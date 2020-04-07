@@ -9,4 +9,4 @@ Usage:
     c-simple-emu-cbm
     c-simple-emu-cbm circle.prg
 
-![circle.bas](https://github.com/davervw/c-simple-emu-cbm/raw/master/circle.png)
+![circle.bas](https://github.com/davervw/c-simple-emu6502-cbm/raw/master/circle.png)
