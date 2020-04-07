@@ -36,9 +36,10 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <stdio.h>
-#include <conio.h>
 #include <string.h>
+#ifdef WIN32
 #include <windows.h>
+#endif
 
 int supress_first_clear = 1;
 
@@ -47,11 +48,13 @@ int buffer_head = 0;
 int buffer_tail = 0;
 int buffer_count = 0;
 
+#ifdef WIN32
 static void cls(HANDLE hConsole);
 
 // From https://support.microsoft.com/en-au/help/99261/how-to-performing-clear-screen-cls-in-a-console-application
 /* Standard error macro for reporting API errors */
 #define PERR(bSuccess, api){if(!(bSuccess)) printf("%s:Error %d from %s on line %d\n", __FILE__, GetLastError(), api, __LINE__);}
+#endif
 
 static void Console_Clear()
 {
@@ -61,13 +64,18 @@ static void Console_Clear()
 		return;
 	}
 
+#ifdef WIN32
 	// See https://docs.microsoft.com/en-us/windows/console/getstdhandle
 	HANDLE hStdout;
 	hStdout = GetStdHandle(STD_OUTPUT_HANDLE); 
 
 	cls(hStdout);
+#else
+	printf("\x1B[2J\x1B[H");
+#endif	
 }
 
+#ifdef WIN32
 BOOL Console_GetCursor(HANDLE hStdout, COORD* coord)
 {
 	CONSOLE_SCREEN_BUFFER_INFO csbi; /* to get buffer info */
@@ -83,9 +91,11 @@ void Console_SetCursor(HANDLE hStdout, COORD coord)
 	BOOL bSuccess = SetConsoleCursorPosition(hStdout, coord);
 	PERR(bSuccess, "SetConsoleCursorPosition");
 }
+#endif
 
 static void Console_Cursor_Up()
 {
+#ifdef WIN32
 	HANDLE hStdout;
 	hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
 	COORD coord = { 0, 0 };
@@ -94,32 +104,40 @@ static void Console_Cursor_Up()
 		--coord.Y;
 		Console_SetCursor(hStdout, coord);
 	}
+#else
+	printf("\x1B[A");
+#endif	
 }
 
 static void Console_Cursor_Down()
 {
+#ifdef WIN32
 	HANDLE hStdout;
 	hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
 	COORD coord = { 0, 0 };
 	if (Console_GetCursor(hStdout, &coord))
 	{
 		SHORT x = coord.X; // save column
-		_cputs("\n");
+		putchar('\n');
 		if (Console_GetCursor(hStdout, &coord))
 		{
 			coord.X = x; // restore column
 			Console_SetCursor(hStdout, coord);
 		}
 	}
+#else	
+	printf("\x1B[B");
+#endif	
 }
 
 static void Console_Cursor_Left()
 {
+#ifdef WIN32
 	HANDLE hStdout;
 	hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
 	COORD coord = { 0, 0 };
 	if (Console_GetCursor(hStdout, &coord) && coord.X > 0)
-		_putch('\b');
+		putchar('\b');
 	else if (coord.Y > 0)
 	{
 		CONSOLE_SCREEN_BUFFER_INFO csbi; /* to get buffer info */
@@ -132,10 +150,14 @@ static void Console_Cursor_Left()
 			Console_SetCursor(hStdout, coord);
 		}
 	}
+#else
+	printf("\x1B[D");
+#endif
 }
 
 static void Console_Cursor_Right()
 {
+#ifdef WIN32
 	HANDLE hStdout;
 	hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
 	CONSOLE_SCREEN_BUFFER_INFO csbi; /* to get buffer info */
@@ -150,27 +172,34 @@ static void Console_Cursor_Right()
 			Console_SetCursor(hStdout, coord);
 		}
 		else
-			_cputs("\n");
+			putchar('\n');
 	}
+#else
+	printf("\x1B[C");
+#endif
 }
 
 static void Console_Cursor_Home()
 {
+#ifdef WIN32
 	HANDLE hStdout;
 	hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
 	COORD coord = { 0, 0 };
 	Console_SetCursor(hStdout, coord);
+#else
+	printf("\x1B[H");
+#endif
 }
 
 extern void CBM_Console_WriteChar(unsigned char c)
 {
 	// we're emulating, so draw character on local console window
 	if (c == 0x0D)
-		_cputs("\n");
+		putchar('\n');
 	else if (c >= ' ' && c <= '~')
 	{
 		//ApplyColor ? .Invoke();
-		_putch(c);
+		putchar(c);
 	}
 	else if (c == 157) // left
 		Console_Cursor_Left();
@@ -197,9 +226,9 @@ extern unsigned char CBM_Console_ReadChar(void)
 		//ApplyColor ? .Invoke();
 		while (1)
 		{
-			gets_s(buffer, sizeof(buffer) - 1); // save room for carriage return and null
+			fgets(buffer, sizeof(buffer) - 1, stdin); // save room for carriage return and null
 			{
-				strcat_s(buffer, sizeof(buffer), "\r");
+				buffer[strlen(buffer)-1] = '\r'; // replace newline
 				buffer_head = 0;
 				buffer_tail = buffer_count = strlen(buffer);
 				Console_Cursor_Up();
@@ -225,6 +254,7 @@ extern void CBM_Console_Push(const char* s)
 	}
 }
 
+#ifdef WIN32
 // borrowed from https://support.microsoft.com/en-au/help/99261/how-to-performing-clear-screen-cls-in-a-console-application
 static void cls(HANDLE hConsole)
 {
@@ -265,3 +295,4 @@ static void cls(HANDLE hConsole)
 	PERR(bSuccess, "SetConsoleCursorPosition");
 	return;
 }
+#endif

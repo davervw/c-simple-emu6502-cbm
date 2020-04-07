@@ -32,21 +32,18 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <stdio.h>
-#include <windows.h>
 #include "emuc64.h"
 #include "emu6502.h"
 
 int main(int argc, char* argv[])
 {
 	fprintf(stderr, "\n");
-	fprintf(stderr, "c-simple-emu-cbm version 1.0\n");
+	fprintf(stderr, "c-simple-emu-cbm version 1.1\n");
 	fprintf(stderr, "Copyright (c) 2020 by David R. Van Wagner\n");
 	fprintf(stderr, "MIT License\n");
 	fprintf(stderr, "github.com/davervw\n");
 	fprintf(stderr, "\n");
-	if (argc == 1)
-		Sleep(5000);
-	else if (argc > 1)
+	if (argc > 1)
 		StartupPRG = argv[1];
 	C64_Init(64*1024, "basic", "kernal");
 	ResetRun(ExecutePatch);

@@ -60,8 +60,8 @@ extern void ResetRun(bool (*ExecutePatch)(void));
 extern void Execute(ushort addr, bool (*ExecutePatch)(void));
 extern void Push(int value);
 extern byte Pop(void);
-extern void DisassembleLong(ushort addr, bool *p_conditional, byte *p_bytes, ushort *p_addr2, byte dis[12], byte line[26]);
-extern void DisassembleShort(ushort addr, bool *p_conditional, byte *p_bytes, ushort *p_addr2, byte dis[12]);
+extern void DisassembleLong(ushort addr, bool *p_conditional, byte *p_bytes, ushort *p_addr2, char *dis, int dis_size, char *line, int line_size);
+extern void DisassembleShort(ushort addr, bool *p_conditional, byte *p_bytes, ushort *p_addr2, char *dis, int dis_size);
 extern byte LO(ushort value);
 extern byte HI(ushort value);
 

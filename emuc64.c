@@ -71,28 +71,46 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <io.h>
-#include <share.h>
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <string.h>
+#ifdef WIN32
+#include <share.h>
+#else
+#include <errno.h>
+#include <unistd.h>
+#endif
 
-extern char* StartupPRG = 0;
+char* StartupPRG = 0;
 int startup_state = 0;
 
 static void File_ReadAllBytes(byte* bytes, unsigned int size, const char* filename)
 {
 	int file;
+#ifdef WIN32	
 	_set_errno(0);
 	_sopen_s(&file, filename, _O_RDONLY | _O_BINARY, _SH_DENYNO, _S_IREAD);
+#else
+	file = open(filename, O_RDONLY);
+#endif	
 	if (file < 0)
 	{
 		char buffer[40];
+#ifdef WIN32
 		strerror_s(buffer, sizeof(buffer), errno);
+#else		
+		strerror_r(errno, buffer, sizeof(buffer));
+#endif		
 		printf("file ""%""s, errno=%d, %s", filename, errno, buffer);
 		exit(1);
 	}
+#ifdef WIN32
 	_read(file, bytes, size);
 	_close(file);
+#else
+	read(file, bytes, size);
+	close(file);
+#endif	
 }
 
 // returns true if BASIC
@@ -102,15 +120,29 @@ static bool LoadPRG(const char* filename)
 	byte lo, hi;
 	int file;
 	ushort loadaddr;
+	
+#ifdef WIN32	
 	_set_errno(0);
 	_sopen_s(&file, filename, _O_RDONLY | _O_BINARY, _SH_DENYNO, _S_IREAD);
+#else
+	file = open(filename, O_RDONLY);
+#endif	
 	if (file < 0
+#ifdef WIN32
 		|| _read(file, &lo, 1) != 1
 		|| _read(file, &hi, 1) != 1
+#else
+		|| read(file, &lo, 1) != 1
+		|| read(file, &hi, 1) != 1
+#endif		
 		)
 	{
 		char buffer[40];
+#ifdef WIN32
 		strerror_s(buffer, sizeof(buffer), errno);
+#else
+		strerror_r(errno, buffer, sizeof(buffer));
+#endif		
 		printf("file ""%""s, errno=%d, %s", filename, errno, buffer);
 		exit(1);
 	}
@@ -127,12 +159,20 @@ static bool LoadPRG(const char* filename)
 	while (true)
 	{
 		byte value;
+#ifdef WIN32
 		if (_read(file, &value, 1) == 1)
+#else
+		if (read(file, &value, 1) == 1)
+#endif		
 			SetMemory(loadaddr++, value);
 		else
 			break;
 	}
+#ifdef WIN32
 	_close(file);
+#else
+	close(file);
+#endif	
 	return result;
 }
 
