@@ -70,11 +70,11 @@
 #include "cbmconsole.h"
 #include <stdlib.h>
 #include <stdio.h>
-#include <io.h>
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <string.h>
 #ifdef WIN32
+#include <io.h>
 #include <share.h>
 #else
 #include <errno.h>

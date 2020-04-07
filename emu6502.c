@@ -685,7 +685,7 @@ extern void Execute(ushort addr, bool (*ExecutePatch)(void))
 #ifdef WIN32
 				OutputDebugStringA(full_line);
 #else				
-				fprintf(stderr, full_line);
+				fprintf(stderr, "%s", full_line);
 #endif				
 				if (step)
 					step = step; // user can put debug breakpoint here to allow stepping
