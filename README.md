@@ -8,7 +8,8 @@ This portable version has been tested with:
 * cygwin (gcc) x64
 * Ubuntu Linux (gcc) x64
 * Raspberry Pi 4 (gcc, Linux ARM)
-* LPC1768 (ARM MBED): [forked](https://os.mbed.com/users/davervw/code/c-simple-emu6502-cbm/)
+* NXP LPC1768 (ARM MBED): [forked](https://os.mbed.com/users/davervw/code/c-simple-emu6502-cbm/)
+* STM32F429 (ARM MBED, note must rename ADC() method)
 
 Only CHRIN/CHROUT/READY(for startup program) are hooked, so no, it won't run your games, only maybe simple ASCII text adventures or such.  Sorry no PETSCII either.
 
