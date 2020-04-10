@@ -35,7 +35,7 @@
 
 typedef signed char sbyte;
 typedef unsigned char byte;
-typedef unsigned char bool;
+//typedef unsigned char bool;
 typedef unsigned short ushort;
 #define false 0
 #define true 1
@@ -68,3 +68,4 @@ extern byte HI(ushort value);
 extern void SetMemory(ushort addr, byte value);
 extern byte GetMemory(ushort addr);
 extern bool ExecutePatch(void);
+
