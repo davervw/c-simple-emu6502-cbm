@@ -38,7 +38,7 @@
 int main(int argc, char* argv[])
 {
 	fprintf(stderr, "\n");
-	fprintf(stderr, "c-simple-emu-cbm version 1.2\n");
+	fprintf(stderr, "c-simple-emu-cbm version 1.3\n");
 	fprintf(stderr, "Copyright (c) 2020 by David R. Van Wagner\n");
 	fprintf(stderr, "MIT License\n");
 	fprintf(stderr, "github.com/davervw\n");
