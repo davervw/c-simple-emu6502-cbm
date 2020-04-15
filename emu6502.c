@@ -97,17 +97,6 @@ extern byte HI(ushort value)
 	return (byte)(value >> 8);
 }
 
-static void BRK(byte *p_bytes)
-{
-	++PC;
-	PHP();
-	Push(HI(PC));
-	Push(LO(PC));
-	B = true;
-	PC = (ushort)(GetMemory(0xFFFE) + (GetMemory(0xFFFF) << 8));
-	*p_bytes = 0;
-}
-
 static byte Subtract(byte reg, byte value, bool *p_overflow)
 {
 	bool old_reg_neg = (reg & 0x80) != 0;
@@ -493,10 +482,21 @@ static void RTS(ushort *p_addr, byte *p_bytes)
 static void RTI(ushort *p_addr, byte *p_bytes)
 {
 	PLP();
-	byte hi = Pop();
 	byte lo = Pop();
+	byte hi = Pop();
 	*p_bytes = 0; // make sure caller does not increase addr by one
 	*p_addr = (ushort)((hi << 8) | lo);
+}
+
+static void BRK(byte *p_bytes)
+{
+	++PC;
+	Push(HI(PC));
+	Push(LO(PC));
+	PHP();
+	B = true;
+	PC = (ushort)(GetMemory(0xFFFE) + (GetMemory(0xFFFF) << 8)); // JMP(IRQ)
+	*p_bytes = 0;
 }
 
 static void JMP(ushort *p_addr, byte *p_bytes)
