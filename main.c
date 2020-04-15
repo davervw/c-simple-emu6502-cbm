@@ -45,7 +45,7 @@ int main(int argc, char* argv[])
 	fprintf(stderr, "\n");
 	if (argc > 1)
 		StartupPRG = argv[1];
-	C64_Init(64*1024, "basic", "kernal");
+	C64_Init(64*1024, "basic", "chargen", "kernal");
 	ResetRun(ExecutePatch);
 	return 0;
 }

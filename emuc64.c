@@ -273,6 +273,7 @@ extern bool ExecutePatch(void)
 
 static byte ram[64 * 1024];
 static byte basic_rom[8 * 1024];
+static byte char_rom[4 * 1024];
 static byte kernal_rom[8 * 1024];
 static byte color_nybles[1024];
 
@@ -285,9 +286,10 @@ const int color_addr = 0xD800;
 const int open_addr = 0xC000;
 const int open_size = 0x1000;
 
-extern void C64_Init(int ram_size, const char* basic_file, const char* kernal_file)
+extern void C64_Init(int ram_size, const char* basic_file, const char* chargen_file, const char* kernal_file)
 {
 	File_ReadAllBytes(basic_rom, sizeof(basic_rom), basic_file);
+	File_ReadAllBytes(char_rom, sizeof(char_rom), chargen_file);
 	File_ReadAllBytes(kernal_rom, sizeof(kernal_rom), kernal_file);
 
 	for (int i = 0; i < sizeof(ram); ++i)
@@ -298,19 +300,36 @@ extern void C64_Init(int ram_size, const char* basic_file, const char* kernal_fi
 	//io = new byte[io_size];
 	//for (int i = 0; i < io.Length; ++i)
 	//	io[i] = 0;
+
+	// initialize DDR and memory mapping to defaults
+	ram[0] = 0xEF;
+	ram[1] = 0x07;
 }
 
 extern byte GetMemory(ushort addr)
 {
-	if (addr < sizeof(ram) && (addr < basic_addr || (addr >= open_addr && addr < open_addr + open_size)))
+	if (addr < sizeof(ram) 
+		  && (
+			  addr < basic_addr // always RAM
+			  || (addr >= open_addr && addr < open_addr + open_size) // always open RAM C000.CFFF
+			  || (((ram[1] & 3) != 3) && addr >= basic_addr && addr < basic_addr + sizeof(basic_rom)) // RAM banked instead of BASIC
+			  || (((ram[1] & 2) == 0) && addr >= kernal_addr && addr <= kernal_addr + sizeof(kernal_rom) - 1) // RAM banked instead of KERNAL
+			  || (((ram[1] & 3) == 0) && addr >= io_addr && addr < io_addr + io_size) // RAM banked instead of IO
+		  )
+		)
 		return ram[addr];
 	else if (addr >= basic_addr && addr < basic_addr + sizeof(basic_rom))
 		return basic_rom[addr - basic_addr];
-	else if (addr >= color_addr && addr < color_addr + sizeof(color_nybles))
-		return color_nybles[addr - color_addr];
 	else if (addr >= io_addr && addr < io_addr + io_size)
-		return 0; // io[addr - io_addr];
-	else if (addr >= kernal_addr && addr < kernal_addr + sizeof(kernal_rom))
+	{
+		if ((ram[1] & 4) == 0)
+			return char_rom[addr - io_addr];
+		else if (addr >= color_addr && addr < color_addr + sizeof(color_nybles))
+			return color_nybles[addr - color_addr] | 0xF0;
+		else
+			return 0; // io[addr - io_addr];
+	}
+	else if (addr >= kernal_addr && addr <= kernal_addr + sizeof(kernal_rom) - 1)
 		return kernal_rom[addr - kernal_addr];
 	else
 		return 0xFF;
@@ -318,7 +337,13 @@ extern byte GetMemory(ushort addr)
 
 extern void SetMemory(ushort addr, byte value)
 {
-	if (addr < sizeof(ram) && (addr < io_addr || (addr >= kernal_addr && addr < kernal_addr + sizeof(kernal_rom))))
+	if (addr <= sizeof(ram)-1
+		&& (
+			addr < io_addr // RAM, including open RAM, and RAM under BASIC
+			|| (addr >= kernal_addr && addr <= kernal_addr + sizeof(kernal_rom) - 1) // RAM under KERNAL
+			|| (((ram[1] & 7) == 0) && addr >= io_addr && addr < io_addr + io_size) // RAM banked in instead of IO
+			)
+		)
 		ram[addr] = value;
 	else if (addr == 0xD021) // background
 		;
