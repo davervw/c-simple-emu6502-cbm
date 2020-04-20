@@ -227,13 +227,11 @@ extern unsigned char CBM_Console_ReadChar(void)
 		while (1)
 		{
 			fgets(buffer, sizeof(buffer) - 1, stdin); // save room for carriage return and null
-			{
-				buffer[strlen(buffer)-1] = '\r'; // replace newline
-				buffer_head = 0;
-				buffer_tail = buffer_count = strlen(buffer);
-				Console_Cursor_Up();
-				break;
-			}
+			buffer[strlen(buffer)-1] = '\r'; // replace newline
+			buffer_head = 0;
+			buffer_tail = buffer_count = strlen(buffer);
+			Console_Cursor_Up();
+			break;
 		}
 	}
 	unsigned char c = buffer[buffer_head++];
