@@ -1,5 +1,6 @@
 10 PRINT "I'm thinking of a number between 1 and 100"
 15 C=0
+19 X=RND(-TI)
 20 X=INT(RND(1)*100+1)
 25 G=0
 30 PRINT "GUESS";:INPUT G

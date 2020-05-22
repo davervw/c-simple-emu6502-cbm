@@ -72,6 +72,8 @@
 #include <stdio.h>
 #include <fcntl.h>
 #include <sys/stat.h>
+#include <sys/time.h> // gettimeofday
+#include <time.h>
 #include <string.h>
 #ifdef WIN32
 #include <io.h>
@@ -308,6 +310,22 @@ extern void C64_Init(int ram_size, const char* basic_file, const char* chargen_f
 
 extern byte GetMemory(ushort addr)
 {
+	if (addr == 0xa2 ) {
+			// RDTIM
+			time_t  now = time(0);
+			struct tm       bd;
+			struct timeval  tv;
+
+			localtime_r(&now, &bd);
+			gettimeofday(&tv, 0);
+
+			unsigned long jiffies = ((bd.tm_hour*60 + bd.tm_min)*60 + bd.tm_sec)*60 + tv.tv_usec / (1000000/60);
+
+			ram[0xa0] = (unsigned char)(jiffies/65536);
+			ram[0xa1] = (unsigned char)((jiffies%65536)/256);
+			ram[0xa2] = (unsigned char)(jiffies%256);
+	}
+
 	if (addr < sizeof(ram) 
 		  && (
 			  addr < basic_addr // always RAM
@@ -331,6 +349,13 @@ extern byte GetMemory(ushort addr)
 	}
 	else if (addr >= kernal_addr && addr <= kernal_addr + sizeof(kernal_rom) - 1)
 		return kernal_rom[addr - kernal_addr];
+	else if (addr >= 0xdc04 && addr <= 0xdc09) {
+		ram[0xdc04] = time(NULL) & 0xFF;
+		ram[0xdc05] = (time(NULL) >> 8) & 0xFF;
+		ram[0xdc08] = (time(NULL) >> 16) & 0xFF;
+		ram[0xdc09] = (time(NULL) >> 24) & 0xFF;
+		return ram[addr];
+  }
 	else
 		return 0xFF;
 }
