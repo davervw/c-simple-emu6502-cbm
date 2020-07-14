@@ -359,13 +359,6 @@ extern byte GetMemory(ushort addr)
 	}
 	else if (addr >= kernal_addr && addr <= kernal_addr + sizeof(kernal_rom) - 1)
 		return kernal_rom[addr - kernal_addr];
-//	else if (addr >= 0xdc04 && addr <= 0xdc09) {
-//		ram[0xdc04] = time(NULL) & 0xFF;
-//		ram[0xdc05] = (time(NULL) >> 8) & 0xFF;
-//		ram[0xdc08] = (time(NULL) >> 16) & 0xFF;
-//		ram[0xdc09] = (time(NULL) >> 24) & 0xFF;
-//		return ram[addr];
-// }
 	else
 		return 0xFF;
 }
