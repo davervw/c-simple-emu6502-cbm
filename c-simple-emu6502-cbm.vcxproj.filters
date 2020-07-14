@@ -27,6 +27,9 @@
     <ClCompile Include="cbmconsole.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="gettimeofday.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="emu6502.h">
