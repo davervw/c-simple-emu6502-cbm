@@ -6,9 +6,9 @@ The portable version has been tested with multiple platforms.
 
 This [Arduino](https://github.com/davervw/c-simple-emu6502-cbm/tree/arduino) version is branched from [master](https://github.com/davervw/c-simple-emu6502-cbm/tree/master) and tested specifically with:
 
-* Arduino Due (ARM ATSAM3X8E)
-* Teensy 3.5
-* Teensy 4.1
+* [Arduino Due](https://store.arduino.cc/usa/due) (ARM ATSAM3X8E) - note: no longer manufactured
+* [Teensy 3.5](https://www.pjrc.com/store/teensy35.html)
+* [Teensy 4.1](https://www.pjrc.com/store/teensy41.html)
 
 Only CHRIN/CHROUT are hooked, so no, it won't run your games, only maybe simple ASCII text adventures or such.  Sorry no PETSCII either.
 
