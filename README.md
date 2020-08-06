@@ -9,6 +9,7 @@ This [Arduino](https://github.com/davervw/c-simple-emu6502-cbm/tree/arduino) ver
 * [Arduino Due](https://store.arduino.cc/usa/due) (ARM ATSAM3X8E) - note: no longer manufactured
 * [Teensy 3.5](https://www.pjrc.com/store/teensy35.html)
 * [Teensy 4.1](https://www.pjrc.com/store/teensy41.html)
+* Espressif [ESP32-WROOM-32](https://www.espressif.com/en/products/modules/esp-wroom-32/overview)
 
 Only CHRIN/CHROUT are hooked, so no, it won't run your games, only maybe simple ASCII text adventures or such.  Sorry no PETSCII either.
 

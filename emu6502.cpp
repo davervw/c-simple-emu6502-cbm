@@ -228,7 +228,7 @@ static void AND(int value)
 	SetA(A & value);
 }
 
-static void BIT(byte value)
+static void BITOP(byte value)
 {
 	Z = (A & value) == 0;
 	N = (value & 0x80) != 0;
@@ -376,7 +376,7 @@ static void DEY()
 	Y = DECR(Y);
 }
 
-static void NOP()
+static void NO_OP()
 {
 }
 
@@ -419,7 +419,7 @@ static ushort GetBR(ushort addr, bool *p_conditional, byte *p_bytes)
 	return addr2;
 }
 
-static void BR(bool branch, ushort *p_addr, bool *p_conditional, byte *p_bytes)
+static void BRANCH(bool branch, ushort *p_addr, bool *p_conditional, byte *p_bytes)
 {
 	ushort addr2 = GetBR(*p_addr, p_conditional, p_bytes);
 	if (branch)
@@ -431,42 +431,42 @@ static void BR(bool branch, ushort *p_addr, bool *p_conditional, byte *p_bytes)
 
 static void BPL(ushort *p_addr, bool *p_conditional, byte *p_bytes)
 {
-	BR(!N, p_addr, p_conditional, p_bytes);
+   BRANCH(!N, p_addr, p_conditional, p_bytes);
 }
 
 static void BMI(ushort *p_addr, bool *p_conditional, byte *p_bytes)
 {
-	BR(N, p_addr, p_conditional, p_bytes);
+   BRANCH(N, p_addr, p_conditional, p_bytes);
 }
 
 static void BCC(ushort *p_addr, bool *p_conditional, byte *p_bytes)
 {
-	BR(!C, p_addr, p_conditional, p_bytes);
+   BRANCH(!C, p_addr, p_conditional, p_bytes);
 }
 
 static void BCS(ushort *p_addr, bool *p_conditional, byte *p_bytes)
 {
-	BR(C, p_addr, p_conditional, p_bytes);
+   BRANCH(C, p_addr, p_conditional, p_bytes);
 }
 
 static void BVC(ushort *p_addr, bool *p_conditional, byte *p_bytes)
 {
-	BR(!V, p_addr, p_conditional, p_bytes);
+   BRANCH(!V, p_addr, p_conditional, p_bytes);
 }
 
 static void BVS(ushort *p_addr, bool *p_conditional, byte *p_bytes)
 {
-	BR(V, p_addr, p_conditional, p_bytes);
+   BRANCH(V, p_addr, p_conditional, p_bytes);
 }
 
 static void BNE(ushort *p_addr, bool *p_conditional, byte *p_bytes)
 {
-	BR(!Z, p_addr, p_conditional, p_bytes);
+   BRANCH(!Z, p_addr, p_conditional, p_bytes);
 }
 
 static void BEQ(ushort *p_addr, bool *p_conditional, byte *p_bytes)
 {
-	BR(Z, p_addr, p_conditional, p_bytes);
+   BRANCH(Z, p_addr, p_conditional, p_bytes);
 }
 
 static void JSR(ushort *p_addr, byte *p_bytes)
@@ -718,13 +718,13 @@ extern void Execute(ushort addr, bool (*ExecutePatch)(void))
 
 		case 0x20: JSR(&PC, &bytes); break;
 		case 0x21: AND(GetIndX(PC, &bytes)); break;
-		case 0x24: BIT(GetZP(PC, &bytes)); break;
+		case 0x24: BITOP(GetZP(PC, &bytes)); break;
 		case 0x25: AND(GetZP(PC, &bytes)); break;
 		case 0x26: SetZP(ROL(GetZP(PC, &bytes)), PC, &bytes); break;
 		case 0x28: PLP(); break;
 		case 0x29: AND(GetIM(PC, &bytes)); break;
 		case 0x2A: SetA(ROL(A)); break;
-		case 0x2C: BIT(GetABS(PC, &bytes)); break;
+		case 0x2C: BITOP(GetABS(PC, &bytes)); break;
 		case 0x2D: AND(GetABS(PC, &bytes)); break;
 		case 0x2E: ROL(GetABS(PC, &bytes)); break;
 
@@ -850,7 +850,7 @@ extern void Execute(ushort addr, bool (*ExecutePatch)(void))
 		case 0xE6: SetZP(INC(GetZP(PC, &bytes)), PC, &bytes); break;
 		case 0xE8: INX(); break;
 		case 0xE9: SBC(GetIM(PC, &bytes)); break;
-		case 0xEA: NOP(); break;
+		case 0xEA: NO_OP(); break;
 		case 0xEC: CPX(GetABS(PC, &bytes)); break;
 		case 0xED: SBC(GetABS(PC, &bytes)); break;
 		case 0xEE: SetABS(INC(GetABS(PC, &bytes)), PC, &bytes); break;
