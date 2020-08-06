@@ -894,7 +894,7 @@ extern void DisassembleLong(ushort addr, bool *p_conditional, byte *p_bytes, ush
 	strcat_s(line, line_size, dis);
 }
 
-static void Ind(char *dis, int dis_size, char* opcode, ushort addr, ushort *p_addr2, byte *p_bytes)
+static void Ind(char *dis, int dis_size, const char* opcode, ushort addr, ushort *p_addr2, byte *p_bytes)
 {
 	*p_bytes = 3;
 	ushort addr1 = (ushort)(GetMemory((ushort)(addr + 1)) | (GetMemory((ushort)(addr + 2)) << 8));
@@ -902,68 +902,68 @@ static void Ind(char *dis, int dis_size, char* opcode, ushort addr, ushort *p_ad
 	snprintf(dis, dis_size, "%s ($%0X4)", opcode, addr1);
 }
 
-static void IndX(char *dis, int dis_size, char* opcode, ushort addr, byte *p_bytes)
+static void IndX(char *dis, int dis_size, const char* opcode, ushort addr, byte *p_bytes)
 {
 	*p_bytes = 2;
 	snprintf(dis, dis_size, "%s ($%02X,X)", opcode, GetMemory((ushort)(addr + 1)));
 }
 
-static void IndY(char *dis, int dis_size, char* opcode, ushort addr, byte *p_bytes)
+static void IndY(char *dis, int dis_size, const char* opcode, ushort addr, byte *p_bytes)
 {
 	*p_bytes = 2;
 	snprintf(dis, dis_size, "%s ($%02X),Y", opcode, GetMemory((ushort)(addr + 1)));
 }
 
-static void ZP(char *dis, int dis_size, char* opcode, ushort addr, byte *p_bytes)
+static void ZP(char *dis, int dis_size, const char* opcode, ushort addr, byte *p_bytes)
 {
 	*p_bytes = 2;
 	snprintf(dis, dis_size, "%s $%02X", opcode, GetMemory((ushort)(addr + 1)));
 }
 
-static void ZPX(char *dis, int dis_size, char* opcode, ushort addr, byte *p_bytes)
+static void ZPX(char *dis, int dis_size, const char* opcode, ushort addr, byte *p_bytes)
 {
 	*p_bytes = 2;
 	snprintf(dis, dis_size, "%s $%02X,X", opcode, GetMemory((ushort)(addr + 1)));
 }
 
-static void ZPY(char *dis, int dis_size, char* opcode, ushort addr, byte *p_bytes)
+static void ZPY(char *dis, int dis_size, const char* opcode, ushort addr, byte *p_bytes)
 {
 	*p_bytes = 2;
 	snprintf(dis, dis_size, "%s $%02X,Y", opcode, GetMemory((ushort)(addr + 1)));
 }
 
-static void ABS(char *dis, int dis_size, char* opcode, ushort addr, byte *p_bytes)
+static void ABS(char *dis, int dis_size, const char* opcode, ushort addr, byte *p_bytes)
 {
 	*p_bytes = 3;
 	snprintf(dis, dis_size, "%s $%04X", opcode, GetMemory((ushort)(addr + 1)) | (GetMemory((ushort)(addr + 2)) << 8));
 }
 
-static void ABSAddr(char *dis, int dis_size, char* opcode, ushort addr, ushort *p_addr2, byte *p_bytes)
+static void ABSAddr(char *dis, int dis_size, const char* opcode, ushort addr, ushort *p_addr2, byte *p_bytes)
 {
 	*p_bytes = 3;
 	*p_addr2 = (ushort)(GetMemory((ushort)(addr + 1)) | (GetMemory((ushort)(addr + 2)) << 8));
 	snprintf(dis, dis_size, "%s $%04X", opcode, *p_addr2);
 }
 
-static void ABSX(char *dis, int dis_size, char* opcode, ushort addr, byte *p_bytes)
+static void ABSX(char *dis, int dis_size, const char* opcode, ushort addr, byte *p_bytes)
 {
 	*p_bytes = 3;
 	snprintf(dis, dis_size, "%s $%04X,X", opcode, GetMemory((ushort)(addr + 1)) | (GetMemory((ushort)(addr + 2)) << 8));
 }
 
-static void ABSY(char *dis, int dis_size, char* opcode, ushort addr, byte *p_bytes)
+static void ABSY(char *dis, int dis_size, const char* opcode, ushort addr, byte *p_bytes)
 {
 	*p_bytes = 3;
 	snprintf(dis, dis_size, "%s $%04X,Y", opcode, GetMemory((ushort)(addr + 1)) | (GetMemory((ushort)(addr + 2)) << 8));
 }
 
-static void IM(char *dis, int dis_size, char* opcode, ushort addr, byte *p_bytes)
+static void IM(char *dis, int dis_size, const char* opcode, ushort addr, byte *p_bytes)
 {
 	*p_bytes = 2;
 	snprintf(dis, dis_size, "%s #$%02X", opcode, GetMemory((ushort)(addr + 1)));
 }
 
-static void BRX(char *dis, int dis_size, char* opcode, ushort addr, bool *p_conditional, ushort *p_addr2, byte *p_bytes)
+static void BRX(char *dis, int dis_size, const char* opcode, ushort addr, bool *p_conditional, ushort *p_addr2, byte *p_bytes)
 {
 	*p_bytes = 2;
 	*p_conditional = true;
