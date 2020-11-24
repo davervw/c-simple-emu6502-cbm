@@ -490,11 +490,11 @@ static void RTS(ushort *p_addr, byte *p_bytes)
 
 static void RTI(ushort *p_addr, byte *p_bytes)
 {
-	PLP();
-	byte hi = Pop();
-	byte lo = Pop();
-	*p_bytes = 0; // make sure caller does not increase addr by one
-	*p_addr = (ushort)((hi << 8) | lo);
+  PLP();
+  byte lo = Pop();
+  byte hi = Pop();
+  *p_bytes = 0; // make sure caller does not increase addr by one
+  *p_addr = (ushort)((hi << 8) | lo);
 }
 
 static void JMP(ushort *p_addr, byte *p_bytes)
@@ -660,6 +660,9 @@ extern void Execute(ushort addr, bool (*ExecutePatch)(void))
 	bool conditional;
 	byte bytes;
 
+  unsigned long interrupt_time = 1000000 / 60;
+  unsigned long timer_then = micros();
+
 	PC = addr;
 
 	while (true)
@@ -667,11 +670,17 @@ extern void Execute(ushort addr, bool (*ExecutePatch)(void))
 		while (true)
 		{
 			bytes = 1;
-			//bool breakpoint = false;
-			//if (Breakpoints.Contains(PC))
-			//	breakpoint = true;
-			bool breakpoint = (addr == 0xFD88);
-			if (trace || breakpoint || step)
+			bool breakpoint = false;
+      if (!I && (micros()-timer_then) >= interrupt_time) // IRQ
+      {
+        timer_then = micros(); // reset timer
+        Push(HI(PC));
+        Push(LO(PC));
+        PHP();
+        I = true;
+        PC = (GetMemory(0xfffe) | (GetMemory(0xffff) << 8));
+      } 
+			else if (trace || breakpoint || step)
 			{
 				ushort addr2;
 				char line[27];
