@@ -3,7 +3,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
 // c-simple-emu-cbm (C Portable Version)
-// C64/6502 Emulator for Microsoft Windows Console
+// C64/6502 Emulator for Teensy
 //
 // MIT License
 //
@@ -32,15 +32,13 @@
 ////////////////////////////////////////////////////////////////////////////////
 // IMPORTANT!
 //
-// This port is for Arduino Due (ARM ATSAM3X8E).  Should be flexible enough to
-//   port to other Arduino platforms with lots of flash and RAM.  C64 ROMs require
-//   16K flash, C64 RAM can be configured from 64K down to 3K and still be usable.
-// Requires almost 64K Flash, a bit more than 64K RAM
-// Expects a vt100 terminal in line mode, sending carriage returns as line endings
-// Usually in echo mode, but Arduino serial monitor will do as well.
-// Put keyboard in CAPS LOCK to type BASIC commands in uppercase like PRINT 2+2
-// Use DUE Programming Port for USB Serial connection (Serial) that is used
-//   througout the various files of this solution.
+// This port is for Teensy 4.0 or 4.1 with IPS LCD and USB keyboard
+// Note: other ports are available for other hardware platforms
+// Tested with Arduino 1.8.5
+// Requires Teensyduino, tested with 1.53, with USBHost_t36
+// Requires Third party library:
+// * https://github.com/KurtE/ILI9341_t3n.git
+// Note: Serial diagnostics commented out so can start immediately without terminal
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "emuc64.h"
@@ -49,16 +47,16 @@
 void setup() {
   // put your setup code here, to run once:
   //Initialize serial and wait for port to open:
-  Serial.begin(115200);
-  while (!Serial) {
-    ; // wait for serial port to connect. Needed for native USB port only
-  }
-  Serial.println("");
-  Serial.println("c-simple-emu-cbm version 1.4");
-  Serial.println("Copyright (c) 2020 by David R. Van Wagner\n");
-  Serial.println("MIT License\n");
-  Serial.println("github.com/davervw\n");
-  Serial.println("\n");
+//  Serial.begin(115200);
+//  while (!Serial) {
+//    ; // wait for serial port to connect. Needed for native USB port only
+//  }
+//  Serial.println("");
+//  Serial.println("c-simple-emu-cbm version 1.4");
+//  Serial.println("Copyright (c) 2020 by David R. Van Wagner\n");
+//  Serial.println("MIT License\n");
+//  Serial.println("github.com/davervw\n");
+//  Serial.println("\n");
 
   //StartupPRG = "/local/guess2.prg";
   C64_Init();

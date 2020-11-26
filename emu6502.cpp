@@ -693,7 +693,7 @@ extern void Execute(ushort addr, bool (*ExecutePatch)(void))
 #ifdef WIN32
 				OutputDebugStringA(full_line);
 #else				
-				Serial.print(full_line);
+				//Serial.print(full_line);
 #endif				
 				if (step)
 					step = step; // user can put debug breakpoint here to allow stepping
@@ -877,7 +877,7 @@ extern void Execute(ushort addr, bool (*ExecutePatch)(void))
 			{
         char buffer[40];
 				snprintf(buffer, sizeof(buffer), "Invalid opcode %02X at %04X", GetMemory(PC), PC);
-        Serial.println(buffer);
+        //Serial.println(buffer);
 				exit(1);
 			}
 		}
