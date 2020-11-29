@@ -64,6 +64,7 @@ extern void DisassembleLong(ushort addr, bool *p_conditional, byte *p_bytes, ush
 extern void DisassembleShort(ushort addr, bool *p_conditional, byte *p_bytes, ushort *p_addr2, char *dis, int dis_size);
 extern byte LO(ushort value);
 extern byte HI(ushort value);
+extern void PHP();
 
 extern void SetMemory(ushort addr, byte value);
 extern byte GetMemory(ushort addr);

@@ -73,7 +73,7 @@ static void strcat_s(char* dest, size_t size, const char* src)
 }
 #endif
 
-static void PHP()
+void PHP()
 {
 	int flags = (N ? 0x80 : 0)
 		| (V ? 0x40 : 0)

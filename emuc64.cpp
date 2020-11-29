@@ -309,6 +309,28 @@ static void onKbdRawRelease(int key)
 
 bool ExecutePatch(void)
 {
+  static bool NMI = false;
+  
+  int found_NMI = 0;
+  for (int i=0; !found_NMI && i<9; ++i)
+    if (scan_codes[i] == 1024+64)
+      found_NMI = 1;
+  
+  if (NMI)
+  {
+    if (!found_NMI)
+      NMI = false; // reset when not pressed
+  }
+  else if (found_NMI) // newly pressed, detected edge
+  {
+    NMI = true; // set so won't trigger again until cleared
+    Push(HI(PC));
+    Push(LO(PC));
+    PHP();
+    PC = (ushort)(GetMemory(0xFFFA) + (GetMemory(0xFFFB) << 8)); // JMP(NMI)
+    return true; // overriden, and PC changed, so caller should reloop before execution to allow breakpoint/trace/ExecutePatch/etc.
+  }
+
 //	if (PC == 0xFFD2) // CHROUT
 //	{
 //		CBM_Console_WriteChar((char)A);
