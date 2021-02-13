@@ -7,11 +7,10 @@
 //
 // MIT License
 //
-// Copyright(c) 2020 by David R.Van Wagner
+// Copyright(c) 2021 by David R. Van Wagner
 // davevw.com
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
-//
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
@@ -140,7 +139,7 @@ static void SetReg(byte *p_reg, int value)
 	N = ((*p_reg & 0x80) != 0);
 }
 
-static void SetA(int value)
+extern void SetA(int value)
 {
 	SetReg(&A, value);
 }
@@ -471,12 +470,12 @@ static void JSR(ushort *p_addr, byte *p_bytes)
 	*p_bytes = 0; // addr already changed
 }
 
-static void RTS(ushort *p_addr, byte *p_bytes)
+extern void RTS(ushort *p_addr, byte *p_bytes)
 {
 	byte lo = Pop();
 	byte hi = Pop();
-	*p_bytes = 1; // make sure caller increases addr by one
-	*p_addr = (ushort)((hi << 8) | lo);
+	*p_addr = (ushort)(((hi << 8) | lo) + 1);
+	*p_bytes = 0; // addr already changed
 }
 
 static void RTI(ushort *p_addr, byte *p_bytes)

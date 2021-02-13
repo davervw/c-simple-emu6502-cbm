@@ -30,6 +30,9 @@
     <ClCompile Include="gettimeofday.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="emud64.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="emu6502.h">
@@ -39,6 +42,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="emuc64.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="emud64.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

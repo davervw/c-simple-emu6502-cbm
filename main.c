@@ -7,11 +7,10 @@
 //
 // MIT License
 //
-// Copyright(c) 2020 by David R.Van Wagner
+// Copyright(c) 2021 by David R. Van Wagner
 // davevw.com
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
-//
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
@@ -38,8 +37,8 @@
 int main(int argc, char* argv[])
 {
 	fprintf(stderr, "\n");
-	fprintf(stderr, "c-simple-emu-cbm version 1.3\n");
-	fprintf(stderr, "Copyright (c) 2020 by David R. Van Wagner\n");
+	fprintf(stderr, "c-simple-emu-cbm version 1.4\n");
+	fprintf(stderr, "Copyright (c) 2021 by David R. Van Wagner\n");
 	fprintf(stderr, "MIT License\n");
 	fprintf(stderr, "github.com/davervw\n");
 	fprintf(stderr, "\n");
@@ -47,5 +46,6 @@ int main(int argc, char* argv[])
 		StartupPRG = argv[1];
 	C64_Init(64*1024, "basic", "chargen", "kernal");
 	ResetRun(ExecutePatch);
+
 	return 0;
 }

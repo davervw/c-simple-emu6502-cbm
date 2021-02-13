@@ -7,11 +7,10 @@
 //
 // MIT License
 //
-// Copyright(c) 2020 by David R.Van Wagner
+// Copyright(c) 2021 by David R. Van Wagner
 // davevw.com
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
-//
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
@@ -64,6 +63,8 @@ extern void DisassembleLong(ushort addr, bool *p_conditional, byte *p_bytes, ush
 extern void DisassembleShort(ushort addr, bool *p_conditional, byte *p_bytes, ushort *p_addr2, char *dis, int dis_size);
 extern byte LO(ushort value);
 extern byte HI(ushort value);
+extern void SetA(int value);
+extern void RTS(ushort* p_addr, byte* p_bytes);
 
 extern void SetMemory(ushort addr, byte value);
 extern byte GetMemory(ushort addr);
