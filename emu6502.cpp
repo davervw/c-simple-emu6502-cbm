@@ -7,11 +7,10 @@
 //
 // MIT License
 //
-// Copyright(c) 2020 by David R.Van Wagner
+// Copyright (c) 2021 by David R. Van Wagner
 // davevw.com
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
-//
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
@@ -30,8 +29,6 @@
 // SOFTWARE.
 //
 ////////////////////////////////////////////////////////////////////////////////
-
-//#define snprintf sprintf_s
 
 #include "emu6502.h"
 #include <arduino.h>
@@ -73,7 +70,7 @@ static void strcat_s(char* dest, size_t size, const char* src)
 }
 #endif
 
-void PHP()
+extern void PHP()
 {
 	int flags = (N ? 0x80 : 0)
 		| (V ? 0x40 : 0)
@@ -93,17 +90,6 @@ extern byte LO(ushort value)
 extern byte HI(ushort value)
 {
 	return (byte)(value >> 8);
-}
-
-static void BRK(byte *p_bytes)
-{
-	++PC;
-	PHP();
-	Push(HI(PC));
-	Push(LO(PC));
-	B = true;
-	PC = (ushort)(GetMemory(0xFFFE) + (GetMemory(0xFFFF) << 8));
-	*p_bytes = 0;
 }
 
 static byte Subtract(byte reg, byte value, bool *p_overflow)
@@ -149,7 +135,7 @@ static void SetReg(byte *p_reg, int value)
 	N = ((*p_reg & 0x80) != 0);
 }
 
-static void SetA(int value)
+extern void SetA(int value)
 {
 	SetReg(&A, value);
 }
@@ -480,21 +466,32 @@ static void JSR(ushort *p_addr, byte *p_bytes)
 	*p_bytes = 0; // addr already changed
 }
 
-static void RTS(ushort *p_addr, byte *p_bytes)
+extern void RTS(ushort *p_addr, byte *p_bytes)
 {
 	byte lo = Pop();
 	byte hi = Pop();
-	*p_bytes = 1; // make sure caller increases addr by one
-	*p_addr = (ushort)((hi << 8) | lo);
+	*p_addr = (ushort)(((hi << 8) | lo) + 1);
+	*p_bytes = 0; // addr already changed
 }
 
 static void RTI(ushort *p_addr, byte *p_bytes)
 {
-  PLP();
-  byte lo = Pop();
-  byte hi = Pop();
-  *p_bytes = 0; // make sure caller does not increase addr by one
-  *p_addr = (ushort)((hi << 8) | lo);
+	PLP();
+	byte lo = Pop();
+	byte hi = Pop();
+	*p_bytes = 0; // make sure caller does not increase addr by one
+	*p_addr = (ushort)((hi << 8) | lo);
+}
+
+static void BRK(byte *p_bytes)
+{
+	++PC;
+	Push(HI(PC));
+	Push(LO(PC));
+	PHP();
+	B = true;
+	PC = (ushort)(GetMemory(0xFFFE) + (GetMemory(0xFFFF) << 8)); // JMP(IRQ)
+	*p_bytes = 0;
 }
 
 static void JMP(ushort *p_addr, byte *p_bytes)

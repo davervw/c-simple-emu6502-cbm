@@ -7,11 +7,10 @@
 //
 // MIT License
 //
-// Copyright(c) 2020 by David R.Van Wagner
+// Copyright (c) 2021 by David R. Van Wagner
 // davevw.com
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
-//
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
@@ -64,19 +63,29 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "emu6502.h"
-#include "cbmconsole.h"
+#include "emud64.h"
 
 #include "SPI.h"
 #include "ILI9341_t3n.h"
 #include "USBHost_t36.h"
 
 // globals
-char* StartupPRG = 0;
+const char* StartupPRG = "samples.d64";
 
 // locals
 static int startup_state = 0;
+const char* FileName = NULL;
+byte FileNum = 0;
+byte FileDev = 0;
+byte FileSec = 0;
+bool FileVerify = false;
+ushort FileAddr = 0;
+int LOAD_TRAP = -1;
+byte* attach = NULL;
+EmuD64* disk = NULL;
 
 static ILI9341_t3n lcd = ILI9341_t3n(10 /*CS*/, 9 /*DC*/);
+
 static USBHost myusb;
 static USBHub hub1(myusb);
 static USBHub hub2(myusb);
@@ -203,7 +212,7 @@ static void onKeyData(uint8_t len, uint8_t* data)
 
 // original code expected keyboard HID buffer, so reconstruct it from events we receive from our keyboard handler
 // place key into kbd_data indexes 2..7, or update modifier at index 0
-static void onKbdRawPress(int key)
+static void onKbdRawPress(uint8_t key)
 {
   if (key == 0x68)
     kbd_data[0] |= lshift;
@@ -226,7 +235,7 @@ static void onKbdRawPress(int key)
 
 // original code expected keyboard HID buffer, so reconstruct it from events we receive from our keyboard handler
 // remove key from kbd_data indexes 2..7, or update modifier at index 0
-static void onKbdRawRelease(int key)
+static void onKbdRawRelease(uint8_t key)
 {
   if (key == 0x68)
     kbd_data[0] &= ~lshift;
@@ -255,57 +264,123 @@ static void onKbdRawRelease(int key)
   onKeyData(8, &kbd_data[0]);
 }
 
-//static void File_ReadAllBytes(byte* bytes, unsigned int size, const char* filename)
-//{
-//	int file;
-//	file = open(filename, O_RDONLY);
-//	if (file < 0)
-//	{
-//		pc.printf("file ""%s"", errno=%d\n", filename, errno);
-//		exit(1);
-//	}
-//	read(file, bytes, size);
-//	close(file);
-//}
+static bool ExecuteRTS()
+{
+	byte bytes;
+	RTS(&PC, &bytes);
+	return true; // return value for ExecutePatch so will reloop execution to allow berakpoint/trace/ExecutePatch/etc.
+}
 
-//// returns true if BASIC
-//static bool LoadPRG(const char* filename)
-//{
-//	bool result;
-//	byte lo, hi;
-//	int file;
-//	ushort loadaddr;
-//	
-//	file = open(filename, O_RDONLY);
-//	if (file < 0
-//		|| read(file, &lo, 1) != 1
-//		|| read(file, &hi, 1) != 1
-//		)
-//	{
-//		pc.printf("file ""%s"", errno=%d\n", filename, errno);
-//		exit(1);
-//	}
-//	if (lo == 1)
-//	{
-//		loadaddr = (ushort)(GetMemory(43) | (GetMemory(44) << 8));
-//		result = true;
-//	}
-//	else
-//	{
-//		loadaddr = (ushort)(lo | (hi << 8));
-//		result = false;
-//	}
-//	while (true)
-//	{
-//		byte value;
-//		if (read(file, &value, 1) == 1)
-//			SetMemory(loadaddr++, value);
-//		else
-//			break;
-//	}
-//	close(file);
-//	return result;
-//}
+static bool ExecuteJSR(ushort addr)
+{
+	ushort retaddr = (PC - 1) & 0xFFFF;
+	Push(HI(retaddr));
+	Push(LO(retaddr));
+	PC = addr;
+	return true; // return value for ExecutePatch so will reloop execution to allow berakpoint/trace/ExecutePatch/etc.
+}
+
+static byte* OpenRead(const char* filename, int* p_ret_file_len)
+{
+	static unsigned char buffer[65536]; // TODO: get actual file size
+
+	if (filename != NULL && filename[0] == '$' && filename[1] == '\0')
+	{
+		*p_ret_file_len = sizeof(buffer);
+		if (disk->GetDirectoryProgram(buffer, *p_ret_file_len))
+			return &buffer[0];
+		else
+		{
+			return (byte*)NULL;
+			*p_ret_file_len = 0;
+		}
+	}
+	else
+	{
+		*p_ret_file_len = sizeof(buffer);
+		disk->ReadFileByName(filename, buffer, *p_ret_file_len);
+		return buffer;
+	}
+}
+
+// returns success
+bool FileLoad(byte* p_err)
+{
+	bool startup = (StartupPRG != NULL);
+	ushort addr = FileAddr;
+	bool success = true;
+	const char* filename = StartupPRG;
+	int file_len;
+	byte* bytes = OpenRead(filename, &file_len);
+	ushort si = 0;
+	if (file_len == 0) {
+		*p_err = 4; // FILE NOT FOUND
+		success = false;
+		FileAddr = addr;
+		return success;
+	}
+
+	byte lo = bytes[si++];
+	byte hi = bytes[si++];
+	if (startup) {
+		if (lo == 1)
+			FileSec = 0;
+		else
+			FileSec = 1;
+	}
+	if (FileSec == 1) // use address in file? yes-use, no-ignore
+		addr = lo | (hi << 8); // use address specified in file
+	while (success) {
+		if (si < file_len) {
+			byte i = bytes[si++];
+			if (FileVerify) {
+				if (GetMemory(addr) != i) {
+					*p_err = 28; // VERIFY
+					success = false;
+				}
+			}
+			else
+				SetMemory(addr, i);
+			++addr;
+		}
+		else
+			break; // end of file
+	}
+	FileAddr = addr;
+	return success;
+}
+
+bool FileSave(const char* filename, ushort addr1, ushort addr2)
+{
+	if (filename == NULL || *filename == 0)
+		filename = "FILENAME";
+	if (disk == 0)
+		return false;
+	int len = addr2 - addr1 + 2;
+	unsigned char* bytes = (unsigned char*)malloc(len);
+	if (bytes == 0 || len < 2)
+		return false;
+	bytes[0] = LO(addr1);
+	bytes[1] = HI(addr1);
+	for (int i = 0; i < len-2; ++i)
+		bytes[i+2] = GetMemory(addr1+i);
+	disk->StoreFileByName(filename, bytes, len);
+	free(bytes);
+	return true;
+}
+
+static bool LoadStartupPrg()
+{
+	bool result;
+	byte err;
+	if (disk == 0)
+		disk = new EmuD64(FileName);
+	result = FileLoad(&err);
+	if (!result)
+		return false;
+	else
+		return FileSec == 0 ? true : false; // relative is BASIC, absolute is ML
+}
 
 bool ExecutePatch(void)
 {
@@ -330,97 +405,169 @@ bool ExecutePatch(void)
     PC = (ushort)(GetMemory(0xFFFA) + (GetMemory(0xFFFB) << 8)); // JMP(NMI)
     return true; // overriden, and PC changed, so caller should reloop before execution to allow breakpoint/trace/ExecutePatch/etc.
   }
+	else if (PC == 0xA474 || PC == LOAD_TRAP) // READY
+	{
+		if (StartupPRG != 0 && strlen(StartupPRG) > 0) // User requested program be loaded at startup
+		{
+			bool is_basic;
+			if (PC == LOAD_TRAP) {
+				is_basic = (
+					FileVerify == false
+					&& FileSec == 0 // relative load, not absolute
+					&& LO(FileAddr) == GetMemory(43) // requested load address matches BASIC start
+					&& HI(FileAddr) == GetMemory(44)
+					);
+				bool success;
+				byte err;
+				success = FileLoad(&err);
+				if (!success) {
+					//console.log("FileLoad() failed: err=" + err + ", file " + StartupPRG);
+					C = true; // signal error
+					SetA(err); // FILE NOT FOUND or VERIFY
 
-//	if (PC == 0xFFD2) // CHROUT
-//	{
-//		CBM_Console_WriteChar((char)A);
-//		// fall through to draw character in screen memory too
-//	}
-//	else if (PC == 0xFFCF) // CHRIN
-//	{
-//		A = CBM_Console_ReadChar();
-//
-//		// SetA equivalent for flags
-//		Z = (A == 0);
-//		N = ((A & 0x80) != 0);
-//		C = false;
-//
-//		// RTS equivalent
-//		byte lo = Pop();
-//		byte hi = Pop();
-//		PC = (ushort)(((hi << 8) | lo) + 1);
-//
-//		return true; // overriden, and PC changed, so caller should reloop before execution to allow breakpoint/trace/ExecutePatch/etc.
-//	}
-//	else if (PC == 0xA474) // READY
-//	{
-//		if (StartupPRG != 0 && strlen(StartupPRG) > 0) // User requested program be loaded at startup
-//		{
-//			const char* filename = StartupPRG;
-//			StartupPRG = 0;
-//
-//			if (LoadPRG(filename))
-//			{
-//				//UNNEW that I used in late 1980s, should work well for loang a program too, probably gleaned from BASIC ROM
-//				//ldy #0
-//				//lda #1
-//				//sta(43),y
-//				//iny
-//				//sta(43),y
-//				//jsr $a533 ; LINKPRG
-//				//clc
-//				//lda $22
-//				//adc #2
-//				//sta 45
-//				//lda $23
-//				//adc #0
-//				//sta 46
-//				//lda #0
-//				//jsr $a65e ; CLEAR/CLR
-//				//jmp $a474 ; READY
-//
-//				// This part shouldn't be necessary as we have loaded, not recovering from NEW, bytes should still be there
-//				ushort addr = (ushort)(GetMemory(43) | (GetMemory(44) << 8));
-//				SetMemory(addr, 1);
-//				SetMemory((ushort)(addr + 1), 1);
-//
-//				// JSR equivalent
-//				ushort retaddr = (ushort)(PC - 1);
-//				Push(HI(retaddr));
-//				Push(LO(retaddr));
-//				PC = 0xA533; // LINKPRG
-//
-//				startup_state = 1; // should be able to regain control when returns...
-//
-//				return true; // overriden, and PC changed, so caller should reloop before execution to allow breakpoint/trace/ExecutePatch/etc.
-//			}
-//		}
-//		else if (startup_state == 1)
-//		{
-//			ushort addr = (ushort)(GetMemory(0x22) | (GetMemory(0x23) << 8) + 2);
-//			SetMemory(45, (byte)addr);
-//			SetMemory(46, (byte)(addr >> 8));
-//
-//			// JSR equivalent
-//			ushort retaddr = (ushort)(PC - 1);
-//			Push(HI(retaddr));
-//			Push(LO(retaddr));
-//			PC = 0xA65E; // CLEAR/CLR
-//			A = 0;
-//
-//			startup_state = 2; // should be able to regain control when returns...
-//
-//			return true; // overriden, and PC changed, so caller should reloop before execution to allow breakpoint/trace/ExecutePatch/etc.
-//		}
-//		else if (startup_state == 2)
-//		{
-//			CBM_Console_Push("RUN\r");
-//			PC = 0xA47B; // skip READY message, but still set direct mode, and continue to MAIN
-//			C = false;
-//			startup_state = 0;
-//			return true; // overriden, and PC changed, so caller should reloop before execution to allow breakpoint/trace/ExecutePatch/etc.
-//		}
-//	}
+					// so doesn't repeat
+					StartupPRG = "";
+					LOAD_TRAP = -1;
+					attach = NULL;
+
+					return true; // overriden, and PC changed, so caller should reloop before execution to allow breakpoint/trace/ExecutePatch/etc.
+				}
+			}
+			else {
+				FileName = StartupPRG;
+				FileAddr = GetMemory(43) | (GetMemory(44) << 8);
+				is_basic = LoadStartupPrg();
+			}
+
+			StartupPRG = 0;
+			attach = NULL;
+
+			if (is_basic) {
+				// UNNEW that I used in late 1980s, should work well for loading a program too, probably gleaned from BASIC ROM
+				// listed here as reference, adapted to use in this state machine, ExecutePatch()
+				// ldy #0
+				// lda #1
+				// sta(43),y
+				// iny
+				// sta(43),y
+				// jsr $a533 ; LINKPRG
+				// clc
+				// lda $22
+				// adc #2
+				// sta 45
+				// lda $23
+				// adc #0
+				// sta 46
+				// lda #0
+				// jsr $a65e ; CLEAR/CLR
+				// jmp $a474 ; READY
+
+				// This part shouldn't be necessary as we have loaded, not recovering from NEW, bytes should still be there
+				// initialize first couple bytes (may only be necessary for UNNEW?)
+				ushort addr = GetMemory(43) | (GetMemory(44) << 8);
+				SetMemory(addr, 1);
+				SetMemory((ushort)(addr + 1), 1);
+
+				startup_state = 1; // should be able to regain control when returns...
+
+				return ExecuteJSR(0xA533); // LINKPRG
+			}
+			else {
+				LOAD_TRAP = -1;
+				X = LO(FileAddr);
+				Y = HI(FileAddr);
+				C = false;
+			}
+		}
+		else if (startup_state == 1) {
+			ushort addr = GetMemory(0x22) + (GetMemory(0x23) << 8) + 2;
+			SetMemory(45, LO(addr));
+			SetMemory(46, HI(addr));
+
+			SetA(0);
+
+			startup_state = 2; // should be able to regain control when returns...
+
+			return ExecuteJSR(0xA65E); // CLEAR/CLR
+		}
+		else if (startup_state == 2) {
+			if (PC == LOAD_TRAP) {
+				X = LO(FileAddr);
+				Y = HI(FileAddr);
+			}
+			else {
+        SetMemory(198, 4);
+        SetMemory(631, 'R');
+        SetMemory(632, 'U');
+        SetMemory(633, 'N');
+        SetMemory(634, '\r');
+				PC = 0xA47B; // skip READY message, but still set direct mode, and continue to MAIN
+			}
+			C = false; // signal success
+			startup_state = 0;
+			LOAD_TRAP = -1;
+			return true; // overriden, and PC changed, so caller should reloop before execution to allow breakpoint/trace/ExecutePatch/etc.
+		}
+	}
+	else if (PC == 0xFFBA) // SETLFS
+	{
+		FileNum = A;
+		FileDev = X;
+		FileSec = Y;
+		//console.log("SETLFS " + FileNum + ", " + FileDev + ", " + FileSec);
+	}
+	else if (PC == 0xFFBD) // SETNAM
+	{
+		static char name[256];
+		memset(name, 0, sizeof(name));
+		ushort addr = X | (Y << 8);
+		for (int i = 0; i < A; ++i)
+			name[i] = GetMemory(addr + i);
+		//console.log("SETNAM " + name);
+		FileName = name;
+	}
+	else if (PC == 0xFFD5) // LOAD
+	{
+		FileAddr = X | (Y << 8);
+		//let op : string;
+		//if (A == 0)
+		//	op = "LOAD";
+		//else if (A == 1)
+		//	op = "VERIFY";
+		//else
+		//	op = "LOAD (A=" + A + ") ???";
+		FileVerify = (A == 1);
+		//console.log(op + " @" + Emu6502.toHex16(FileAddr));
+
+		ExecuteRTS();
+
+		if (A == 0 || A == 1) {
+			StartupPRG = FileName;
+			FileName = "";
+			LOAD_TRAP = PC;
+
+			// Set success
+			C = false;
+		}
+		else {
+			SetA(14); // ILLEGAL QUANTITY message
+			C = true; // failure
+		}
+
+		return true; // overriden, and PC changed, so caller should reloop before execution to allow breakpoint/trace/ExecutePatch/etc.
+	}
+	else if (PC == 0xFFD8) // SAVE
+	{
+		ushort addr1 = GetMemory(A) | (GetMemory((A + 1) & 0xFF) << 8);
+		ushort addr2 = X | (Y << 8);
+		//console.log("SAVE " + Emu6502.toHex16(addr1) + "-" + Emu6502.toHex16(addr2));
+
+		// Set success
+		C = !FileSave(FileName, addr1, addr2);
+
+		return ExecuteRTS();
+	}
+
 	return false; // execute normally
 }
 
@@ -1093,11 +1240,11 @@ void C64_Init(void)
   //File_ReadAllBytes(chargen_rom, sizeof(chargen_rom), chargen_file);
 	//File_ReadAllBytes(kernal_rom, sizeof(kernal_rom), kernal_file);
 
-	for (int i = 0; i < sizeof(ram); ++i)
+	for (unsigned i = 0; i < sizeof(ram); ++i)
 		ram[i] = 0;
-	for (int i = 0; i < sizeof(color_nybles); ++i)
+	for (unsigned i = 0; i < sizeof(color_nybles); ++i)
 		color_nybles[i] = 0;
-  for (int i = 0; i < sizeof(io); ++i)
+  for (unsigned i = 0; i < sizeof(io); ++i)
     io[i] = 0;
   
   // initialize DDR and memory mapping to defaults
@@ -1179,7 +1326,7 @@ static void RedrawScreen()
   }
 }
 
-byte GetMemory(ushort addr)
+extern byte GetMemory(ushort addr)
 {
   if (addr <= sizeof(ram) - 1
       && (
@@ -1227,7 +1374,7 @@ byte GetMemory(ushort addr)
     return 0xFF;
 }
 
-void SetMemory(ushort addr, byte value)
+extern void SetMemory(ushort addr, byte value)
 {
   if (addr <= sizeof(ram) - 1
     && (
