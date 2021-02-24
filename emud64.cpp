@@ -665,7 +665,7 @@ static bool ReadFileByNameHandler(EmuD64* d64, EmuD64::DirStruct* dir, int n, bo
         || (filename_len == 3 && filename[0] == '0' && filename[1] == ':' && filename[2] == '*');
     for (int i = 0; i < EmuD64::DirStruct::dir_name_size; ++i)
     {
-        if (((i > 0 && dir->filename[i] == 0xA0) || doFirst) && isPRG) // end of filename shortcut
+        if (((i > 0 && dir->filename[i] == 0xA0 && (filename[i] == 0xA0 || filename[i] == 0)) || doFirst) && isPRG) // end of filename shortcut
             break;
         else if (filename[i] != dir->filename[i]) // no match
             return true; // keep searching
