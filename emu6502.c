@@ -958,7 +958,7 @@ static void ABSY(char *dis, int dis_size, char* opcode, ushort addr, byte *p_byt
 static void IM(char *dis, int dis_size, char* opcode, ushort addr, byte *p_bytes)
 {
 	*p_bytes = 2;
-	snprintf(dis, dis_size, "%s #$%0X2", opcode, GetMemory((ushort)(addr + 1)));
+	snprintf(dis, dis_size, "%s #$%02X", opcode, GetMemory((ushort)(addr + 1)));
 }
 
 static void BRX(char *dis, int dis_size, char* opcode, ushort addr, bool *p_conditional, ushort *p_addr2, byte *p_bytes)
