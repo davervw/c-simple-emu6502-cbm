@@ -668,7 +668,7 @@ static bool ReadFileByNameHandler(EmuD64* d64, EmuD64::DirStruct* dir, int n, bo
         || (filename_len == 3 && filename[0] == '0' && filename[1] == ':' && filename[2] == '*');
     for (int i = 0; i < EmuD64::DirStruct::dir_name_size; ++i)
     {
-        if (((i > 0 && dir->filename[i] == 0xA0) || doFirst) && isPRG) // end of filename shortcut
+        if (((i > 0 && dir->filename[i] == 0xA0 && (filename[i] == 0xA0 || filename[i] == 0)) || doFirst) && isPRG) // end of filename shortcut
             break;
         else if (filename[i] != dir->filename[i]) // no match
             return true; // keep searching
@@ -1106,8 +1106,9 @@ void EmuD64::FlushDisk()
                 if (track_dirty[track] && (new_file || track != dir_track))
                 {
                     int offset = GetSectorOffset(track, 0);
+                    fp.seek(offset);
                     int track_bytes = sectors_per_track[track] * bytes_per_sector;
-                    int written = fp.write(&bytes[offset], track_bytes);
+                    fp.write(&bytes[offset], track_bytes);
                     track_dirty[track] = false;
                 }
             }
@@ -1125,26 +1126,5 @@ void EmuD64::FlushDisk()
             fp.close();
         }
     }
-}
-
-extern "C" void* D64_CreateOrLoad(const char* filename)
-{
-    return new EmuD64(filename);
-}
-
-extern "C" int D64_GetDirectoryProgram(void* disk, unsigned char* buffer, int* p_ret_file_len)
-{
-    return ((EmuD64*)disk)->GetDirectoryProgram(buffer, *p_ret_file_len) ? 1 : 0;
-}
-
-extern "C" void D64_ReadFileByName(void* disk, unsigned char* filename, unsigned char* buffer, int* p_ret_file_len)
-{
-    ((EmuD64*)disk)->ReadFileByName(filename, buffer, *p_ret_file_len);
-}
-
-extern "C" int D64_FileSave(void* disk, char* filename, unsigned char* buffer, int buffer_len)
-{
-    ((EmuD64*)disk)->StoreFileByName(filename, buffer, buffer_len);
-    return true;
 }
 
