@@ -11,3 +11,18 @@ Here is a simple Commodore 64 and 6502 Emulator I wrote from scratch, ported to 
 * Yes, there is D64 support.  Disk is automatically attached with samples.d64 from SD card
 
 ![](teensy41_lcd.jpg)
+
+Wiring
+
+| Teensy Pin   | Description |
+| ------------ | ----------- |
+| Vin (USB 5V) | LCD VCC     |
+| GND          | USB Ground  |
+| 9            | LCD DC      |
+| 10 CS        | LCD CS      |
+| 11 MOSI      | LCD SI/MOSI |
+| 12 MISO      | LCD SO/MISO |
+| 3.3V         | LCD RESET   |
+| 13           | LCD SCK     |
+
+And 100 Ohm resistor between LCD VCC and LCD LED backlight pins
