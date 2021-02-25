@@ -466,7 +466,12 @@ extern bool ExecutePatch(void)
 
 		ExecuteRTS();
 
-		if (A == 0 || A == 1) {
+		if (strlen(FileName) == 0)
+		{
+			SetA(8); // EMPTY filename message
+			C = true; // failure
+		}
+		else if (A == 0 || A == 1) {
 			StartupPRG = FileName;
 			FileName = "";
 			LOAD_TRAP = PC;
