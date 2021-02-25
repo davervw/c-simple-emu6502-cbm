@@ -17,7 +17,7 @@ Wiring
 | Teensy Pin   | Description |
 | ------------ | ----------- |
 | Vin (USB 5V) | LCD VCC     |
-| GND          | USB Ground  |
+| GND          | LCD GND     |
 | 9            | LCD DC      |
 | 10 CS        | LCD CS      |
 | 11 MOSI      | LCD SI/MOSI |
