@@ -14,7 +14,7 @@ Here is a simple Commodore 64 and 6502 Emulator I wrote from scratch, ported to 
 
 Wiring
 
-| Teensy Pin   | Description |
+| Teensy Pin   | LCD Pin     |
 | ------------ | ----------- |
 | Vin (USB 5V) | LCD VCC     |
 | GND          | LCD GND     |
