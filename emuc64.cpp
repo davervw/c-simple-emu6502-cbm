@@ -62,8 +62,8 @@
 // ROMs copyright Commodore or their assignees
 ////////////////////////////////////////////////////////////////////////////////
 
-//#define ILI9341
-#define ILI9488
+#define ILI9341
+//#define ILI9488
 
 #include "emu6502.h"
 #include "emud64.h"
