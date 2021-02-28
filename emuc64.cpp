@@ -62,8 +62,8 @@
 // ROMs copyright Commodore or their assignees
 ////////////////////////////////////////////////////////////////////////////////
 
-#define ILI9341
-//#define ILI9488
+//#define ILI9341
+#define ILI9488
 
 #include "emu6502.h"
 #include "emud64.h"
@@ -1323,6 +1323,22 @@ int C64ColorToLCDColor(byte value)
   }
 }
 
+#ifdef ILI9488  
+int colors[12][12];
+int scale_index(int i)
+{
+  return (i*3+1)/2;
+}
+void store_color(int row, int col, int color)
+{
+  colors[scale_index(row)][scale_index(col)]=color;
+}
+int get_color(int row, int col)
+{
+  return colors[scale_index(row)][scale_index(col)];
+}
+#endif
+
 void DrawChar(byte c, int col, int row, int fg, int bg)
 {
   int offset = ((io[0x18] & 2) == 0) ? 0 : (8*256);
@@ -1332,9 +1348,12 @@ void DrawChar(byte c, int col, int row, int fg, int bg)
   int y0 = col*8;
 #endif  
 #ifdef ILI9488  
-  int x0 = 60 + row*8;
-  int y0 = 80 + col*8;
-#endif  
+//  int x0 = 10 + row*8;
+//  int y0 = 80 + col*8;
+  int x0 = 10 + row*12;
+  int y0 = col*12;
+  int colors[12][12];
+#endif
   for (int row_i=0; row_i<8; ++row_i)
   {
     int mask = 128;
@@ -1344,10 +1363,78 @@ void DrawChar(byte c, int col, int row, int fg, int bg)
       lcd.drawPixel(x0+row_i, 320 - (y0+col_i), ((shape[row_i] & mask) == 0) ? bg : fg);
 #endif      
 #ifdef ILI9488
-      lcd.drawPixel(x0+row_i, 480  - (y0+col_i), ((shape[row_i] & mask) == 0) ? bg : fg);
+//      lcd.drawPixel(x0+row_i, 480 - (y0+col_i), ((shape[row_i] & mask) == 0) ? bg : fg);
+      int color = ((shape[row_i] & mask) == 0) ? bg : fg;
+      store_color(row_i, col_i, color);
+      static int even_color;
+      if ((col_i % 2) == 0)
+        even_color = color;
+      else
+      {
+        // interpolate color for added horizontal pixels - just need to add one inbetween
+        if (color == even_color)
+        {
+          lcd.drawPixel(x0+scale_index(row_i), 480 - (y0+scale_index(col_i)-1), color);
+          colors[scale_index(row_i)][scale_index(col_i)-1] = color;
+        }
+        else
+        {
+          unsigned char r0, g0, b0;
+          unsigned char r1, g1, b1;
+          unsigned char r2, g2, b2;
+          lcd.color565toRGB(even_color, r0, g0, b0);
+          lcd.color565toRGB(color, r2, g2, b2);
+          r1 = (r0+r2)/2;
+          g1 = (g0+g2)/2;
+          b1 = (b0+b2)/2;
+          int middle_color = CL(r1, g1, b1);
+          lcd.drawPixel(x0+scale_index(row_i), 480 - (y0+scale_index(col_i)-1), middle_color);
+          colors[scale_index(row_i)][scale_index(col_i)-1] = middle_color;
+        }
+      }
+      lcd.drawPixel(x0+scale_index(row_i), 480 - (y0+scale_index(col_i)), color);
 #endif      
       mask = mask >> 1;
     }
+#ifdef ILI9488
+    if ((row_i % 2) == 1)
+    {
+      // interpolate color for added vertical pixels - need entire row
+      for (int col_i=0; col_i<8; ++col_i)
+      {
+        int top_color = get_color(row_i-1, col_i);
+        int bottom_color = get_color(row_i, col_i);
+        unsigned char r0, g0, b0;
+        unsigned char r1, g1, b1;
+        unsigned char r2, g2, b2;        
+        lcd.color565toRGB(top_color, r0, g0, b0);
+        lcd.color565toRGB(bottom_color, r2, g2, b2);
+        r1 = (r0+r2)/2;
+        g1 = (g0+g2)/2;
+        b1 = (b0+b2)/2;
+        int middle_color = CL(r1, g1, b1);
+        lcd.drawPixel(x0+scale_index(row_i)-1, 480 - (y0+scale_index(col_i)), middle_color);
+        colors[scale_index(row_i)-1][scale_index(col_i)] = middle_color;
+
+        if (col_i%2 == 1) // center square
+        {
+          int left_color = colors[scale_index(row_i)-1][scale_index(col_i-1)];
+          int right_color = colors[scale_index(row_i)-1][scale_index(col_i)];
+          unsigned char r0, g0, b0;
+          unsigned char r1, g1, b1;
+          unsigned char r2, g2, b2;
+          lcd.color565toRGB(left_color, r0, g0, b0);
+          lcd.color565toRGB(right_color, r2, g2, b2);
+          r1 = (r0+r2)/2;
+          g1 = (g0+g2)/2;
+          b1 = (b0+b2)/2;
+          int middle_color = CL(r1, g1, b1);
+          lcd.drawPixel(x0+scale_index(row_i)-1, 480 - (y0+scale_index(col_i)-1), middle_color);
+          //colors[scale_index(row_i)-1][scale_index(col_i)-1] = middle_color; // don't need
+        }
+      }  
+    }
+#endif    
   }
 }
 
@@ -1450,10 +1537,12 @@ extern void SetMemory(ushort addr, byte value)
     lcd.fillRect(220, 0, 20, 320, border);
 #endif    
 #ifdef ILI9488    
-    lcd.fillRect(0, 0, 60, 480, border);
-    lcd.fillRect(60, 0, 200, 80, border);
-    lcd.fillRect(60, 400, 200, 80, border);
-    lcd.fillRect(260, 0, 60, 480, border);
+//    lcd.fillRect(0, 0, 60, 480, border);
+//    lcd.fillRect(60, 0, 200, 80, border);
+//    lcd.fillRect(60, 400, 200, 80, border);
+//    lcd.fillRect(260, 0, 60, 480, border);
+    lcd.fillRect(0, 0, 10, 480, border);
+    lcd.fillRect(310, 0, 10, 480, border);
 #endif    
     io[addr - io_addr] = value & 0xF;
   } 
@@ -1463,7 +1552,8 @@ extern void SetMemory(ushort addr, byte value)
     lcd.fillRect(20, 0, 200, 320, C64ColorToLCDColor(value));
 #endif    
 #ifdef ILI9488    
-    lcd.fillRect(60, 80, 200, 320, C64ColorToLCDColor(value));
+//    lcd.fillRect(60, 80, 200, 320, C64ColorToLCDColor(value));
+    lcd.fillRect(10, 0, 300, 480, C64ColorToLCDColor(value));
 #endif    
     io[addr - io_addr] = value & 0xF;
     RedrawScreen();
