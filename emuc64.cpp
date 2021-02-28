@@ -62,11 +62,19 @@
 // ROMs copyright Commodore or their assignees
 ////////////////////////////////////////////////////////////////////////////////
 
+#define ILI9341
+//#define ILI9488
+
 #include "emu6502.h"
 #include "emud64.h"
 
 #include "SPI.h"
+#ifdef ILI9341
 #include "ILI9341_t3n.h"
+#endif
+#ifdef ILI9488
+#include "ILI9488_t3.h"
+#endif
 #include "USBHost_t36.h"
 
 // globals
@@ -84,7 +92,12 @@ int LOAD_TRAP = -1;
 byte* attach = NULL;
 EmuD64* disk = NULL;
 
+#ifdef ILI9341
 static ILI9341_t3n lcd = ILI9341_t3n(10 /*CS*/, 9 /*DC*/);
+#endif
+#ifdef ILI9488
+static ILI9488_t3 lcd = ILI9488_t3(10 /*CS*/, 9 /*DC*/);
+#endif
 
 static USBHost myusb;
 static USBHub hub1(myusb);
@@ -1258,7 +1271,7 @@ void C64_Init(void)
 
   // initialize ILI9341 LCD screen
   lcd.begin();
-  lcd.fillScreen(ILI9341_BLACK);
+  lcd.fillScreen(0x0000); // BLACK
 
   myusb.begin();
   keyboard1.attachRawPress(onKbdRawPress);
@@ -1270,6 +1283,7 @@ int C64ColorToLCDColor(byte value)
 {
   switch (value & 0xF)
   {
+#ifdef ILI9341    
     case 0: return ILI9341_BLACK;
     case 1: return ILI9341_WHITE;
     case 2: return ILI9341_RED;
@@ -1286,6 +1300,25 @@ int C64ColorToLCDColor(byte value)
     case 13: return 0x07E0; // LIGHTGREEN;
     case 14: return 0x841F; // LIGHTBLUE;
     case 15: return ILI9341_LIGHTGREY;
+#endif    
+#ifdef ILI9488    
+    case 0: return ILI9488_BLACK;
+    case 1: return ILI9488_WHITE;
+    case 2: return ILI9488_RED;
+    case 3: return ILI9488_CYAN;
+    case 4: return 0x8118; // DARKMAGENTA OR PURPLE
+    case 5: return 0x0400; // DARKGREEN
+    case 6: return ILI9488_BLUE;
+    case 7: return ILI9488_YELLOW;
+    case 8: return ILI9488_ORANGE;
+    case 9: return 0x8283; // BROWN;
+    case 10: return 0xFC10; // PINK OR LT RED
+    case 11: return ILI9488_DARKGREY;
+    case 12: return ILI9488_DARKCYAN; // MED GRAY
+    case 13: return 0x07E0; // LIGHTGREEN;
+    case 14: return 0x841F; // LIGHTBLUE;
+    case 15: return ILI9488_LIGHTGREY;
+#endif    
     default: return 0;
   }
 }
@@ -1294,14 +1327,25 @@ void DrawChar(byte c, int col, int row, int fg, int bg)
 {
   int offset = ((io[0x18] & 2) == 0) ? 0 : (8*256);
   const byte* shape = &chargen_rom[c*8+offset];
+#ifdef ILI9341  
   int x0 = 20 + row*8;
   int y0 = col*8;
+#endif  
+#ifdef ILI9488  
+  int x0 = 60 + row*8;
+  int y0 = 80 + col*8;
+#endif  
   for (int row_i=0; row_i<8; ++row_i)
   {
     int mask = 128;
     for (int col_i=0; col_i<8; ++col_i)
     {
+#ifdef ILI9341      
       lcd.drawPixel(x0+row_i, 320 - (y0+col_i), ((shape[row_i] & mask) == 0) ? bg : fg);
+#endif      
+#ifdef ILI9488
+      lcd.drawPixel(x0+row_i, 480  - (y0+col_i), ((shape[row_i] & mask) == 0) ? bg : fg);
+#endif      
       mask = mask >> 1;
     }
   }
@@ -1401,13 +1445,26 @@ extern void SetMemory(ushort addr, byte value)
   else if (addr == 0xD020) // border
   {
     int border = C64ColorToLCDColor(value);
+#ifdef ILI9341    
     lcd.fillRect(0, 0, 20, 320, border);
     lcd.fillRect(220, 0, 20, 320, border);
+#endif    
+#ifdef ILI9488    
+    lcd.fillRect(0, 0, 60, 480, border);
+    lcd.fillRect(60, 0, 200, 80, border);
+    lcd.fillRect(60, 400, 200, 80, border);
+    lcd.fillRect(260, 0, 60, 480, border);
+#endif    
     io[addr - io_addr] = value & 0xF;
   } 
   else if (addr == 0xD021) // background
   {
+#ifdef ILI9341    
     lcd.fillRect(20, 0, 200, 320, C64ColorToLCDColor(value));
+#endif    
+#ifdef ILI9488    
+    lcd.fillRect(60, 80, 200, 320, C64ColorToLCDColor(value));
+#endif    
     io[addr - io_addr] = value & 0xF;
     RedrawScreen();
   }
