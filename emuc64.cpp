@@ -1548,13 +1548,6 @@ extern void SetMemory(ushort addr, byte value)
   } 
   else if (addr == 0xD021) // background
   {
-#ifdef ILI9341    
-    lcd.fillRect(20, 0, 200, 320, C64ColorToLCDColor(value));
-#endif    
-#ifdef ILI9488    
-//    lcd.fillRect(60, 80, 200, 320, C64ColorToLCDColor(value));
-    lcd.fillRect(10, 0, 300, 480, C64ColorToLCDColor(value));
-#endif    
     io[addr - io_addr] = value & 0xF;
     RedrawScreen();
   }
