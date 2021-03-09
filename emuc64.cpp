@@ -62,8 +62,8 @@
 // ROMs copyright Commodore or their assignees
 ////////////////////////////////////////////////////////////////////////////////
 
-#define ILI9341
-//#define ILI9488
+//#define ILI9341
+#define ILI9488
 
 #include "emu6502.h"
 #include "emud64.h"
@@ -1520,9 +1520,13 @@ extern void SetMemory(ushort addr, byte value)
       )
     )
   {
-    ram[addr] = value;
-    if (addr >= 1024 && addr < 2024)
-      DrawChar(addr-1024);
+    bool changedRequiresUpdate = ram[addr] != value;
+    if (changedRequiresUpdate)
+    {
+      ram[addr] = value;
+      if (addr >= 1024 && addr < 2024)
+        DrawChar(addr-1024);
+    }
   }
   else if (addr == 0xD018) // VIC-II Chip Memory Control Register
   {
@@ -1554,8 +1558,16 @@ extern void SetMemory(ushort addr, byte value)
   else if (addr >= color_addr && addr < color_addr + sizeof(color_nybles))
   {
     int offset = addr - color_addr;
-    color_nybles[offset] = value;
-    DrawChar(offset);
+    bool colorChange = (color_nybles[offset] != value);
+    if (colorChange)
+    {
+      color_nybles[offset] = value;
+      char charAtOffset = ram[1024 + offset];
+      bool isBlank = (charAtOffset == ' ' || charAtOffset == 96);
+      bool requiresRedraw = !isBlank;
+      if (requiresRedraw)
+        DrawChar(offset);
+    }
   }
   else if (addr == 0xDC00)
   {
