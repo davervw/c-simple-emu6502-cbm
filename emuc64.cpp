@@ -3,7 +3,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
 // c-simple-emu-cbm (C Portable Version)
-// C64/6502 Emulator for Microsoft Windows Console
+// C64/6502 Emulator for Teensy
 //
 // MIT License
 //
@@ -34,36 +34,28 @@
 //   with only a few hooks: CHRIN-$FFCF/CHROUT-$FFD2/COLOR-$D021/199/646
 // Useful as is in current state as a simple 6502 emulator
 //
-// LIMITATIONS:
-// Only keyboard/console I/O.  No text pokes, no graphics.  Just stdio.  
-//   No asynchronous input (GET K$), but INPUT S$ works
-// No keyboard color switching.  No border displayed.  No border color.
-// No screen editing (gasp!) Just short and sweet for running C64 BASIC in 
-//   terminal/console window via 6502 chip emulation in software
-// No PETSCII graphic characters, only supports printables CHR$(32) to CHR$(126), and CHR$(147) clear screen
-// No memory management.  Full 64K RAM not accessible via banking despite startup screen.
-//   Just 44K RAM, 16K ROM, 1K VIC-II color RAM nybbles
-// No timers.  No interrupts except BRK.  No NMI/RESTORE key.  No STOP key.
-// No loading of files implemented.
-//
-//   $00/$01     (DDR and banking and I/O of 6510 missing), just RAM
-//   $0000-$9FFF RAM (199=reverse if non-zero, 646=foreground color)
-//   $A000-$BFFF BASIC ROM (write to RAM underneath, but haven't implemented read/banking)
+// MEMORY MAP with implementation notes
+//   $00         (data direction missing)
+//   $01         Banking implemented (tape sense/controls missing)
+//   $0000-$9FFF RAM
+//   $A000-$BFFF BASIC ROM
+//   $A000-$BFFF Banked LORAM
 //   $C000-$CFFF RAM
-//   $D000-$DFFF (missing I/O and character ROM and RAM banks), just zeros except...
-//   $D021       Background Screen Color
-//   $D800-$DFFF VIC-II color RAM nybbles (note: haven't implemented RAM banking)
-//   $E000-$FFFF KERNAL ROM (write to RAM underneath, but haven't implemented read/banking)
+//   $D000-$D7FF (I/O missing, reads as zeros)
+//   $D800-$DFFF VIC-II color RAM nybbles in I/O space (1K x 4bits)
+//   $D000-$DFFF Banked RAM
+//   $D000-$DFFF Banked Character ROM
+//   $E000-$FFFF KERNAL ROM
+//   $E000-$FFFF Banked HIRAM
 //
-// Requires user provided Commodore 64 BASIC/KERNAL ROMs (e.g. from VICE)
-//   as they are not provided, others copyrights may still be in effect.
+// Note it is possible to limit RAM size less than 64K and Commodore ROMs adapt
 //
 ////////////////////////////////////////////////////////////////////////////////
 // ROMs copyright Commodore or their assignees
 ////////////////////////////////////////////////////////////////////////////////
 
-//#define ILI9341
-#define ILI9488
+#define ILI9341
+//#define ILI9488
 
 #include "emu6502.h"
 #include "emud64.h"
@@ -78,7 +70,7 @@
 #include "USBHost_t36.h"
 
 // globals
-const char* StartupPRG = "samples.d64";
+const char* StartupPRG = "fa.d64"; // "samples.d64";
 
 // locals
 static int startup_state = 0;
@@ -89,8 +81,15 @@ byte FileSec = 0;
 bool FileVerify = false;
 ushort FileAddr = 0;
 int LOAD_TRAP = -1;
+int DRAW_TRAP = -1;
 byte* attach = NULL;
 EmuD64* disk = NULL;
+static bool postponeDrawChar = false;
+static byte old_video[1000];
+static byte old_color[1000];
+
+static byte ram[64 * 1024];
+static byte color_nybles[1024];
 
 #ifdef ILI9341
 static ILI9341_t3n lcd = ILI9341_t3n(10 /*CS*/, 9 /*DC*/);
@@ -395,6 +394,9 @@ static bool LoadStartupPrg()
 		return FileSec == 0 ? true : false; // relative is BASIC, absolute is ML
 }
 
+// forward declaration
+static void RedrawScreenEfficientlyAfterPostponed();
+
 bool ExecutePatch(void)
 {
   static bool NMI = false;
@@ -585,6 +587,26 @@ bool ExecutePatch(void)
 
 		return ExecuteRTS();
 	}
+  else if (DRAW_TRAP == -1 && !postponeDrawChar &&
+    (PC == 0xE8EA // SCROLL SCREEN
+    || PC == 0xE965 // INSERT BLANK LINE
+    || PC == 0xE9C8 // MOVE SCREEN LINE
+    || PC == 0xE9FF // CLEAR SCREEN LINE
+    || PC == 0xEA1C)) // STORE A TO SCREEN X TO COLOR (SEE $D1, $F3)
+  {
+    byte lo = GetMemory((ushort)(0x100 + (S+1)));
+    byte hi = GetMemory((ushort)(0x100 + (S+2)));
+    DRAW_TRAP = (ushort)(((hi << 8) | lo) + 1); // return address
+    postponeDrawChar = true;
+    memcpy(&old_video[0], &ram[1024], 1000);
+    memcpy(&old_color[0], &color_nybles[0], 1000);
+  }
+  else if (PC == DRAW_TRAP && postponeDrawChar) // returned from drawing postponement
+  {
+    DRAW_TRAP = -1;
+    postponeDrawChar = false;
+    RedrawScreenEfficientlyAfterPostponed();
+}
 
 	return false; // execute normally
 }
@@ -1238,9 +1260,6 @@ static const byte chargen_rom[4 * 1024] = {
 '\xF0','\xF0','\xF0','\xF0','\xFF','\xFF','\xFF','\xFF','\xE7','\xE7','\xE7','\x07','\x07','\xFF','\xFF','\xFF','\x0F','\x0F','\x0F','\x0F','\xFF','\xFF','\xFF','\xFF','\x0F','\x0F','\x0F','\x0F','\xF0','\xF0','\xF0','\xF0'
 };
 
-static byte ram[64 * 1024];
-static byte color_nybles[1024];
-
 // note ram starts at 0x0000
 static const int basic_addr = 0xA000;
 static const int kernal_addr = 0xE000;
@@ -1341,6 +1360,9 @@ int get_color(int row, int col)
 
 void DrawChar(byte c, int col, int row, int fg, int bg)
 {
+  if (postponeDrawChar)
+    return;
+  
   int offset = ((io[0x18] & 2) == 0) ? 0 : (8*256);
   const byte* shape = &chargen_rom[c*8+offset];
 #ifdef ILI9341  
@@ -1457,6 +1479,26 @@ static void RedrawScreen()
     {
       int fg = C64ColorToLCDColor(color_nybles[offset]);
       DrawChar(ram[1024 + offset], col, row, fg, bg);
+      ++offset;
+    }
+  }
+}
+
+static void RedrawScreenEfficientlyAfterPostponed()
+{
+  int bg = C64ColorToLCDColor(io[0x21]);
+  int offset = 0;
+  for (int row = 0; row < 25; ++row)
+  {
+    for (int col = 0; col < 40; ++col)
+    {
+      int fg = C64ColorToLCDColor(color_nybles[offset]);
+      byte old_char = old_video[offset];
+      byte new_char = ram[1024 + offset];
+      byte old_fg_index = old_color[offset] & 0xF;
+      byte new_fg_index = color_nybles[offset] & 0xF;
+      if (old_char != new_char || old_fg_index != new_fg_index)
+        DrawChar(new_char, col, row, fg, bg);
       ++offset;
     }
   }
