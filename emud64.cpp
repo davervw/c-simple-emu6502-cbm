@@ -32,6 +32,7 @@
 // and http://unusedino.de/ec64/technical/formats/d64.html
 
 // ported from EmuD64 class at https://github.com/davervw/ts-emu-c64/blob/master/c64-6502.ts
+// and added write capability
 
 #include <arduino.h>
 #include <SD.h>
@@ -750,7 +751,7 @@ EmuD64::BlockStruct EmuD64::AllocBlock(bool directory)
             ++track; // skip over directory track
     } while (!directory && track <= EmuD64::n_tracks);
 
-    if (track > n_tracks || directory && track != EmuD64::dir_track) 
+    if (track > n_tracks || (directory && track != EmuD64::dir_track)) 
     {
         track = 0;
         sector = 0;
