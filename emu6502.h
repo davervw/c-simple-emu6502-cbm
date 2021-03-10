@@ -3,7 +3,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
 // c-simple-emu-cbm (C Portable Version)
-// C64/6502 Emulator for Microsoft Windows Console
+// C64/6502 Emulator for Teensy
 //
 // MIT License
 //
