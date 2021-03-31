@@ -190,11 +190,31 @@ static void Console_Cursor_Home()
 #endif
 }
 
+static int ReverseActive = 0;
+
+static void Console_Reverse_On()
+{
+   printf("\x1B[7m");
+   ReverseActive = 1;
+}
+
+static void Console_Reverse_Off()
+{
+   if (ReverseActive)
+   {
+      printf("\x1B[m");
+      ReverseActive = 0;
+   }
+}
+
 extern void CBM_Console_WriteChar(unsigned char c)
 {
 	// we're emulating, so draw character on local console window
 	if (c == 0x0D)
+	{
 		putchar('\n');
+		Console_Reverse_Off();
+	}
 	else if (c >= ' ' && c <= '~')
 	{
 		//ApplyColor ? .Invoke();
@@ -211,9 +231,11 @@ extern void CBM_Console_WriteChar(unsigned char c)
 	else if (c == 19) // home
 		Console_Cursor_Home();
 	else if (c == 147)
-	{
 		Console_Clear();
-	}
+	else if (c == 18)
+      Console_Reverse_On();
+	else if (c == 146)
+      Console_Reverse_Off();
 }
 
 // blocking read to get next typed character
