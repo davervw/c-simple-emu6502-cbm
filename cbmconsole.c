@@ -57,136 +57,136 @@ static void cls(HANDLE hConsole);
 
 static void Console_Clear()
 {
-	if (supress_first_clear)
-	{
-		supress_first_clear = 0;
-		return;
-	}
+   if (supress_first_clear)
+   {
+      supress_first_clear = 0;
+      return;
+   }
 
 #ifdef WIN32
-	// See https://docs.microsoft.com/en-us/windows/console/getstdhandle
-	HANDLE hStdout;
-	hStdout = GetStdHandle(STD_OUTPUT_HANDLE); 
+   // See https://docs.microsoft.com/en-us/windows/console/getstdhandle
+   HANDLE hStdout;
+   hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
 
-	cls(hStdout);
+   cls(hStdout);
 #else
-	printf("\x1B[2J\x1B[H");
-#endif	
+   printf("\x1B[2J\x1B[H");
+#endif
 }
 
 #ifdef WIN32
 BOOL Console_GetCursor(HANDLE hStdout, COORD* coord)
 {
-	CONSOLE_SCREEN_BUFFER_INFO csbi; /* to get buffer info */
-	BOOL bSuccess = GetConsoleScreenBufferInfo(hStdout, &csbi);
-	PERR(bSuccess, "GetConsoleScreenBufferInfo");
-	coord->X = csbi.dwCursorPosition.X;
-	coord->Y = csbi.dwCursorPosition.Y;
-	return bSuccess;
+   CONSOLE_SCREEN_BUFFER_INFO csbi; /* to get buffer info */
+   BOOL bSuccess = GetConsoleScreenBufferInfo(hStdout, &csbi);
+   PERR(bSuccess, "GetConsoleScreenBufferInfo");
+   coord->X = csbi.dwCursorPosition.X;
+   coord->Y = csbi.dwCursorPosition.Y;
+   return bSuccess;
 }
 
 void Console_SetCursor(HANDLE hStdout, COORD coord)
 {
-	BOOL bSuccess = SetConsoleCursorPosition(hStdout, coord);
-	PERR(bSuccess, "SetConsoleCursorPosition");
+   BOOL bSuccess = SetConsoleCursorPosition(hStdout, coord);
+   PERR(bSuccess, "SetConsoleCursorPosition");
 }
 #endif
 
 static void Console_Cursor_Up()
 {
 #ifdef WIN32
-	HANDLE hStdout;
-	hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
-	COORD coord = { 0, 0 };
-	if (Console_GetCursor(hStdout, &coord) && coord.Y > 0)
-	{
-		--coord.Y;
-		Console_SetCursor(hStdout, coord);
-	}
+   HANDLE hStdout;
+   hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
+   COORD coord = { 0, 0 };
+   if (Console_GetCursor(hStdout, &coord) && coord.Y > 0)
+   {
+      --coord.Y;
+      Console_SetCursor(hStdout, coord);
+   }
 #else
-	printf("\x1B[A");
-#endif	
+   printf("\x1B[A");
+#endif
 }
 
 static void Console_Cursor_Down()
 {
 #ifdef WIN32
-	HANDLE hStdout;
-	hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
-	COORD coord = { 0, 0 };
-	if (Console_GetCursor(hStdout, &coord))
-	{
-		SHORT x = coord.X; // save column
-		putchar('\n');
-		if (Console_GetCursor(hStdout, &coord))
-		{
-			coord.X = x; // restore column
-			Console_SetCursor(hStdout, coord);
-		}
-	}
-#else	
-	printf("\x1B[B");
-#endif	
+   HANDLE hStdout;
+   hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
+   COORD coord = { 0, 0 };
+   if (Console_GetCursor(hStdout, &coord))
+   {
+      SHORT x = coord.X; // save column
+      putchar('\n');
+      if (Console_GetCursor(hStdout, &coord))
+      {
+         coord.X = x; // restore column
+         Console_SetCursor(hStdout, coord);
+      }
+   }
+#else
+   printf("\x1B[B");
+#endif
 }
 
 static void Console_Cursor_Left()
 {
 #ifdef WIN32
-	HANDLE hStdout;
-	hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
-	COORD coord = { 0, 0 };
-	if (Console_GetCursor(hStdout, &coord) && coord.X > 0)
-		putchar('\b');
-	else if (coord.Y > 0)
-	{
-		CONSOLE_SCREEN_BUFFER_INFO csbi; /* to get buffer info */
-		BOOL bSuccess = GetConsoleScreenBufferInfo(hStdout, &csbi);
-		PERR(bSuccess, "ConsoleScreenBufferInfo");
-		if (bSuccess)
-		{
-			--coord.Y;
-			coord.X = csbi.dwSize.X - 1;
-			Console_SetCursor(hStdout, coord);
-		}
-	}
+   HANDLE hStdout;
+   hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
+   COORD coord = { 0, 0 };
+   if (Console_GetCursor(hStdout, &coord) && coord.X > 0)
+      putchar('\b');
+   else if (coord.Y > 0)
+   {
+      CONSOLE_SCREEN_BUFFER_INFO csbi; /* to get buffer info */
+      BOOL bSuccess = GetConsoleScreenBufferInfo(hStdout, &csbi);
+      PERR(bSuccess, "ConsoleScreenBufferInfo");
+      if (bSuccess)
+      {
+         --coord.Y;
+         coord.X = csbi.dwSize.X - 1;
+         Console_SetCursor(hStdout, coord);
+      }
+   }
 #else
-	printf("\x1B[D");
+   printf("\x1B[D");
 #endif
 }
 
 static void Console_Cursor_Right()
 {
 #ifdef WIN32
-	HANDLE hStdout;
-	hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
-	CONSOLE_SCREEN_BUFFER_INFO csbi; /* to get buffer info */
-	COORD coord = { 0, 0 };
-	BOOL bSuccess = GetConsoleScreenBufferInfo(hStdout, &csbi);
-	PERR(bSuccess, "ConsoleScreenBufferInfo");
-	if (bSuccess && Console_GetCursor(hStdout, &coord))
-	{
-		if (coord.X < csbi.dwSize.X - 1)
-		{
-			++coord.X;
-			Console_SetCursor(hStdout, coord);
-		}
-		else
-			putchar('\n');
-	}
+   HANDLE hStdout;
+   hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
+   CONSOLE_SCREEN_BUFFER_INFO csbi; /* to get buffer info */
+   COORD coord = { 0, 0 };
+   BOOL bSuccess = GetConsoleScreenBufferInfo(hStdout, &csbi);
+   PERR(bSuccess, "ConsoleScreenBufferInfo");
+   if (bSuccess && Console_GetCursor(hStdout, &coord))
+   {
+      if (coord.X < csbi.dwSize.X - 1)
+      {
+         ++coord.X;
+         Console_SetCursor(hStdout, coord);
+      }
+      else
+         putchar('\n');
+   }
 #else
-	printf("\x1B[C");
+   printf("\x1B[C");
 #endif
 }
 
 static void Console_Cursor_Home()
 {
 #ifdef WIN32
-	HANDLE hStdout;
-	hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
-	COORD coord = { 0, 0 };
-	Console_SetCursor(hStdout, coord);
+   HANDLE hStdout;
+   hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
+   COORD coord = { 0, 0 };
+   Console_SetCursor(hStdout, coord);
 #else
-	printf("\x1B[H");
+   printf("\x1B[H");
 #endif
 }
 
@@ -194,8 +194,11 @@ static int ReverseActive = 0;
 
 static void Console_Reverse_On()
 {
-   printf("\x1B[7m");
-   ReverseActive = 1;
+   if (!ReverseActive)
+   {
+      printf("\x1B[7m");
+      ReverseActive = 1;
+	}
 }
 
 static void Console_Reverse_Off()
@@ -209,109 +212,109 @@ static void Console_Reverse_Off()
 
 extern void CBM_Console_WriteChar(unsigned char c)
 {
-	// we're emulating, so draw character on local console window
-	if (c == 0x0D)
-	{
-		putchar('\n');
-		Console_Reverse_Off();
-	}
-	else if (c >= ' ' && c <= '~')
-	{
-		//ApplyColor ? .Invoke();
-		putchar(c);
-	}
-	else if (c == 157) // left
-		Console_Cursor_Left();
-	else if (c == 29) // right
-		Console_Cursor_Right();
-	else if (c == 145) // up
-		Console_Cursor_Up();
-	else if (c == 17) // down
-		Console_Cursor_Down();
-	else if (c == 19) // home
-		Console_Cursor_Home();
-	else if (c == 147)
-		Console_Clear();
-	else if (c == 18)
+   // we're emulating, so draw character on local console window
+   if (c == 0x0D)
+   {
+      putchar('\n');
+      Console_Reverse_Off();
+   }
+   else if (c >= ' ' && c <= '~')
+   {
+      //ApplyColor ? .Invoke();
+      putchar(c);
+   }
+   else if (c == 157) // left
+      Console_Cursor_Left();
+   else if (c == 29) // right
+      Console_Cursor_Right();
+   else if (c == 145) // up
+      Console_Cursor_Up();
+   else if (c == 17) // down
+      Console_Cursor_Down();
+   else if (c == 19) // home
+      Console_Cursor_Home();
+   else if (c == 147)
+      Console_Clear();
+   else if (c == 18)
       Console_Reverse_On();
-	else if (c == 146)
+   else if (c == 146)
       Console_Reverse_Off();
 }
 
 // blocking read to get next typed character
 extern unsigned char CBM_Console_ReadChar(void)
 {
-	if (buffer_count == 0)
-	{
-		// System.Console.ReadLine() has features of history (cursor up/down, F7/F8), editing (cursor left/right, delete, backspace, etc.)
-		//ApplyColor ? .Invoke();
-		while (1)
-		{
-			fgets(buffer, sizeof(buffer) - 1, stdin); // save room for carriage return and null
-			buffer[strlen(buffer)-1] = '\r'; // replace newline
-			buffer_head = 0;
-			buffer_tail = buffer_count = (int)strlen(buffer);
-			Console_Cursor_Up();
-			break;
-		}
-	}
-	unsigned char c = buffer[buffer_head++];
-	if (buffer_head >= sizeof(buffer))
-		buffer_head = 0;
-	--buffer_count;
-	return c;
+   if (buffer_count == 0)
+   {
+      // System.Console.ReadLine() has features of history (cursor up/down, F7/F8), editing (cursor left/right, delete, backspace, etc.)
+      //ApplyColor ? .Invoke();
+      while (1)
+      {
+         fgets(buffer, sizeof(buffer) - 1, stdin); // save room for carriage return and null
+         buffer[strlen(buffer)-1] = '\r'; // replace newline
+         buffer_head = 0;
+         buffer_tail = buffer_count = (int)strlen(buffer);
+         Console_Cursor_Up();
+         break;
+      }
+   }
+   unsigned char c = buffer[buffer_head++];
+   if (buffer_head >= sizeof(buffer))
+      buffer_head = 0;
+   --buffer_count;
+   return c;
 }
 
 extern void CBM_Console_Push(const char* s)
 {
-	while (s != 0 && *s != 0 && buffer_count < sizeof(buffer))
-	{
-		buffer[buffer_tail++] = *(s++);
-		if (buffer_tail >= sizeof(buffer))
-			buffer_tail = 0;
-		++buffer_count;
-	}
+   while (s != 0 && *s != 0 && buffer_count < sizeof(buffer))
+   {
+      buffer[buffer_tail++] = *(s++);
+      if (buffer_tail >= sizeof(buffer))
+         buffer_tail = 0;
+      ++buffer_count;
+   }
 }
 
 #ifdef WIN32
 // borrowed from https://support.microsoft.com/en-au/help/99261/how-to-performing-clear-screen-cls-in-a-console-application
 static void cls(HANDLE hConsole)
 {
-	COORD coordScreen = { 0, 0 };    /* here's where we'll home the
-										cursor */
-	BOOL bSuccess;
-	DWORD cCharsWritten;
-	CONSOLE_SCREEN_BUFFER_INFO csbi; /* to get buffer info */
-	DWORD dwConSize;                 /* number of character cells in
-										the current buffer */
+   COORD coordScreen = { 0, 0 };    /* here's where we'll home the
+                              cursor */
+   BOOL bSuccess;
+   DWORD cCharsWritten;
+   CONSOLE_SCREEN_BUFFER_INFO csbi; /* to get buffer info */
+   DWORD dwConSize;                 /* number of character cells in
+                              the current buffer */
 
-										/* get the number of character cells in the current buffer */
+                              /* get the number of character cells in the current buffer */
 
-	bSuccess = GetConsoleScreenBufferInfo(hConsole, &csbi);
-	PERR(bSuccess, "GetConsoleScreenBufferInfo");
-	dwConSize = csbi.dwSize.X * csbi.dwSize.Y;
+   bSuccess = GetConsoleScreenBufferInfo(hConsole, &csbi);
+   PERR(bSuccess, "GetConsoleScreenBufferInfo");
+   dwConSize = csbi.dwSize.X * csbi.dwSize.Y;
 
-	/* fill the entire screen with blanks */
+   /* fill the entire screen with blanks */
 
-	bSuccess = FillConsoleOutputCharacter(hConsole, (TCHAR) ' ',
-		dwConSize, coordScreen, &cCharsWritten);
-	PERR(bSuccess, "FillConsoleOutputCharacter");
+   bSuccess = FillConsoleOutputCharacter(hConsole, (TCHAR) ' ',
+      dwConSize, coordScreen, &cCharsWritten);
+   PERR(bSuccess, "FillConsoleOutputCharacter");
 
-	/* get the current text attribute */
+   /* get the current text attribute */
 
-	bSuccess = GetConsoleScreenBufferInfo(hConsole, &csbi);
-	PERR(bSuccess, "ConsoleScreenBufferInfo");
+   bSuccess = GetConsoleScreenBufferInfo(hConsole, &csbi);
+   PERR(bSuccess, "ConsoleScreenBufferInfo");
 
-	/* now set the buffer's attributes accordingly */
+   /* now set the buffer's attributes accordingly */
 
-	bSuccess = FillConsoleOutputAttribute(hConsole, csbi.wAttributes,
-		dwConSize, coordScreen, &cCharsWritten);
-	PERR(bSuccess, "FillConsoleOutputAttribute");
+   bSuccess = FillConsoleOutputAttribute(hConsole, csbi.wAttributes,
+      dwConSize, coordScreen, &cCharsWritten);
+   PERR(bSuccess, "FillConsoleOutputAttribute");
 
-	/* put the cursor at (0, 0) */
+   /* put the cursor at (0, 0) */
 
-	bSuccess = SetConsoleCursorPosition(hConsole, coordScreen);
-	PERR(bSuccess, "SetConsoleCursorPosition");
-	return;
+   bSuccess = SetConsoleCursorPosition(hConsole, coordScreen);
+   PERR(bSuccess, "SetConsoleCursorPosition");
+   return;
 }
 #endif
