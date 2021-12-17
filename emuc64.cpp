@@ -54,8 +54,8 @@
 // ROMs copyright Commodore or their assignees
 ////////////////////////////////////////////////////////////////////////////////
 
-#define ILI9341
-//#define ILI9488
+//#define ILI9341
+#define ILI9488
 
 #include "emu6502.h"
 #include "emud64.h"
@@ -70,20 +70,20 @@
 #include "USBHost_t36.h"
 
 // globals
-const char* StartupPRG = "fa.d64"; // "samples.d64";
+const char* StartupPRG = 0;
 
 // locals
 static int startup_state = 0;
-const char* FileName = NULL;
-byte FileNum = 0;
-byte FileDev = 0;
-byte FileSec = 0;
-bool FileVerify = false;
-ushort FileAddr = 0;
-int LOAD_TRAP = -1;
-int DRAW_TRAP = -1;
-byte* attach = NULL;
-EmuD64* disk = NULL;
+static const char* FileName = NULL;
+static byte FileNum = 0;
+static byte FileDev = 0;
+static byte FileSec = 0;
+static bool FileVerify = false;
+static ushort FileAddr = 0;
+static int LOAD_TRAP = -1;
+static int DRAW_TRAP = -1;
+static byte* attach = NULL;
+static EmuD64* disks[4] = {NULL,NULL,NULL,NULL};
 static bool postponeDrawChar = false;
 static byte old_video[1000];
 static byte old_color[1000];
@@ -103,9 +103,6 @@ static USBHub hub1(myusb);
 static USBHub hub2(myusb);
 static KeyboardController keyboard1(myusb);
 static USBDriver *drivers[] = {&hub1, &hub2, &keyboard1};
-#define CNT_DEVICES (sizeof(drivers)/sizeof(drivers[0]))
-//static const char * driver_names[CNT_DEVICES] = {"Hub1","Hub2", "KB1"};
-static bool driver_active[CNT_DEVICES] = {false, false, false};
 
 // array allows multiple keys/modifiers pressed at one time
 static int scan_codes[9] = { 64, 64, 64, 64, 64, 64, 64, 64, 64 } ;
@@ -292,9 +289,25 @@ static bool ExecuteJSR(ushort addr)
 	return true; // return value for ExecutePatch so will reloop execution to allow berakpoint/trace/ExecutePatch/etc.
 }
 
+EmuD64* GetDisk()
+{
+  if (FileDev == 0 || FileDev == 1)
+    return disks[0];
+  else if (FileDev >=8 && FileDev <= 11)
+    return disks[FileDev-8];
+  else
+    return 0;
+}
+
 static byte* OpenRead(const char* filename, int* p_ret_file_len)
 {
 	static unsigned char buffer[65536]; // TODO: get actual file size
+  EmuD64* disk = GetDisk();
+  if (disk == 0)
+  {
+      *p_ret_file_len = 0;
+      return (byte*)NULL;
+  }
 
 	if (filename != NULL && filename[0] == '$' && filename[1] == '\0')
 	{
@@ -303,15 +316,18 @@ static byte* OpenRead(const char* filename, int* p_ret_file_len)
 			return &buffer[0];
 		else
 		{
+      *p_ret_file_len = 0;
 			return (byte*)NULL;
-			*p_ret_file_len = 0;
 		}
 	}
 	else
 	{
 		*p_ret_file_len = sizeof(buffer);
 		disk->ReadFileByName(filename, buffer, *p_ret_file_len);
-		return buffer;
+    if (*p_ret_file_len == 0)
+       return (byte*)NULL;
+    else
+		   return buffer;
 	}
 }
 
@@ -329,7 +345,7 @@ bool FileLoad(byte* p_err)
 		*p_err = 4; // FILE NOT FOUND
 		success = false;
 		FileAddr = addr;
-		return success;
+		return false;
 	}
 
 	byte lo = bytes[si++];
@@ -364,6 +380,7 @@ bool FileLoad(byte* p_err)
 
 bool FileSave(const char* filename, ushort addr1, ushort addr2)
 {
+  EmuD64* disk = GetDisk();
 	if (filename == NULL || *filename == 0)
 		filename = "FILENAME";
 	if (disk == 0)
@@ -385,8 +402,9 @@ static bool LoadStartupPrg()
 {
 	bool result;
 	byte err;
-	if (disk == 0)
-		disk = new EmuD64(FileName);
+  EmuD64* disk = GetDisk();
+  if (disk == 0)
+    return false;
 	result = FileLoad(&err);
 	if (!result)
 		return false;
@@ -1277,6 +1295,9 @@ void C64_Init(void)
   //File_ReadAllBytes(chargen_rom, sizeof(chargen_rom), chargen_file);
 	//File_ReadAllBytes(kernal_rom, sizeof(kernal_rom), kernal_file);
 
+  disks[0] = new EmuD64("drive8.d64");
+  disks[1] = new EmuD64("drive9.d64");
+
 	for (unsigned i = 0; i < sizeof(ram); ++i)
 		ram[i] = 0;
 	for (unsigned i = 0; i < sizeof(color_nybles); ++i)
@@ -1616,4 +1637,3 @@ extern void SetMemory(ushort addr, byte value)
     io[addr - io_addr] = value;
   } 
 }
-

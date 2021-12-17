@@ -8,7 +8,7 @@ Here is a simple Commodore 64 and 6502 Emulator I wrote from scratch, ported to 
 * Displays C64 color text screen to LCD with PETSCII supporting graphic characters and lowercase characters
 * IRQ 1/60 second is working (e.g. TI and TI$)
 * Sorry emulation is limited.  No games!
-* Yes, there is D64 support.  Disk is automatically attached with samples.d64 from SD card
+* Yes, there is D64 support.  Disks are automatically attached with drive8.d64 and drive9.d64 from SD card
 
 ![](teensy41_lcd.jpg)
 
