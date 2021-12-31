@@ -490,10 +490,11 @@ static void RTI(ushort *p_addr, byte *p_bytes)
 static void BRK(byte *p_bytes)
 {
 	++PC;
+	++PC;
 	Push(HI(PC));
 	Push(LO(PC));
-	PHP();
 	B = true;
+	PHP();
 	PC = (ushort)(GetMemory(0xFFFE) + (GetMemory(0xFFFF) << 8)); // JMP(IRQ)
 	*p_bytes = 0;
 }
