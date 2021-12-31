@@ -43,7 +43,7 @@ byte Y = 0;
 byte S = 0xFF;
 bool N = false;
 bool V = false;
-bool B = false;
+bool B = true; // 6502 PHP instructions always treats B flag as true, so keep it true
 bool D = false;
 bool I = false;
 bool Z = false;
@@ -74,6 +74,7 @@ extern void PHP()
 {
 	int flags = (N ? 0x80 : 0)
 		| (V ? 0x40 : 0)
+		| 0x20
 		| (B ? 0x10 : 0)
 		| (D ? 0x08 : 0)
 		| (I ? 0x04 : 0)
@@ -274,7 +275,6 @@ static void PLP()
 	int flags = Pop();
 	N = (flags & 0x80) != 0;
 	V = (flags & 0x40) != 0;
-	B = (flags & 0x10) != 0;
 	D = (flags & 0x08) != 0;
 	I = (flags & 0x04) != 0;
 	Z = (flags & 0x02) != 0;
@@ -486,10 +486,10 @@ static void RTI(ushort *p_addr, byte *p_bytes)
 static void BRK(byte *p_bytes)
 {
 	++PC;
+	++PC;
 	Push(HI(PC));
 	Push(LO(PC));
 	PHP();
-	B = true;
 	PC = (ushort)(GetMemory(0xFFFE) + (GetMemory(0xFFFF) << 8)); // JMP(IRQ)
 	*p_bytes = 0;
 }
@@ -673,7 +673,9 @@ extern void Execute(ushort addr, bool (*ExecutePatch)(void))
         timer_then = micros(); // reset timer
         Push(HI(PC));
         Push(LO(PC));
+		B = false; // differentiates IRQ from BRK
         PHP();
+		B = true; // return to normal state expected when user does PHP
         I = true;
         PC = (GetMemory(0xfffe) | (GetMemory(0xffff) << 8));
       } 

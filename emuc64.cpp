@@ -337,7 +337,7 @@ bool FileLoad(byte* p_err)
 	bool startup = (StartupPRG != NULL);
 	ushort addr = FileAddr;
 	bool success = true;
-	const char* filename = StartupPRG;
+	const char* filename = (StartupPRG != NULL) ? StartupPRG : FileName;
 	int file_len;
 	byte* bytes = OpenRead(filename, &file_len);
 	ushort si = 0;
@@ -414,6 +414,8 @@ static bool LoadStartupPrg()
 
 // forward declaration
 static void RedrawScreenEfficientlyAfterPostponed();
+static void CheckBypassSETNAM();
+static void CheckBypassSETLFS();
 
 bool ExecutePatch(void)
 {
@@ -434,13 +436,15 @@ bool ExecutePatch(void)
     NMI = true; // set so won't trigger again until cleared
     Push(HI(PC));
     Push(LO(PC));
+    B = false; // only false on stack for NMI and IRQ
     PHP();
+    B = true; // return to normal state
     PC = (ushort)(GetMemory(0xFFFA) + (GetMemory(0xFFFB) << 8)); // JMP(NMI)
     return true; // overriden, and PC changed, so caller should reloop before execution to allow breakpoint/trace/ExecutePatch/etc.
   }
 	else if (PC == 0xA474 || PC == LOAD_TRAP) // READY
 	{
-		if (StartupPRG != 0 && strlen(StartupPRG) > 0) // User requested program be loaded at startup
+		if (startup_state == 0 && ((StartupPRG != 0 && strlen(StartupPRG) > 0) || PC == LOAD_TRAP))
 		{
 			bool is_basic;
 			if (PC == LOAD_TRAP) {
@@ -453,7 +457,14 @@ bool ExecutePatch(void)
 				bool success;
 				byte err;
 				success = FileLoad(&err);
-				if (!success) {
+				if (success) 
+        {
+					// set End of Program
+					SetMemory(0xAE, (byte)FileAddr);
+					SetMemory(0xAF, (byte)(FileAddr >> 8));
+				}
+        else
+        {
 					//console.log("FileLoad() failed: err=" + err + ", file " + StartupPRG);
 					C = true; // signal error
 					SetA(err); // FILE NOT FOUND or VERIFY
@@ -580,14 +591,11 @@ bool ExecutePatch(void)
       C = true; // failure
     }
 		else if (A == 0 || A == 1) {
-			StartupPRG = FileName;
-			FileName = "";
 			LOAD_TRAP = PC;
-
-			// Set success
-			C = false;
+			C = false; // success
 		}
 		else {
+      FileName = "";
 			SetA(14); // ILLEGAL QUANTITY message
 			C = true; // failure
 		}
@@ -624,9 +632,57 @@ bool ExecutePatch(void)
     DRAW_TRAP = -1;
     postponeDrawChar = false;
     RedrawScreenEfficientlyAfterPostponed();
-}
+  }
+	else if (GetMemory(PC) == 0x6C && GetMemory((ushort)(PC + 1)) == 0x30 && GetMemory((ushort)(PC + 2)) == 0x03) // catch JMP(LOAD_VECTOR), redirect to jump table
+	{
+		CheckBypassSETLFS();
+		CheckBypassSETNAM();
+		// note: A register has same purpose LOAD/VERIFY
+		X = GetMemory(0xC3);
+		Y = GetMemory(0xC4);
+		PC = 0xFFD5; // use KERNAL JUMP TABLE instead, so LOAD is hooked by base
+		return true; // re-execute
+	}
+	else if (GetMemory(PC) == 0x6C && GetMemory((ushort)(PC + 1)) == 0x32 && GetMemory((ushort)(PC + 2)) == 0x03) // catch JMP(SAVE_VECTOR), redirect to jump table
+	{
+		CheckBypassSETLFS();
+		CheckBypassSETNAM();
+		X = GetMemory(0xAE);
+		Y = GetMemory(0xAF);
+		A = 0xC1;
+		PC = 0xFFD8; // use KERNAL JUMP TABLE instead, so SAVE is hooked by base
+		return true; // re-execute
+	}
 
 	return false; // execute normally
+}
+
+static void CheckBypassSETNAM()
+{
+	// In case caller bypassed calling SETNAM, get from lower memory
+	byte name_len = GetMemory(0xB7);
+	ushort name_addr = (ushort)(GetMemory(0xBB) | (GetMemory(0xBC) << 8));
+	static char name[256];
+	memset(name, 0, sizeof(name));
+	for (int i = 0; i < name_len; ++i)
+		name[i] = GetMemory(name_addr + i);
+	if (FileName != 0 || strlen(FileName) != strlen(name) || memcmp(FileName, name, strlen(name)) != 0)
+		FileName = name;
+}
+
+static void CheckBypassSETLFS()
+{
+	// In case caller bypassed calling SETLFS, get from lower memory
+	if (
+		FileNum != GetMemory(0xB8)
+		|| FileDev != GetMemory(0xBA)
+		|| FileSec != GetMemory(0xB9)
+		)
+	{
+		FileNum = GetMemory(0xB8);
+		FileDev = GetMemory(0xBA);
+		FileSec = GetMemory(0xB9);
+	}
 }
 
 static const byte basic_rom[8 * 1024] = {
