@@ -6,4 +6,5 @@ kernal
 basic
 chargen
 *.exe
-obj
+obj/
+enc_temp_folder/
