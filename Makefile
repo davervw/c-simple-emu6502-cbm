@@ -25,4 +25,4 @@ obj/emu6502.o: emu6502.c emu6502.h
 	$(CC) -O9 -o obj/emu6502.o -c emu6502.c
 
 clean:
-	rm -f emu6502.exe obj/*
+	rm -f c-simple-emu6502-cbm.exe obj/*
