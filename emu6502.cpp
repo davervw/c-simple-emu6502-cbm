@@ -46,7 +46,7 @@ byte Y = 0;
 byte S = 0xFF;
 bool N = false;
 bool V = false;
-bool B = false;
+bool B = true; // always set except for IRQ/NMI
 bool D = false;
 bool I = false;
 bool Z = false;
@@ -77,6 +77,7 @@ static void PHP()
 {
 	int flags = (N ? 0x80 : 0)
 		| (V ? 0x40 : 0)
+    | 0x20 // not implemented, always set
 		| (B ? 0x10 : 0)
 		| (D ? 0x08 : 0)
 		| (I ? 0x04 : 0)
@@ -98,10 +99,10 @@ extern byte HI(ushort value)
 static void BRK(byte *p_bytes)
 {
 	++PC;
-	PHP();
+  ++PC;
 	Push(HI(PC));
 	Push(LO(PC));
-	B = true;
+  PHP();
 	PC = (ushort)(GetMemory(0xFFFE) + (GetMemory(0xFFFF) << 8));
 	*p_bytes = 0;
 }
@@ -288,7 +289,6 @@ static void PLP()
 	int flags = Pop();
 	N = (flags & 0x80) != 0;
 	V = (flags & 0x40) != 0;
-	B = (flags & 0x10) != 0;
 	D = (flags & 0x08) != 0;
 	I = (flags & 0x04) != 0;
 	Z = (flags & 0x02) != 0;
