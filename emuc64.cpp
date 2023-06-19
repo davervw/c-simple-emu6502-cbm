@@ -54,20 +54,11 @@
 // ROMs copyright Commodore or their assignees
 ////////////////////////////////////////////////////////////////////////////////
 
-//#define ILI9341
-#define ILI9488
-
 #include "emu6502.h"
 #include "emud64.h"
 
 #include "SPI.h"
-#ifdef ILI9341
-#include "ILI9341_t3n.h"
-#endif
-#ifdef ILI9488
-#include "ILI9488_t3.h"
-#endif
-#include "USBHost_t36.h"
+#include "M5Core.h"
 
 // globals
 const char* StartupPRG = 0;
@@ -83,7 +74,7 @@ static ushort FileAddr = 0;
 static int LOAD_TRAP = -1;
 static int DRAW_TRAP = -1;
 static byte* attach = NULL;
-static EmuD64* disks[4] = {NULL,NULL,NULL,NULL};
+//static EmuD64* disks[4] = {NULL,NULL,NULL,NULL};
 static bool postponeDrawChar = false;
 static byte old_video[1000];
 static byte old_color[1000];
@@ -91,18 +82,11 @@ static byte old_color[1000];
 static byte ram[64 * 1024];
 static byte color_nybles[1024];
 
-#ifdef ILI9341
-static ILI9341_t3n lcd = ILI9341_t3n(10 /*CS*/, 9 /*DC*/);
-#endif
-#ifdef ILI9488
-static ILI9488_t3 lcd = ILI9488_t3(10 /*CS*/, 9 /*DC*/);
-#endif
-
-static USBHost myusb;
-static USBHub hub1(myusb);
-static USBHub hub2(myusb);
-static KeyboardController keyboard1(myusb);
-static USBDriver *drivers[] = {&hub1, &hub2, &keyboard1};
+// static USBHost myusb;
+// static USBHub hub1(myusb);
+// static USBHub hub2(myusb);
+// static KeyboardController keyboard1(myusb);
+// static USBDriver *drivers[] = {&hub1, &hub2, &keyboard1};
 
 // array allows multiple keys/modifiers pressed at one time
 static int scan_codes[9] = { 64, 64, 64, 64, 64, 64, 64, 64, 64 } ;
@@ -289,120 +273,121 @@ static bool ExecuteJSR(ushort addr)
 	return true; // return value for ExecutePatch so will reloop execution to allow berakpoint/trace/ExecutePatch/etc.
 }
 
-EmuD64* GetDisk()
+//EmuD64* 
+void* GetDisk()
 {
-  if (FileDev == 0 || FileDev == 1)
-    return disks[0];
-  else if (FileDev >=8 && FileDev <= 11)
-    return disks[FileDev-8];
-  else
+  // if (FileDev == 0 || FileDev == 1)
+  //   return disks[0];
+  // else if (FileDev >=8 && FileDev <= 11)
+  //   return disks[FileDev-8];
+  // else
     return 0;
 }
 
 static byte* OpenRead(const char* filename, int* p_ret_file_len)
 {
-	static unsigned char buffer[65536]; // TODO: get actual file size
-  EmuD64* disk = GetDisk();
-  if (disk == 0)
-  {
+	// static unsigned char buffer[65536]; // TODO: get actual file size
+  // EmuD64* disk = GetDisk();
+  // if (disk == 0)
+  // {
       *p_ret_file_len = 0;
       return (byte*)NULL;
-  }
+  // }
 
-	if (filename != NULL && filename[0] == '$' && filename[1] == '\0')
-	{
-		*p_ret_file_len = sizeof(buffer);
-		if (disk->GetDirectoryProgram(buffer, *p_ret_file_len))
-			return &buffer[0];
-		else
-		{
-      *p_ret_file_len = 0;
-			return (byte*)NULL;
-		}
-	}
-	else
-	{
-		*p_ret_file_len = sizeof(buffer);
-		disk->ReadFileByName(filename, buffer, *p_ret_file_len);
-    if (*p_ret_file_len == 0)
-       return (byte*)NULL;
-    else
-		   return buffer;
-	}
+	// if (filename != NULL && filename[0] == '$' && filename[1] == '\0')
+	// {
+	// 	*p_ret_file_len = sizeof(buffer);
+	// 	if (disk->GetDirectoryProgram(buffer, *p_ret_file_len))
+	// 		return &buffer[0];
+	// 	else
+	// 	{
+  //     *p_ret_file_len = 0;
+	// 		return (byte*)NULL;
+	// 	}
+	// }
+	// else
+	// {
+	// 	*p_ret_file_len = sizeof(buffer);
+	// 	disk->ReadFileByName(filename, buffer, *p_ret_file_len);
+  //   if (*p_ret_file_len == 0)
+  //      return (byte*)NULL;
+  //   else
+	// 	   return buffer;
+	// }
 }
 
 // returns success
 bool FileLoad(byte* p_err)
 {
-	bool startup = (StartupPRG != NULL);
-	ushort addr = FileAddr;
-	bool success = true;
-	const char* filename = (StartupPRG != NULL) ? StartupPRG : FileName;
-	int file_len;
-	byte* bytes = OpenRead(filename, &file_len);
-	ushort si = 0;
-	if (file_len == 0) {
+	// bool startup = (StartupPRG != NULL);
+	// ushort addr = FileAddr;
+	// bool success = true;
+	// const char* filename = (StartupPRG != NULL) ? StartupPRG : FileName;
+	// int file_len;
+	// byte* bytes = OpenRead(filename, &file_len);
+	// ushort si = 0;
+	// if (file_len == 0) {
 		*p_err = 4; // FILE NOT FOUND
-		success = false;
-		FileAddr = addr;
+  //	FileAddr = addr;
 		return false;
-	}
+	// }
 
-	byte lo = bytes[si++];
-	byte hi = bytes[si++];
-	if (startup) {
-		if (lo == 1)
-			FileSec = 0;
-		else
-			FileSec = 1;
-	}
-	if (FileSec == 1) // use address in file? yes-use, no-ignore
-		addr = lo | (hi << 8); // use address specified in file
-	while (success) {
-		if (si < file_len) {
-			byte i = bytes[si++];
-			if (FileVerify) {
-				if (GetMemory(addr) != i) {
-					*p_err = 28; // VERIFY
-					success = false;
-				}
-			}
-			else
-				SetMemory(addr, i);
-			++addr;
-		}
-		else
-			break; // end of file
-	}
-	FileAddr = addr;
-	return success;
+	// byte lo = bytes[si++];
+	// byte hi = bytes[si++];
+	// if (startup) {
+	// 	if (lo == 1)
+	// 		FileSec = 0;
+	// 	else
+	// 		FileSec = 1;
+	// }
+	// if (FileSec == 1) // use address in file? yes-use, no-ignore
+	// 	addr = lo | (hi << 8); // use address specified in file
+	// while (success) {
+	// 	if (si < file_len) {
+	// 		byte i = bytes[si++];
+	// 		if (FileVerify) {
+	// 			if (GetMemory(addr) != i) {
+	// 				*p_err = 28; // VERIFY
+	// 				success = false;
+	// 			}
+	// 		}
+	// 		else
+	// 			SetMemory(addr, i);
+	// 		++addr;
+	// 	}
+	// 	else
+	// 		break; // end of file
+	// }
+	// FileAddr = addr;
+	// return success;
 }
 
 bool FileSave(const char* filename, ushort addr1, ushort addr2)
 {
-  EmuD64* disk = GetDisk();
-	if (filename == NULL || *filename == 0)
-		filename = "FILENAME";
-	if (disk == 0)
+  // EmuD64* disk = GetDisk();
+	// if (filename == NULL || *filename == 0)
+	// 	filename = "FILENAME";
+	// if (disk == 0)
 		return false;
-	int len = addr2 - addr1 + 2;
-	unsigned char* bytes = (unsigned char*)malloc(len);
-	if (bytes == 0 || len < 2)
-		return false;
-	bytes[0] = LO(addr1);
-	bytes[1] = HI(addr1);
-	for (int i = 0; i < len-2; ++i)
-		bytes[i+2] = GetMemory(addr1+i);
-	disk->StoreFileByName(filename, bytes, len);
-	free(bytes);
-	return true;
+	// int len = addr2 - addr1 + 2;
+	// unsigned char* bytes = (unsigned char*)malloc(len);
+	// if (bytes == 0 || len < 2)
+	// 	return false;
+	// bytes[0] = LO(addr1);
+	// bytes[1] = HI(addr1);
+	// for (int i = 0; i < len-2; ++i)
+	// 	bytes[i+2] = GetMemory(addr1+i);
+	// disk->StoreFileByName(filename, bytes, len);
+	// free(bytes);
+	// return true;
 }
 
 static bool LoadStartupPrg()
 {
 	bool result;
 	byte err;
-  EmuD64* disk = GetDisk();
+  //EmuD64* 
+  void* disk = GetDisk();
   if (disk == 0)
     return false;
 	result = FileLoad(&err);
@@ -1351,8 +1336,8 @@ void C64_Init(void)
   //File_ReadAllBytes(chargen_rom, sizeof(chargen_rom), chargen_file);
 	//File_ReadAllBytes(kernal_rom, sizeof(kernal_rom), kernal_file);
 
-  disks[0] = new EmuD64("drive8.d64");
-  disks[1] = new EmuD64("drive9.d64");
+  // disks[0] = new EmuD64("drive8.d64");
+  // disks[1] = new EmuD64("drive9.d64");
 
 	for (unsigned i = 0; i < sizeof(ram); ++i)
 		ram[i] = 0;
@@ -1365,13 +1350,12 @@ void C64_Init(void)
   ram[0] = 0xEF;
   ram[1] = 0x07;
 
-  // initialize ILI9341 LCD screen
-  lcd.begin();
-  lcd.fillScreen(0x0000); // BLACK
+  // initialize LCD screen
+  M5.Lcd.fillScreen(0x0000); // BLACK
 
-  myusb.begin();
-  keyboard1.attachRawPress(onKbdRawPress);
-  keyboard1.attachRawRelease(onKbdRawRelease);
+  // myusb.begin();
+  // keyboard1.attachRawPress(onKbdRawPress);
+  // keyboard1.attachRawRelease(onKbdRawRelease);
 }
 
 // RGB565 colors picked with http://www.barth-dev.de/online/rgb565-color-picker/
@@ -1379,42 +1363,22 @@ int C64ColorToLCDColor(byte value)
 {
   switch (value & 0xF)
   {
-#ifdef ILI9341    
-    case 0: return ILI9341_BLACK;
-    case 1: return ILI9341_WHITE;
-    case 2: return ILI9341_RED;
-    case 3: return ILI9341_CYAN;
+    case 0: return TFT_BLACK;
+    case 1: return TFT_WHITE;
+    case 2: return TFT_RED;
+    case 3: return TFT_CYAN;
     case 4: return 0x8118; // DARKMAGENTA OR PURPLE
     case 5: return 0x0400; // DARKGREEN
-    case 6: return ILI9341_BLUE;
-    case 7: return ILI9341_YELLOW;
-    case 8: return ILI9341_ORANGE;
+    case 6: return TFT_BLUE;
+    case 7: return TFT_YELLOW;
+    case 8: return TFT_ORANGE;
     case 9: return 0x8283; // BROWN;
     case 10: return 0xFC10; // PINK OR LT RED
-    case 11: return ILI9341_DARKGREY;
-    case 12: return ILI9341_DARKCYAN; // MED GRAY
+    case 11: return TFT_DARKGREY;
+    case 12: return TFT_DARKCYAN; // MED GRAY
     case 13: return 0x07E0; // LIGHTGREEN;
     case 14: return 0x841F; // LIGHTBLUE;
-    case 15: return ILI9341_LIGHTGREY;
-#endif    
-#ifdef ILI9488    
-    case 0: return ILI9488_BLACK;
-    case 1: return ILI9488_WHITE;
-    case 2: return ILI9488_RED;
-    case 3: return ILI9488_CYAN;
-    case 4: return 0x8118; // DARKMAGENTA OR PURPLE
-    case 5: return 0x0400; // DARKGREEN
-    case 6: return ILI9488_BLUE;
-    case 7: return ILI9488_YELLOW;
-    case 8: return ILI9488_ORANGE;
-    case 9: return 0x8283; // BROWN;
-    case 10: return 0xFC10; // PINK OR LT RED
-    case 11: return ILI9488_DARKGREY;
-    case 12: return ILI9488_DARKCYAN; // MED GRAY
-    case 13: return 0x07E0; // LIGHTGREEN;
-    case 14: return 0x841F; // LIGHTBLUE;
-    case 15: return ILI9488_LIGHTGREY;
-#endif    
+    case 15: return TFT_LIGHTGREY;
     default: return 0;
   }
 }
@@ -1442,98 +1406,16 @@ void DrawChar(byte c, int col, int row, int fg, int bg)
   
   int offset = ((io[0x18] & 2) == 0) ? 0 : (8*256);
   const byte* shape = &chargen_rom[c*8+offset];
-#ifdef ILI9341  
-  int x0 = 20 + row*8;
-  int y0 = col*8;
-#endif  
-#ifdef ILI9488  
-//  int x0 = 10 + row*8;
-//  int y0 = 80 + col*8;
-  int x0 = 10 + row*12;
-  int y0 = col*12;
-  int colors[12][12];
-#endif
+  int x0 = 0 + col*8;
+  int y0 = 20 + row*8;
   for (int row_i=0; row_i<8; ++row_i)
   {
     int mask = 128;
     for (int col_i=0; col_i<8; ++col_i)
     {
-#ifdef ILI9341      
-      lcd.drawPixel(x0+row_i, 320 - (y0+col_i), ((shape[row_i] & mask) == 0) ? bg : fg);
-#endif      
-#ifdef ILI9488
-//      lcd.drawPixel(x0+row_i, 480 - (y0+col_i), ((shape[row_i] & mask) == 0) ? bg : fg);
-      int color = ((shape[row_i] & mask) == 0) ? bg : fg;
-      store_color(row_i, col_i, color);
-      static int even_color;
-      if ((col_i % 2) == 0)
-        even_color = color;
-      else
-      {
-        // interpolate color for added horizontal pixels - just need to add one inbetween
-        if (color == even_color)
-        {
-          lcd.drawPixel(x0+scale_index(row_i), 480 - (y0+scale_index(col_i)-1), color);
-          colors[scale_index(row_i)][scale_index(col_i)-1] = color;
-        }
-        else
-        {
-          unsigned char r0, g0, b0;
-          unsigned char r1, g1, b1;
-          unsigned char r2, g2, b2;
-          lcd.color565toRGB(even_color, r0, g0, b0);
-          lcd.color565toRGB(color, r2, g2, b2);
-          r1 = (r0+r2)/2;
-          g1 = (g0+g2)/2;
-          b1 = (b0+b2)/2;
-          int middle_color = CL(r1, g1, b1);
-          lcd.drawPixel(x0+scale_index(row_i), 480 - (y0+scale_index(col_i)-1), middle_color);
-          colors[scale_index(row_i)][scale_index(col_i)-1] = middle_color;
-        }
-      }
-      lcd.drawPixel(x0+scale_index(row_i), 480 - (y0+scale_index(col_i)), color);
-#endif      
+      M5.Lcd.drawPixel(x0+col_i, y0+row_i, ((shape[row_i] & mask) == 0) ? bg : fg);
       mask = mask >> 1;
     }
-#ifdef ILI9488
-    if ((row_i % 2) == 1)
-    {
-      // interpolate color for added vertical pixels - need entire row
-      for (int col_i=0; col_i<8; ++col_i)
-      {
-        int top_color = get_color(row_i-1, col_i);
-        int bottom_color = get_color(row_i, col_i);
-        unsigned char r0, g0, b0;
-        unsigned char r1, g1, b1;
-        unsigned char r2, g2, b2;        
-        lcd.color565toRGB(top_color, r0, g0, b0);
-        lcd.color565toRGB(bottom_color, r2, g2, b2);
-        r1 = (r0+r2)/2;
-        g1 = (g0+g2)/2;
-        b1 = (b0+b2)/2;
-        int middle_color = CL(r1, g1, b1);
-        lcd.drawPixel(x0+scale_index(row_i)-1, 480 - (y0+scale_index(col_i)), middle_color);
-        colors[scale_index(row_i)-1][scale_index(col_i)] = middle_color;
-
-        if (col_i%2 == 1) // center square
-        {
-          int left_color = colors[scale_index(row_i)-1][scale_index(col_i-1)];
-          int right_color = colors[scale_index(row_i)-1][scale_index(col_i)];
-          unsigned char r0, g0, b0;
-          unsigned char r1, g1, b1;
-          unsigned char r2, g2, b2;
-          lcd.color565toRGB(left_color, r0, g0, b0);
-          lcd.color565toRGB(right_color, r2, g2, b2);
-          r1 = (r0+r2)/2;
-          g1 = (g0+g2)/2;
-          b1 = (b0+b2)/2;
-          int middle_color = CL(r1, g1, b1);
-          lcd.drawPixel(x0+scale_index(row_i)-1, 480 - (y0+scale_index(col_i)-1), middle_color);
-          //colors[scale_index(row_i)-1][scale_index(col_i)-1] = middle_color; // don't need
-        }
-      }  
-    }
-#endif    
   }
 }
 
@@ -1655,18 +1537,8 @@ extern void SetMemory(ushort addr, byte value)
   else if (addr == 0xD020) // border
   {
     int border = C64ColorToLCDColor(value);
-#ifdef ILI9341    
-    lcd.fillRect(0, 0, 20, 320, border);
-    lcd.fillRect(220, 0, 20, 320, border);
-#endif    
-#ifdef ILI9488    
-//    lcd.fillRect(0, 0, 60, 480, border);
-//    lcd.fillRect(60, 0, 200, 80, border);
-//    lcd.fillRect(60, 400, 200, 80, border);
-//    lcd.fillRect(260, 0, 60, 480, border);
-    lcd.fillRect(0, 0, 10, 480, border);
-    lcd.fillRect(310, 0, 10, 480, border);
-#endif    
+    M5.Lcd.fillRect(0, 0, 320, 20, border);
+    M5.Lcd.fillRect(0, 220, 320, 20, border);
     io[addr - io_addr] = value & 0xF;
   } 
   else if (addr == 0xD021) // background

@@ -31,13 +31,10 @@
 ////////////////////////////////////////////////////////////////////////////////
 // IMPORTANT!
 //
-// This port is for Teensy 4.1 with IPS LCD, USB keyboard, and D64 disk (SD)
+// This port is for M5Stack with IPS LCD, USB keyboard, and D64 disk (SD)
 // Note: other ports are available for other hardware platforms
-// Tested with Arduino 1.8.5
-// Requires Teensyduino, tested with 1.53, with USBHost_t36
-// Requires Third party libraries:
-// * https://github.com/KurtE/ILI9341_t3n.git
-// * https://github.com/mjs513/ILI9488_t3.git
+// Tested with Arduino 2.1.0
+// Requires M5 Basic Core (or Core2, or CoreS3)
 // Note: Serial diagnostics commented out so can start immediately without terminal
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -47,12 +44,15 @@
 #include <SD.h>
 #include <SPI.h>
 #include "emud64.h"
+#include "M5Core.h"
 
 void setup() {
+  M5.begin();
+
   //Initialize serial (but don't wait for it to be connected, until there is an exception
   Serial.begin(115200);
 
-  SD.begin(BUILTIN_SDCARD);
+  //SD.begin(BUILTIN_SDCARD);
 
   C64_Init();
 }
