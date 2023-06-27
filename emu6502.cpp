@@ -3,11 +3,11 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
 // c-simple-emu-cbm (C Portable Version)
-// C64/6502 Emulator for Teensy
+// C64/6502 Emulator for M5Stack Cores
 //
 // MIT License
 //
-// Copyright (c) 2021 by David R. Van Wagner
+// Copyright (c) 2023 by David R. Van Wagner
 // davevw.com
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -31,7 +31,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "emu6502.h"
-#include <arduino.h>
+#include "M5Core.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
