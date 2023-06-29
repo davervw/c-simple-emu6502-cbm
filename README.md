@@ -2,7 +2,8 @@
 
 Work in progress.  Current state includes rendering full color screen on M5Core LCD and supporting multiple Core models with a define change in M5Core.h.  60 times a second IRQ implemented to blink cursor.   
 
-No input for now (will be adding keyboard).
+Open browser-keyscan-helper/index.html for instructions how to use a keyboard via Serial from a web browser.
+
 SD support not integrated yet (should be simple).
 
 ![](m5cores.jpg)
