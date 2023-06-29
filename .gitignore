@@ -11,3 +11,4 @@ debug.cfg
 debug_custom.json
 esp32.svd
 esp32s3.svd
+browser-keyscan-helper/node_modules

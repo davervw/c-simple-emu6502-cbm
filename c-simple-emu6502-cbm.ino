@@ -51,6 +51,7 @@ void setup() {
 
   //Initialize serial (but don't wait for it to be connected, until there is an exception
   Serial.begin(115200);
+  Serial.setTimeout(0); // so we don't wait for reads
 
   //SD.begin(BUILTIN_SDCARD);
 

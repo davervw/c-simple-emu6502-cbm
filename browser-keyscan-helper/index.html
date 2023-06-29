@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Commodore 64 - Keyboard Emulator</title>
+  <style>
+    body {
+      margin: 0;
+    }
+
+    .text {
+      padding-left: 10px;
+    }
+  </style>
+</head>
+<meta charset="utf-8" />
+<doc user-select:none>
+  <div id="div">
+    <p>Commodore 64 Keyboard Emulator, key scan codes helper</p>
+    <ol>
+      <li>Flash <a href="https://shop.m5stack.com/collections/m5-controllers/CORE" 
+          target="_blank">M5 Core</a>
+        with
+        <a href="https://github.com/davervw/c-simple-emu6502-cbm/tree/m5_from_teensy"
+          target="_blank">
+          C64 Emulator
+        </a>
+        via USB cable
+      </li>
+      <li>
+        <button type="button" onclick="GetSerialPort()">Connect</button>
+        Browser to Serial Port
+      </li>
+      <li>While keeping this page in focus, type to get keystrokes in emulator</li>
+      <li>Optionally open Dev Tools to watch real-time codes in console log</li>
+    </ol>
+    <br>
+    <img src="core_keyboard.jpg" width="480">
+  </div>
+</doc>
+<script src="c64-main-ui.js"></script>
+
+</html>
