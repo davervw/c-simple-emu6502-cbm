@@ -50,10 +50,13 @@ void setup() {
   M5.begin();
 
   //Initialize serial (but don't wait for it to be connected, until there is an exception
-  Serial.begin(115200);
-  Serial.setTimeout(0); // so we don't wait for reads
+  M5Serial.begin(115200);
+  M5Serial.setTimeout(0); // so we don't wait for reads
 
-  //SD.begin(BUILTIN_SDCARD);
+  if(!SD.begin()){
+      M5Serial.println("Card Mount Failed");
+      return;
+  }
 
   C64_Init();
 }

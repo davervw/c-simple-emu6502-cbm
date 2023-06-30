@@ -54,11 +54,10 @@
 // ROMs copyright Commodore or their assignees
 ////////////////////////////////////////////////////////////////////////////////
 
+#include "M5Core.h"
+
 #include "emu6502.h"
 #include "emud64.h"
-
-#include "SPI.h"
-#include "M5Core.h"
 
 // globals
 const char* StartupPRG = 0;
@@ -74,7 +73,7 @@ static ushort FileAddr = 0;
 static int LOAD_TRAP = -1;
 static int DRAW_TRAP = -1;
 static byte* attach = NULL;
-//static EmuD64* disks[4] = {NULL,NULL,NULL,NULL};
+static EmuD64* disks[4] = {NULL,NULL,NULL,NULL};
 static bool postponeDrawChar = false;
 static byte old_video[1000];
 static byte old_color[1000];
@@ -87,8 +86,8 @@ static int scan_codes[16] = { 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64
 
 static void ReadKeyboard()
 {
-  if (Serial.available()) {
-    String s = Serial.readString();
+  if (M5Serial.available()) {
+    String s = M5Serial.readString();
     int src = 0;
     int dest = 0;
     int scan = 0;
@@ -123,121 +122,119 @@ static bool ExecuteJSR(ushort addr)
 	return true; // return value for ExecutePatch so will reloop execution to allow berakpoint/trace/ExecutePatch/etc.
 }
 
-//EmuD64* 
-void* GetDisk()
+EmuD64* GetDisk()
 {
-  // if (FileDev == 0 || FileDev == 1)
-  //   return disks[0];
-  // else if (FileDev >=8 && FileDev <= 11)
-  //   return disks[FileDev-8];
-  // else
+  if (FileDev == 0 || FileDev == 1)
+    return disks[0];
+  else if (FileDev >=8 && FileDev <= 11)
+    return disks[FileDev-8];
+  else
     return 0;
 }
 
 static byte* OpenRead(const char* filename, int* p_ret_file_len)
 {
-	// static unsigned char buffer[65536]; // TODO: get actual file size
-  // EmuD64* disk = GetDisk();
-  // if (disk == 0)
-  // {
+	static unsigned char buffer[27000]; // TODO: get actual file size, and allow up to 64K
+  EmuD64* disk = GetDisk();
+  if (disk == 0)
+  {
       *p_ret_file_len = 0;
       return (byte*)NULL;
-  // }
+  }
 
-	// if (filename != NULL && filename[0] == '$' && filename[1] == '\0')
-	// {
-	// 	*p_ret_file_len = sizeof(buffer);
-	// 	if (disk->GetDirectoryProgram(buffer, *p_ret_file_len))
-	// 		return &buffer[0];
-	// 	else
-	// 	{
-  //     *p_ret_file_len = 0;
-	// 		return (byte*)NULL;
-	// 	}
-	// }
-	// else
-	// {
-	// 	*p_ret_file_len = sizeof(buffer);
-	// 	disk->ReadFileByName(filename, buffer, *p_ret_file_len);
-  //   if (*p_ret_file_len == 0)
-  //      return (byte*)NULL;
-  //   else
-	// 	   return buffer;
-	// }
+	if (filename != NULL && filename[0] == '$' && filename[1] == '\0')
+	{
+		*p_ret_file_len = sizeof(buffer);
+		if (disk->GetDirectoryProgram(buffer, *p_ret_file_len))
+			return &buffer[0];
+		else
+		{
+      *p_ret_file_len = 0;
+			return (byte*)NULL;
+		}
+	}
+	else
+	{
+		*p_ret_file_len = sizeof(buffer);
+		disk->ReadFileByName(filename, buffer, *p_ret_file_len);
+    if (*p_ret_file_len == 0)
+       return (byte*)NULL;
+    else
+		   return buffer;
+	}
 }
 
 // returns success
 bool FileLoad(byte* p_err)
 {
-	// bool startup = (StartupPRG != NULL);
-	// ushort addr = FileAddr;
-	// bool success = true;
-	// const char* filename = (StartupPRG != NULL) ? StartupPRG : FileName;
-	// int file_len;
-	// byte* bytes = OpenRead(filename, &file_len);
-	// ushort si = 0;
-	// if (file_len == 0) {
+	bool startup = (StartupPRG != NULL);
+	ushort addr = FileAddr;
+	bool success = true;
+	const char* filename = (StartupPRG != NULL) ? StartupPRG : FileName;
+	int file_len;
+	byte* bytes = OpenRead(filename, &file_len);
+	ushort si = 0;
+	if (file_len == 0) {
 		*p_err = 4; // FILE NOT FOUND
-  //	FileAddr = addr;
+  	FileAddr = addr;
 		return false;
-	// }
+	}
 
-	// byte lo = bytes[si++];
-	// byte hi = bytes[si++];
-	// if (startup) {
-	// 	if (lo == 1)
-	// 		FileSec = 0;
-	// 	else
-	// 		FileSec = 1;
-	// }
-	// if (FileSec == 1) // use address in file? yes-use, no-ignore
-	// 	addr = lo | (hi << 8); // use address specified in file
-	// while (success) {
-	// 	if (si < file_len) {
-	// 		byte i = bytes[si++];
-	// 		if (FileVerify) {
-	// 			if (GetMemory(addr) != i) {
-	// 				*p_err = 28; // VERIFY
-	// 				success = false;
-	// 			}
-	// 		}
-	// 		else
-	// 			SetMemory(addr, i);
-	// 		++addr;
-	// 	}
-	// 	else
-	// 		break; // end of file
-	// }
-	// FileAddr = addr;
-	// return success;
+	byte lo = bytes[si++];
+	byte hi = bytes[si++];
+	if (startup) {
+		if (lo == 1)
+			FileSec = 0;
+		else
+			FileSec = 1;
+	}
+	if (FileSec == 1) // use address in file? yes-use, no-ignore
+		addr = lo | (hi << 8); // use address specified in file
+	while (success) {
+		if (si < file_len) {
+			byte i = bytes[si++];
+			if (FileVerify) {
+				if (GetMemory(addr) != i) {
+					*p_err = 28; // VERIFY
+					success = false;
+				}
+			}
+			else
+				SetMemory(addr, i);
+			++addr;
+		}
+		else
+			break; // end of file
+	}
+	FileAddr = addr;
+	return success;
 }
 
 bool FileSave(const char* filename, ushort addr1, ushort addr2)
 {
-  // EmuD64* disk = GetDisk();
-	// if (filename == NULL || *filename == 0)
-	// 	filename = "FILENAME";
-	// if (disk == 0)
+  EmuD64* disk = GetDisk();
+	if (filename == NULL || *filename == 0)
+		filename = "FILENAME";
+	if (disk == 0)
 		return false;
-	// int len = addr2 - addr1 + 2;
-	// unsigned char* bytes = (unsigned char*)malloc(len);
-	// if (bytes == 0 || len < 2)
-	// 	return false;
-	// bytes[0] = LO(addr1);
-	// bytes[1] = HI(addr1);
-	// for (int i = 0; i < len-2; ++i)
-	// 	bytes[i+2] = GetMemory(addr1+i);
-	// disk->StoreFileByName(filename, bytes, len);
-	// free(bytes);
-	// return true;
+	int len = addr2 - addr1 + 2;
+	unsigned char* bytes = (unsigned char*)malloc(len);
+	if (bytes == 0 || len < 2)
+		return false;
+	bytes[0] = LO(addr1);
+	bytes[1] = HI(addr1);
+	for (int i = 0; i < len-2; ++i)
+		bytes[i+2] = GetMemory(addr1+i);
+	disk->StoreFileByName(filename, bytes, len);
+	free(bytes);
+	return true;
 }
 
 static bool LoadStartupPrg()
 {
 	bool result;
 	byte err;
-  //EmuD64* 
-  void* disk = GetDisk();
+  EmuD64* disk = GetDisk();
   if (disk == 0)
     return false;
 	result = FileLoad(&err);
@@ -1186,8 +1183,8 @@ void C64_Init(void)
   //File_ReadAllBytes(chargen_rom, sizeof(chargen_rom), chargen_file);
 	//File_ReadAllBytes(kernal_rom, sizeof(kernal_rom), kernal_file);
 
-  // disks[0] = new EmuD64("drive8.d64");
-  // disks[1] = new EmuD64("drive9.d64");
+  //disks[0] = new EmuD64("drive8.d64");
+  //disks[1] = new EmuD64("drive9.d64");
 
 	for (unsigned i = 0; i < sizeof(ram); ++i)
 		ram[i] = 0;
