@@ -1,3 +1,4 @@
+"use strict";
 // c64-kbd.ts - Web browser keyboard events to Commodore 64 scan codes
 //
 ////////////////////////////////////////////////////////////////////////////////
@@ -38,33 +39,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __generator = (this && this.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
-    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
-    function verb(n) { return function (v) { return step([n, v]); }; }
-    function step(op) {
-        if (f) throw new TypeError("Generator is already executing.");
-        while (g && (g = 0, op[0] && (_ = 0)), _) try {
-            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [op[0] & 2, t.value];
-            switch (op[0]) {
-                case 0: case 1: t = op; break;
-                case 4: _.label++; return { value: op[1], done: false };
-                case 5: _.label++; y = op[1]; op = [0]; continue;
-                case 7: op = _.ops.pop(); _.trys.pop(); continue;
-                default:
-                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
-                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
-                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
-                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
-                    if (t[2]) _.ops.pop();
-                    _.trys.pop(); continue;
-            }
-            op = body.call(thisArg, _);
-        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
-        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
-    }
-};
 // PC(US) keyboard to Commodore keyboard symbolic mapping
 // STOP(ESC) F1 F2 F3 F4 F5 F6 F7 F8 Help(F9)                  Run/Stop(Pause/Break)
 //           1! 2@ 3# 4$ 5% 6^ 7& 8* 9( 0) -_ += DelIns Ins HmClr Rstr     / * -
@@ -102,7 +76,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 //           QWERTYUIOP  pi(greek letter for 3.1415..)
 //           ASDFGHJKL[]=
 //           ZXCVBNM<>?    Up Lt
-var keyDictionary = {
+let keyDictionary = {
     'a': { scan: 10 },
     'b': { scan: 28 },
     'c': { scan: 20 },
@@ -219,82 +193,63 @@ var keyDictionary = {
     'F5': { scan: 6 },
     'F6': { scan: 6, shift: 1 },
     'F7': { scan: 3 },
-    'F8': { scan: 3, shift: 1 }
+    'F8': { scan: 3, shift: 1 },
 };
-var keys = [];
-var last_keys = "";
-var port = null;
-var C64keymapper = /** @class */ (function () {
-    function C64keymapper() {
+let keys = [];
+let last_keys = "";
+let port = null;
+class C64keymapper {
+    constructor() {
         var _a;
         document.addEventListener("keydown", C64keyEvent, true);
         document.addEventListener("keyup", C64keyEvent, true);
         document.addEventListener("input", C64inputEvent);
         (_a = document.getElementById("return")) === null || _a === void 0 ? void 0 : _a.addEventListener("click", C64ReturnClicked);
     }
-    return C64keymapper;
-}());
+}
 function GetSerialPort() {
-    return __awaiter(this, void 0, void 0, function () {
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0: return [4 /*yield*/, navigator.serial.requestPort()];
-                case 1:
-                    port = _a.sent();
-                    return [4 /*yield*/, port.open({ baudRate: 115200 })];
-                case 2:
-                    _a.sent();
-                    return [2 /*return*/];
-            }
-        });
+    return __awaiter(this, void 0, void 0, function* () {
+        port = yield navigator.serial.requestPort();
+        yield port.open({ baudRate: 115200 });
     });
 }
 function SerialWrite(msg) {
-    return __awaiter(this, void 0, void 0, function () {
-        var writer, data, i;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0:
-                    if (port == null || msg == null || msg.length == 0)
-                        return [2 /*return*/];
-                    writer = port.writable.getWriter();
-                    data = new Uint8Array(msg.length + 1);
-                    for (i = 0; i < msg.length; ++i)
-                        data[i] = msg.charCodeAt(i);
-                    data[msg.length] = '|'.charCodeAt(0);
-                    return [4 /*yield*/, writer.write(data)];
-                case 1:
-                    _a.sent();
-                    writer.releaseLock();
-                    console.log(msg);
-                    return [2 /*return*/];
-            }
-        });
+    return __awaiter(this, void 0, void 0, function* () {
+        if (port == null || msg == null || msg.length == 0)
+            return;
+        const writer = port.writable.getWriter();
+        const data = new Uint8Array(msg.length + 1);
+        for (let i = 0; i < msg.length; ++i)
+            data[i] = msg.charCodeAt(i);
+        data[msg.length] = '|'.charCodeAt(0);
+        yield writer.write(data);
+        writer.releaseLock();
+        console.log(msg);
     });
 }
 function C64ReturnClicked(ev) {
-    var input = document.getElementById("input");
-    var data = input.value;
+    let input = document.getElementById("input");
+    let data = input.value;
     input.value = "";
     // send each key to keydown/keyup handler
-    for (var i = 0; data != null && i < data.length; ++i) {
-        var c_1 = data[i];
-        if (c_1 == '\n')
-            c_1 = 'Enter';
-        var evt_1 = new KeyboardEvent("keydown", { key: c_1 });
-        C64keyEventEx(evt_1);
-        evt_1 = new KeyboardEvent("keyup", { key: c_1 });
-        C64keyEventEx(evt_1);
+    for (let i = 0; data != null && i < data.length; ++i) {
+        let c = data[i];
+        if (c == '\n')
+            c = 'Enter';
+        let evt = new KeyboardEvent("keydown", { key: c });
+        C64keyEventEx(evt);
+        evt = new KeyboardEvent("keyup", { key: c });
+        C64keyEventEx(evt);
     }
-    var c = "Enter";
-    var evt = new KeyboardEvent("keydown", { key: c });
+    let c = "Enter";
+    let evt = new KeyboardEvent("keydown", { key: c });
     C64keyEventEx(evt);
     evt = new KeyboardEvent("keyup", { key: c });
     C64keyEventEx(evt);
 }
 function C64inputEvent(ev) {
-    var input = ev;
-    var data = input.data;
+    let input = ev;
+    let data = input.data;
     // // log it
     // let date = new Date();
     // let msg = (date.getSeconds()+date.getMilliseconds()/1000) + 
@@ -307,16 +262,16 @@ function C64inputEvent(ev) {
     //     log.innerHTML = log.innerHTML + "<br>" + msg;
     //console.log("input " + data);
     // remove whatever is typed from input field
-    var clear = document.getElementById("clear input").checked;
+    let clear = document.getElementById("clear input").checked;
     if (clear) {
         document.getElementById("input").value = "";
         // send each key to keydown/keyup handler
-        var i = void 0;
+        let i;
         for (i = 0; !input.isComposing && data != null && i < data.length; ++i) {
-            var c = data[i];
+            let c = data[i];
             if (c == '\n')
                 c = 'Enter';
-            var evt = new KeyboardEvent("keydown", { key: c });
+            let evt = new KeyboardEvent("keydown", { key: c });
             C64keyEventEx(evt);
             evt = new KeyboardEvent("keyup", { key: c });
             C64keyEventEx(evt);
@@ -324,7 +279,7 @@ function C64inputEvent(ev) {
     }
 }
 function C64keyEvent(event) {
-    var result = C64keyEventEx(event);
+    let result = C64keyEventEx(event);
     if (!result) {
         event.preventDefault(); // disable all keys default actions (as allowed by OS and user agent)
         event.stopPropagation();
@@ -332,14 +287,14 @@ function C64keyEvent(event) {
     return result;
 }
 function C64keyEventEx(event) {
-    var i;
-    var scan = 64;
-    var key = keyDictionary[event.key];
+    let i;
+    let scan = 64;
+    let key = keyDictionary[event.key];
     if (key == null)
         key = keyDictionary[event.code];
     if (key != null)
         scan = key.scan;
-    var release = key === null || key === void 0 ? void 0 : key.release;
+    let release = key === null || key === void 0 ? void 0 : key.release;
     switch (key === null || key === void 0 ? void 0 : key.shift) {
         case 0: // delete shift
             i = keys.indexOf(keyDictionary['ShiftLeft'].scan);
@@ -394,7 +349,7 @@ function C64keyEventEx(event) {
                 keys.splice(i, 1);
         }
     }
-    var msg = keys.toString();
+    let msg = keys.toString();
     if (msg.length == 0)
         msg = '64';
     if (msg != last_keys) {
@@ -403,5 +358,4 @@ function C64keyEventEx(event) {
     }
     return (scan == 64);
 }
-var mapper = new C64keymapper();
-//# sourceMappingURL=c64-main-ui.js.map
+const mapper = new C64keymapper();
