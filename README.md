@@ -14,6 +14,10 @@ SD support not integrated yet (should be a simple port for Core2, CoreS3).
 
 ![M5 Basic Core shown next to mini USB keyboard](browser-keyscan-helper/core_keyboard.jpg)
 
+![Photo showing bluetooth Palm Portable Keyboard, Phone running key scan helper with serial USB to M5](browser-keyscan-helper/palm_phone_serial.jpg)
+
+![Block diagram showing bluetooth Palm Portable Keyboard, Phone running key scan helper with serial USB to M5](browser-keyscan-helper/block_diagram.png)
+
 ![Early prototype with various M5 Core models](m5cores.jpg)
 
 * Basic Core
