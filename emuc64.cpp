@@ -90,7 +90,7 @@ static void ReadKeyboard()
   if (Serial.available()) {
     String s = Serial.readString();
     int src = 0;
-    int dest = 0; if (c == ',' || c = if (c == ',' || c == '|')= '|')
+    int dest = 0;
     int scan = 0;
     while (src < s.length() && dest < 16) {
       char c = s.charAt(src++);

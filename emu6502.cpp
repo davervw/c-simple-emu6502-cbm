@@ -514,22 +514,22 @@ static void JMPIND(ushort *p_addr, byte *p_bytes)
 }
 
 // "A:FF X:FF Y:FF S:FF P:XX-XXXXX"
-static void GetDisplayState(char *state, int state_size)
-{
-	snprintf(state, state_size, "A:%02X X:%02X Y:%02X S:%02X P:%c%c-%c%c%c%c%c",
-		A,
-		X,
-		Y,
-		S,
-		N ? 'N' : ' ',
-		V ? 'V' : ' ',
-		B ? 'B' : ' ',
-		D ? 'D' : ' ',
-		I ? 'I' : ' ',
-		Z ? 'Z' : ' ',
-		C ? 'C' : ' '
-	);
-}
+// static void GetDisplayState(char *state, int state_size)
+// {
+// 	snprintf(state, state_size, "A:%02X X:%02X Y:%02X S:%02X P:%c%c-%c%c%c%c%c",
+// 		A,
+// 		X,
+// 		Y,
+// 		S,
+// 		N ? 'N' : ' ',
+// 		V ? 'V' : ' ',
+// 		B ? 'B' : ' ',
+// 		D ? 'D' : ' ',
+// 		I ? 'I' : ' ',
+// 		Z ? 'Z' : ' ',
+// 		C ? 'C' : ' '
+// 	);
+// }
 
 static byte GetIndX(ushort addr, byte *p_bytes)
 {
@@ -679,26 +679,27 @@ extern void Execute(ushort addr, bool (*ExecutePatch)(void))
         I = true;
         PC = (GetMemory(0xfffe) | (GetMemory(0xffff) << 8));
       } 
-			else if (trace || breakpoint || step)
-			{
-				ushort addr2;
-				char line[27];
-				char dis[13];
-				DisassembleLong(PC, &conditional, &bytes, &addr2, dis, sizeof(dis), line, sizeof(line));
-				char state[33];
-				GetDisplayState(state, sizeof(state));
-				char full_line[80];
-				snprintf(full_line, sizeof(full_line), "%-30s%s\n", line, state);
-#ifdef WIN32
-				OutputDebugStringA(full_line);
-#else				
-				//Serial.print(full_line);
-#endif				
-				if (step)
-					step = step; // user can put debug breakpoint here to allow stepping
-				if (breakpoint)
-					breakpoint = breakpoint; // user can put debug breakpoint here to allow break
-			}
+// 			else if (trace || breakpoint || step)
+// 			{
+// 				ushort addr2;
+// 				char line[27];
+// 				char dis[13];
+// 				DisassembleLong(PC, &conditional, &bytes, &addr2, dis, sizeof(dis), line, sizeof(line));
+// 				char state[33];
+// 				GetDisplayState(state, sizeof(state));
+// 				char full_line[80];
+// #ifdef WIN32
+// 				snprintf(full_line, sizeof(full_line), "%-30s%s\n", line, state);
+// 				OutputDebugStringA(full_line);
+// #else				
+// 				snprintf(full_line, sizeof(full_line), "%-30s%s\n", line, state);
+// 				Serial.print(full_line);
+// #endif				
+// 				if (step)
+// 					step = step; // user can put debug breakpoint here to allow stepping
+// 				if (breakpoint)
+// 					breakpoint = breakpoint; // user can put debug breakpoint here to allow break
+// 			}
 			if (ExecutePatch != 0 && !ExecutePatch()) // allow execute to be overriden at a specific address
 				break;
 		}
@@ -874,8 +875,8 @@ extern void Execute(ushort addr, bool (*ExecutePatch)(void))
 
 		default:
 			{
-        char buffer[40];
-				snprintf(buffer, sizeof(buffer), "Invalid opcode %02X at %04X", GetMemory(PC), PC);
+        // char buffer[40];
+				// snprintf(buffer, sizeof(buffer), "Invalid opcode %02X at %04X", GetMemory(PC), PC);
         //Serial.println(buffer);
 				exit(1);
 			}
@@ -888,278 +889,278 @@ extern void Execute(ushort addr, bool (*ExecutePatch)(void))
 // Examples:
 // FFFF FF FF FF JMP ($FFFF)
 // FFFF FF FF FF LDA $FFFF,X
-extern void DisassembleLong(ushort addr, bool *p_conditional, byte *p_bytes, ushort *p_addr2, char *dis, int dis_size, char *line, int line_size)
-{
-	DisassembleShort(addr, p_conditional, p_bytes, p_addr2, dis, dis_size);
-	snprintf(line, line_size, "%04X ", addr);
-	for (int i = 0; i < 3; ++i)
-	{
-		if (i < *p_bytes)
-			snprintf(line+strlen(line), line_size-strlen(line), "%02X ", GetMemory((ushort)(addr + i)));
-		else
-			strcat_s(line, line_size, "   ");
-	}
-	strcat_s(line, line_size, dis);
-}
+// extern void DisassembleLong(ushort addr, bool *p_conditional, byte *p_bytes, ushort *p_addr2, char *dis, int dis_size, char *line, int line_size)
+// {
+// 	DisassembleShort(addr, p_conditional, p_bytes, p_addr2, dis, dis_size);
+// 	snprintf(line, line_size, "%04X ", addr);
+// 	for (int i = 0; i < 3; ++i)
+// 	{
+// 		if (i < *p_bytes)
+// 			snprintf(line+strlen(line), line_size-strlen(line), "%02X ", GetMemory((ushort)(addr + i)));
+// 		else
+// 			strcat_s(line, line_size, "   ");
+// 	}
+// 	strcat_s(line, line_size, dis);
+// }
 
-static void Ind(char *dis, int dis_size, const char* opcode, ushort addr, ushort *p_addr2, byte *p_bytes)
-{
-	*p_bytes = 3;
-	ushort addr1 = (ushort)(GetMemory((ushort)(addr + 1)) | (GetMemory((ushort)(addr + 2)) << 8));
-	*p_addr2 = (ushort)(GetMemory(addr1) | (GetMemory((ushort)(addr1 + 1)) << 8));
-	snprintf(dis, dis_size, "%s ($%0X4)", opcode, addr1);
-}
+// static void Ind(char *dis, int dis_size, const char* opcode, ushort addr, ushort *p_addr2, byte *p_bytes)
+// {
+// 	*p_bytes = 3;
+// 	ushort addr1 = (ushort)(GetMemory((ushort)(addr + 1)) | (GetMemory((ushort)(addr + 2)) << 8));
+// 	*p_addr2 = (ushort)(GetMemory(addr1) | (GetMemory((ushort)(addr1 + 1)) << 8));
+// 	snprintf(dis, dis_size, "%s ($%0X4)", opcode, addr1);
+// }
 
-static void IndX(char *dis, int dis_size, const char* opcode, ushort addr, byte *p_bytes)
-{
-	*p_bytes = 2;
-	snprintf(dis, dis_size, "%s ($%02X,X)", opcode, GetMemory((ushort)(addr + 1)));
-}
+// static void IndX(char *dis, int dis_size, const char* opcode, ushort addr, byte *p_bytes)
+// {
+// 	*p_bytes = 2;
+// 	snprintf(dis, dis_size, "%s ($%02X,X)", opcode, GetMemory((ushort)(addr + 1)));
+// }
 
-static void IndY(char *dis, int dis_size, const char* opcode, ushort addr, byte *p_bytes)
-{
-	*p_bytes = 2;
-	snprintf(dis, dis_size, "%s ($%02X),Y", opcode, GetMemory((ushort)(addr + 1)));
-}
+// static void IndY(char *dis, int dis_size, const char* opcode, ushort addr, byte *p_bytes)
+// {
+// 	*p_bytes = 2;
+// 	snprintf(dis, dis_size, "%s ($%02X),Y", opcode, GetMemory((ushort)(addr + 1)));
+// }
 
-static void ZP(char *dis, int dis_size, const char* opcode, ushort addr, byte *p_bytes)
-{
-	*p_bytes = 2;
-	snprintf(dis, dis_size, "%s $%02X", opcode, GetMemory((ushort)(addr + 1)));
-}
+// static void ZP(char *dis, int dis_size, const char* opcode, ushort addr, byte *p_bytes)
+// {
+// 	*p_bytes = 2;
+// 	snprintf(dis, dis_size, "%s $%02X", opcode, GetMemory((ushort)(addr + 1)));
+// }
 
-static void ZPX(char *dis, int dis_size, const char* opcode, ushort addr, byte *p_bytes)
-{
-	*p_bytes = 2;
-	snprintf(dis, dis_size, "%s $%02X,X", opcode, GetMemory((ushort)(addr + 1)));
-}
+// static void ZPX(char *dis, int dis_size, const char* opcode, ushort addr, byte *p_bytes)
+// {
+// 	*p_bytes = 2;
+// 	snprintf(dis, dis_size, "%s $%02X,X", opcode, GetMemory((ushort)(addr + 1)));
+// }
 
-static void ZPY(char *dis, int dis_size, const char* opcode, ushort addr, byte *p_bytes)
-{
-	*p_bytes = 2;
-	snprintf(dis, dis_size, "%s $%02X,Y", opcode, GetMemory((ushort)(addr + 1)));
-}
+// static void ZPY(char *dis, int dis_size, const char* opcode, ushort addr, byte *p_bytes)
+// {
+// 	*p_bytes = 2;
+// 	snprintf(dis, dis_size, "%s $%02X,Y", opcode, GetMemory((ushort)(addr + 1)));
+// }
 
-static void ABS(char *dis, int dis_size, const char* opcode, ushort addr, byte *p_bytes)
-{
-	*p_bytes = 3;
-	snprintf(dis, dis_size, "%s $%04X", opcode, GetMemory((ushort)(addr + 1)) | (GetMemory((ushort)(addr + 2)) << 8));
-}
+// static void ABS(char *dis, int dis_size, const char* opcode, ushort addr, byte *p_bytes)
+// {
+// 	*p_bytes = 3;
+// 	snprintf(dis, dis_size, "%s $%04X", opcode, GetMemory((ushort)(addr + 1)) | (GetMemory((ushort)(addr + 2)) << 8));
+// }
 
-static void ABSAddr(char *dis, int dis_size, const char* opcode, ushort addr, ushort *p_addr2, byte *p_bytes)
-{
-	*p_bytes = 3;
-	*p_addr2 = (ushort)(GetMemory((ushort)(addr + 1)) | (GetMemory((ushort)(addr + 2)) << 8));
-	snprintf(dis, dis_size, "%s $%04X", opcode, *p_addr2);
-}
+// static void ABSAddr(char *dis, int dis_size, const char* opcode, ushort addr, ushort *p_addr2, byte *p_bytes)
+// {
+// 	*p_bytes = 3;
+// 	*p_addr2 = (ushort)(GetMemory((ushort)(addr + 1)) | (GetMemory((ushort)(addr + 2)) << 8));
+// 	snprintf(dis, dis_size, "%s $%04X", opcode, *p_addr2);
+// }
 
-static void ABSX(char *dis, int dis_size, const char* opcode, ushort addr, byte *p_bytes)
-{
-	*p_bytes = 3;
-	snprintf(dis, dis_size, "%s $%04X,X", opcode, GetMemory((ushort)(addr + 1)) | (GetMemory((ushort)(addr + 2)) << 8));
-}
+// static void ABSX(char *dis, int dis_size, const char* opcode, ushort addr, byte *p_bytes)
+// {
+// 	*p_bytes = 3;
+// 	snprintf(dis, dis_size, "%s $%04X,X", opcode, GetMemory((ushort)(addr + 1)) | (GetMemory((ushort)(addr + 2)) << 8));
+// }
 
-static void ABSY(char *dis, int dis_size, const char* opcode, ushort addr, byte *p_bytes)
-{
-	*p_bytes = 3;
-	snprintf(dis, dis_size, "%s $%04X,Y", opcode, GetMemory((ushort)(addr + 1)) | (GetMemory((ushort)(addr + 2)) << 8));
-}
+// static void ABSY(char *dis, int dis_size, const char* opcode, ushort addr, byte *p_bytes)
+// {
+// 	*p_bytes = 3;
+// 	snprintf(dis, dis_size, "%s $%04X,Y", opcode, GetMemory((ushort)(addr + 1)) | (GetMemory((ushort)(addr + 2)) << 8));
+// }
 
-static void IM(char *dis, int dis_size, const char* opcode, ushort addr, byte *p_bytes)
-{
-	*p_bytes = 2;
-	snprintf(dis, dis_size, "%s #$%02X", opcode, GetMemory((ushort)(addr + 1)));
-}
+// static void IM(char *dis, int dis_size, const char* opcode, ushort addr, byte *p_bytes)
+// {
+// 	*p_bytes = 2;
+// 	snprintf(dis, dis_size, "%s #$%02X", opcode, GetMemory((ushort)(addr + 1)));
+// }
 
-static void BRX(char *dis, int dis_size, const char* opcode, ushort addr, bool *p_conditional, ushort *p_addr2, byte *p_bytes)
-{
-	*p_bytes = 2;
-	*p_conditional = true;
-	sbyte offset = (sbyte)GetMemory((ushort)(addr + 1));
-	*p_addr2 = (ushort)(addr + 2 + offset);
-	snprintf(dis, dis_size, "%s $%04X", opcode, *p_addr2);
-}
+// static void BRX(char *dis, int dis_size, const char* opcode, ushort addr, bool *p_conditional, ushort *p_addr2, byte *p_bytes)
+// {
+// 	*p_bytes = 2;
+// 	*p_conditional = true;
+// 	sbyte offset = (sbyte)GetMemory((ushort)(addr + 1));
+// 	*p_addr2 = (ushort)(addr + 2 + offset);
+// 	snprintf(dis, dis_size, "%s $%04X", opcode, *p_addr2);
+// }
 
 // JMP ($FFFF)
 // LDA $FFFF,X
-extern void DisassembleShort(ushort addr, bool *p_conditional, byte *p_bytes, ushort *p_addr2, char *dis, int dis_size)
-{
-	*p_conditional = false;
-	*p_addr2 = 0;
-	*p_bytes = 1;
+// extern void DisassembleShort(ushort addr, bool *p_conditional, byte *p_bytes, ushort *p_addr2, char *dis, int dis_size)
+// {
+// 	*p_conditional = false;
+// 	*p_addr2 = 0;
+// 	*p_bytes = 1;
 
-	switch (GetMemory(addr))
-	{
-	case 0x00: strcpy_s(dis, dis_size, "BRK"); return;
-	case 0x01: IndX(dis, dis_size, "ORA", addr, p_bytes); return;
-	case 0x05: ZP(dis, dis_size, "ORA", addr, p_bytes); return;
-	case 0x06: ZP(dis, dis_size, "ASL", addr, p_bytes); return;
-	case 0x08: strcpy_s(dis, dis_size, "PHP"); return;
-	case 0x09: IM(dis, dis_size, "ORA", addr, p_bytes); return;
-	case 0x0A: strcpy_s(dis, dis_size, "ASL A"); return;
-	case 0x0D: ABS(dis, dis_size, "ORA", addr, p_bytes); return;
-	case 0x0E: ABS(dis, dis_size, "ASL", addr, p_bytes); return;
+// 	switch (GetMemory(addr))
+// 	{
+// 	case 0x00: strcpy_s(dis, dis_size, "BRK"); return;
+// 	case 0x01: IndX(dis, dis_size, "ORA", addr, p_bytes); return;
+// 	case 0x05: ZP(dis, dis_size, "ORA", addr, p_bytes); return;
+// 	case 0x06: ZP(dis, dis_size, "ASL", addr, p_bytes); return;
+// 	case 0x08: strcpy_s(dis, dis_size, "PHP"); return;
+// 	case 0x09: IM(dis, dis_size, "ORA", addr, p_bytes); return;
+// 	case 0x0A: strcpy_s(dis, dis_size, "ASL A"); return;
+// 	case 0x0D: ABS(dis, dis_size, "ORA", addr, p_bytes); return;
+// 	case 0x0E: ABS(dis, dis_size, "ASL", addr, p_bytes); return;
 
-	case 0x10: BRX(dis, dis_size, "BPL", addr, p_conditional, p_addr2, p_bytes); return;
-	case 0x11: IndY(dis, dis_size, "ORA", addr, p_bytes); return;
-	case 0x15: ZPX(dis, dis_size, "ORA", addr, p_bytes); return;
-	case 0x16: ZPX(dis, dis_size, "ASL", addr, p_bytes); return;
-	case 0x18: strcpy_s(dis, dis_size, "CLC"); return;
-	case 0x19: ABSY(dis, dis_size, "ORA", addr, p_bytes); return;
-	case 0x1D: ABSX(dis, dis_size, "ORA", addr, p_bytes); return;
-	case 0x1E: ABSX(dis, dis_size, "ASL", addr, p_bytes); return;
+// 	case 0x10: BRX(dis, dis_size, "BPL", addr, p_conditional, p_addr2, p_bytes); return;
+// 	case 0x11: IndY(dis, dis_size, "ORA", addr, p_bytes); return;
+// 	case 0x15: ZPX(dis, dis_size, "ORA", addr, p_bytes); return;
+// 	case 0x16: ZPX(dis, dis_size, "ASL", addr, p_bytes); return;
+// 	case 0x18: strcpy_s(dis, dis_size, "CLC"); return;
+// 	case 0x19: ABSY(dis, dis_size, "ORA", addr, p_bytes); return;
+// 	case 0x1D: ABSX(dis, dis_size, "ORA", addr, p_bytes); return;
+// 	case 0x1E: ABSX(dis, dis_size, "ASL", addr, p_bytes); return;
 
-	case 0x20: ABSAddr(dis, dis_size, "JSR", addr, p_addr2, p_bytes); return;
-	case 0x21: IndX(dis, dis_size, "AND", addr, p_bytes); return;
-	case 0x24: ZP(dis, dis_size, "BIT", addr, p_bytes); return;
-	case 0x25: ZP(dis, dis_size, "AND", addr, p_bytes); return;
-	case 0x26: ZP(dis, dis_size, "ROL", addr, p_bytes); return;
-	case 0x28: strcpy_s(dis, dis_size, "PLP"); return;
-	case 0x29: IM(dis, dis_size, "AND", addr, p_bytes); return;
-	case 0x2A: strcpy_s(dis, dis_size, "ROL A"); return;
-	case 0x2C: ABS(dis, dis_size, "BIT", addr, p_bytes); return;
-	case 0x2D: ABS(dis, dis_size, "AND", addr, p_bytes); return;
-	case 0x2E: ABS(dis, dis_size, "ROL", addr, p_bytes); return;
+// 	case 0x20: ABSAddr(dis, dis_size, "JSR", addr, p_addr2, p_bytes); return;
+// 	case 0x21: IndX(dis, dis_size, "AND", addr, p_bytes); return;
+// 	case 0x24: ZP(dis, dis_size, "BIT", addr, p_bytes); return;
+// 	case 0x25: ZP(dis, dis_size, "AND", addr, p_bytes); return;
+// 	case 0x26: ZP(dis, dis_size, "ROL", addr, p_bytes); return;
+// 	case 0x28: strcpy_s(dis, dis_size, "PLP"); return;
+// 	case 0x29: IM(dis, dis_size, "AND", addr, p_bytes); return;
+// 	case 0x2A: strcpy_s(dis, dis_size, "ROL A"); return;
+// 	case 0x2C: ABS(dis, dis_size, "BIT", addr, p_bytes); return;
+// 	case 0x2D: ABS(dis, dis_size, "AND", addr, p_bytes); return;
+// 	case 0x2E: ABS(dis, dis_size, "ROL", addr, p_bytes); return;
 
-	case 0x30: BRX(dis, dis_size, "BMI", addr, p_conditional, p_addr2, p_bytes); return;
-	case 0x31: IndY(dis, dis_size, "AND", addr, p_bytes); return;
-	case 0x35: ZPX(dis, dis_size, "AND", addr, p_bytes); return;
-	case 0x36: ZPX(dis, dis_size, "ROL", addr, p_bytes); return;
-	case 0x38: strcpy_s(dis, dis_size, "SEC"); return;
-	case 0x39: ABSY(dis, dis_size, "AND", addr, p_bytes); return;
-	case 0x3D: ABSX(dis, dis_size, "AND", addr, p_bytes); return;
-	case 0x3E: ABSX(dis, dis_size, "ROL", addr, p_bytes); return;
+// 	case 0x30: BRX(dis, dis_size, "BMI", addr, p_conditional, p_addr2, p_bytes); return;
+// 	case 0x31: IndY(dis, dis_size, "AND", addr, p_bytes); return;
+// 	case 0x35: ZPX(dis, dis_size, "AND", addr, p_bytes); return;
+// 	case 0x36: ZPX(dis, dis_size, "ROL", addr, p_bytes); return;
+// 	case 0x38: strcpy_s(dis, dis_size, "SEC"); return;
+// 	case 0x39: ABSY(dis, dis_size, "AND", addr, p_bytes); return;
+// 	case 0x3D: ABSX(dis, dis_size, "AND", addr, p_bytes); return;
+// 	case 0x3E: ABSX(dis, dis_size, "ROL", addr, p_bytes); return;
 
-	case 0x40: strcpy_s(dis, dis_size, "RTI"); return;
-	case 0x41: IndX(dis, dis_size, "EOR", addr, p_bytes); return;
-	case 0x45: ZP(dis, dis_size, "EOR", addr, p_bytes); return;
-	case 0x46: ZP(dis, dis_size, "LSR", addr, p_bytes); return;
-	case 0x48: strcpy_s(dis, dis_size, "PHA"); return;
-	case 0x49: IM(dis, dis_size, "EOR", addr, p_bytes); return;
-	case 0x4A: strcpy_s(dis, dis_size, "LSR A"); return;
-	case 0x4C: ABSAddr(dis, dis_size, "JMP", addr, p_addr2, p_bytes); return;
-	case 0x4D: ABS(dis, dis_size, "EOR", addr, p_bytes); return;
-	case 0x4E: ABS(dis, dis_size, "LSR", addr, p_bytes); return;
+// 	case 0x40: strcpy_s(dis, dis_size, "RTI"); return;
+// 	case 0x41: IndX(dis, dis_size, "EOR", addr, p_bytes); return;
+// 	case 0x45: ZP(dis, dis_size, "EOR", addr, p_bytes); return;
+// 	case 0x46: ZP(dis, dis_size, "LSR", addr, p_bytes); return;
+// 	case 0x48: strcpy_s(dis, dis_size, "PHA"); return;
+// 	case 0x49: IM(dis, dis_size, "EOR", addr, p_bytes); return;
+// 	case 0x4A: strcpy_s(dis, dis_size, "LSR A"); return;
+// 	case 0x4C: ABSAddr(dis, dis_size, "JMP", addr, p_addr2, p_bytes); return;
+// 	case 0x4D: ABS(dis, dis_size, "EOR", addr, p_bytes); return;
+// 	case 0x4E: ABS(dis, dis_size, "LSR", addr, p_bytes); return;
 
-	case 0x50: BRX(dis, dis_size, "BVC", addr, p_conditional, p_addr2, p_bytes); return;
-	case 0x51: IndY(dis, dis_size, "EOR", addr, p_bytes); return;
-	case 0x55: ZPX(dis, dis_size, "EOR", addr, p_bytes); return;
-	case 0x56: ZPX(dis, dis_size, "LSR", addr, p_bytes); return;
-	case 0x58: strcpy_s(dis, dis_size, "CLI"); return;
-	case 0x59: ABSY(dis, dis_size, "EOR", addr, p_bytes); return;
-	case 0x5D: ABSX(dis, dis_size, "EOR", addr, p_bytes); return;
-	case 0x5E: ABSX(dis, dis_size, "LSR", addr, p_bytes); return;
+// 	case 0x50: BRX(dis, dis_size, "BVC", addr, p_conditional, p_addr2, p_bytes); return;
+// 	case 0x51: IndY(dis, dis_size, "EOR", addr, p_bytes); return;
+// 	case 0x55: ZPX(dis, dis_size, "EOR", addr, p_bytes); return;
+// 	case 0x56: ZPX(dis, dis_size, "LSR", addr, p_bytes); return;
+// 	case 0x58: strcpy_s(dis, dis_size, "CLI"); return;
+// 	case 0x59: ABSY(dis, dis_size, "EOR", addr, p_bytes); return;
+// 	case 0x5D: ABSX(dis, dis_size, "EOR", addr, p_bytes); return;
+// 	case 0x5E: ABSX(dis, dis_size, "LSR", addr, p_bytes); return;
 
-	case 0x60: strcpy_s(dis, dis_size, "RTS"); return;
-	case 0x61: IndX(dis, dis_size, "ADC", addr, p_bytes); return;
-	case 0x65: ZP(dis, dis_size, "ADC", addr, p_bytes); return;
-	case 0x66: ZP(dis, dis_size, "ROR", addr, p_bytes); return;
-	case 0x68: strcpy_s(dis, dis_size, "PLA"); return;
-	case 0x69: IM(dis, dis_size, "ADC", addr, p_bytes); return;
-	case 0x6A: strcpy_s(dis, dis_size, "ROR A"); return;
-	case 0x6C: Ind(dis, dis_size, "JMP", addr, p_addr2, p_bytes); return;
-	case 0x6D: ABS(dis, dis_size, "ADC", addr, p_bytes); return;
-	case 0x6E: ABS(dis, dis_size, "ROR", addr, p_bytes); return;
+// 	case 0x60: strcpy_s(dis, dis_size, "RTS"); return;
+// 	case 0x61: IndX(dis, dis_size, "ADC", addr, p_bytes); return;
+// 	case 0x65: ZP(dis, dis_size, "ADC", addr, p_bytes); return;
+// 	case 0x66: ZP(dis, dis_size, "ROR", addr, p_bytes); return;
+// 	case 0x68: strcpy_s(dis, dis_size, "PLA"); return;
+// 	case 0x69: IM(dis, dis_size, "ADC", addr, p_bytes); return;
+// 	case 0x6A: strcpy_s(dis, dis_size, "ROR A"); return;
+// 	case 0x6C: Ind(dis, dis_size, "JMP", addr, p_addr2, p_bytes); return;
+// 	case 0x6D: ABS(dis, dis_size, "ADC", addr, p_bytes); return;
+// 	case 0x6E: ABS(dis, dis_size, "ROR", addr, p_bytes); return;
 
-	case 0x70: BRX(dis, dis_size, "BVS", addr, p_conditional, p_addr2, p_bytes); return;
-	case 0x71: IndY(dis, dis_size, "ADC", addr, p_bytes); return;
-	case 0x75: ZPX(dis, dis_size, "ADC", addr, p_bytes); return;
-	case 0x76: ZPX(dis, dis_size, "ROR", addr, p_bytes); return;
-	case 0x78: strcpy_s(dis, dis_size, "SEI"); return;
-	case 0x79: ABSY(dis, dis_size, "ADC", addr, p_bytes); return;
-	case 0x7D: ABSX(dis, dis_size, "ADC", addr, p_bytes); return;
-	case 0x7E: ABSX(dis, dis_size, "ROR", addr, p_bytes); return;
+// 	case 0x70: BRX(dis, dis_size, "BVS", addr, p_conditional, p_addr2, p_bytes); return;
+// 	case 0x71: IndY(dis, dis_size, "ADC", addr, p_bytes); return;
+// 	case 0x75: ZPX(dis, dis_size, "ADC", addr, p_bytes); return;
+// 	case 0x76: ZPX(dis, dis_size, "ROR", addr, p_bytes); return;
+// 	case 0x78: strcpy_s(dis, dis_size, "SEI"); return;
+// 	case 0x79: ABSY(dis, dis_size, "ADC", addr, p_bytes); return;
+// 	case 0x7D: ABSX(dis, dis_size, "ADC", addr, p_bytes); return;
+// 	case 0x7E: ABSX(dis, dis_size, "ROR", addr, p_bytes); return;
 
-	case 0x81: IndX(dis, dis_size, "STA", addr, p_bytes); return;
-	case 0x84: ZP(dis, dis_size, "STY", addr, p_bytes); return;
-	case 0x85: ZP(dis, dis_size, "STA", addr, p_bytes); return;
-	case 0x86: ZP(dis, dis_size, "STX", addr, p_bytes); return;
-	case 0x88: strcpy_s(dis, dis_size, "DEY"); return;
-	case 0x8A: strcpy_s(dis, dis_size, "TXA"); return;
-	case 0x8C: ABS(dis, dis_size, "STY", addr, p_bytes); return;
-	case 0x8D: ABS(dis, dis_size, "STA", addr, p_bytes); return;
-	case 0x8E: ABS(dis, dis_size, "STX", addr, p_bytes); return;
+// 	case 0x81: IndX(dis, dis_size, "STA", addr, p_bytes); return;
+// 	case 0x84: ZP(dis, dis_size, "STY", addr, p_bytes); return;
+// 	case 0x85: ZP(dis, dis_size, "STA", addr, p_bytes); return;
+// 	case 0x86: ZP(dis, dis_size, "STX", addr, p_bytes); return;
+// 	case 0x88: strcpy_s(dis, dis_size, "DEY"); return;
+// 	case 0x8A: strcpy_s(dis, dis_size, "TXA"); return;
+// 	case 0x8C: ABS(dis, dis_size, "STY", addr, p_bytes); return;
+// 	case 0x8D: ABS(dis, dis_size, "STA", addr, p_bytes); return;
+// 	case 0x8E: ABS(dis, dis_size, "STX", addr, p_bytes); return;
 
-	case 0x90: BRX(dis, dis_size, "BCC", addr, p_conditional, p_addr2, p_bytes); return;
-	case 0x91: IndY(dis, dis_size, "STA", addr, p_bytes); return;
-	case 0x94: ZPX(dis, dis_size, "STY", addr, p_bytes); return;
-	case 0x95: ZPX(dis, dis_size, "STA", addr, p_bytes); return;
-	case 0x96: ZPY(dis, dis_size, "STX", addr, p_bytes); return;
-	case 0x98: strcpy_s(dis, dis_size, "TYA"); return;
-	case 0x99: ABSY(dis, dis_size, "STA", addr, p_bytes); return;
-	case 0x9A: strcpy_s(dis, dis_size, "TXS"); return;
-	case 0x9D: ABSX(dis, dis_size, "STA", addr, p_bytes); return;
+// 	case 0x90: BRX(dis, dis_size, "BCC", addr, p_conditional, p_addr2, p_bytes); return;
+// 	case 0x91: IndY(dis, dis_size, "STA", addr, p_bytes); return;
+// 	case 0x94: ZPX(dis, dis_size, "STY", addr, p_bytes); return;
+// 	case 0x95: ZPX(dis, dis_size, "STA", addr, p_bytes); return;
+// 	case 0x96: ZPY(dis, dis_size, "STX", addr, p_bytes); return;
+// 	case 0x98: strcpy_s(dis, dis_size, "TYA"); return;
+// 	case 0x99: ABSY(dis, dis_size, "STA", addr, p_bytes); return;
+// 	case 0x9A: strcpy_s(dis, dis_size, "TXS"); return;
+// 	case 0x9D: ABSX(dis, dis_size, "STA", addr, p_bytes); return;
 
-	case 0xA0: IM(dis, dis_size, "LDY", addr, p_bytes); return;
-	case 0xA1: IndX(dis, dis_size, "LDA", addr, p_bytes); return;
-	case 0xA2: IM(dis, dis_size, "LDX", addr, p_bytes); return;
-	case 0xA4: ZP(dis, dis_size, "LDY", addr, p_bytes); return;
-	case 0xA5: ZP(dis, dis_size, "LDA", addr, p_bytes); return;
-	case 0xA6: ZP(dis, dis_size, "LDX", addr, p_bytes); return;
-	case 0xA8: strcpy_s(dis, dis_size, "TAY"); return;
-	case 0xA9: IM(dis, dis_size, "LDA", addr, p_bytes); return;
-	case 0xAA: strcpy_s(dis, dis_size, "TAX"); return;
-	case 0xAC: ABS(dis, dis_size, "LDY", addr, p_bytes); return;
-	case 0xAD: ABS(dis, dis_size, "LDA", addr, p_bytes); return;
-	case 0xAE: ABS(dis, dis_size, "LDX", addr, p_bytes); return;
+// 	case 0xA0: IM(dis, dis_size, "LDY", addr, p_bytes); return;
+// 	case 0xA1: IndX(dis, dis_size, "LDA", addr, p_bytes); return;
+// 	case 0xA2: IM(dis, dis_size, "LDX", addr, p_bytes); return;
+// 	case 0xA4: ZP(dis, dis_size, "LDY", addr, p_bytes); return;
+// 	case 0xA5: ZP(dis, dis_size, "LDA", addr, p_bytes); return;
+// 	case 0xA6: ZP(dis, dis_size, "LDX", addr, p_bytes); return;
+// 	case 0xA8: strcpy_s(dis, dis_size, "TAY"); return;
+// 	case 0xA9: IM(dis, dis_size, "LDA", addr, p_bytes); return;
+// 	case 0xAA: strcpy_s(dis, dis_size, "TAX"); return;
+// 	case 0xAC: ABS(dis, dis_size, "LDY", addr, p_bytes); return;
+// 	case 0xAD: ABS(dis, dis_size, "LDA", addr, p_bytes); return;
+// 	case 0xAE: ABS(dis, dis_size, "LDX", addr, p_bytes); return;
 
-	case 0xB0: BRX(dis, dis_size, "BCS", addr, p_conditional, p_addr2, p_bytes); return;
-	case 0xB1: IndY(dis, dis_size, "LDA", addr, p_bytes); return;
-	case 0xB4: ZPX(dis, dis_size, "LDY", addr, p_bytes); return;
-	case 0xB5: ZPX(dis, dis_size, "LDA", addr, p_bytes); return;
-	case 0xB6: ZPY(dis, dis_size, "LDX", addr, p_bytes); return;
-	case 0xB8: strcpy_s(dis, dis_size, "CLV"); return;
-	case 0xB9: ABSY(dis, dis_size, "LDA", addr, p_bytes); return;
-	case 0xBA: strcpy_s(dis, dis_size, "TSX"); return;
-	case 0xBC: ABSX(dis, dis_size, "LDY", addr, p_bytes); return;
-	case 0xBD: ABSX(dis, dis_size, "LDA", addr, p_bytes); return;
-	case 0xBE: ABSY(dis, dis_size, "LDX", addr, p_bytes); return;
+// 	case 0xB0: BRX(dis, dis_size, "BCS", addr, p_conditional, p_addr2, p_bytes); return;
+// 	case 0xB1: IndY(dis, dis_size, "LDA", addr, p_bytes); return;
+// 	case 0xB4: ZPX(dis, dis_size, "LDY", addr, p_bytes); return;
+// 	case 0xB5: ZPX(dis, dis_size, "LDA", addr, p_bytes); return;
+// 	case 0xB6: ZPY(dis, dis_size, "LDX", addr, p_bytes); return;
+// 	case 0xB8: strcpy_s(dis, dis_size, "CLV"); return;
+// 	case 0xB9: ABSY(dis, dis_size, "LDA", addr, p_bytes); return;
+// 	case 0xBA: strcpy_s(dis, dis_size, "TSX"); return;
+// 	case 0xBC: ABSX(dis, dis_size, "LDY", addr, p_bytes); return;
+// 	case 0xBD: ABSX(dis, dis_size, "LDA", addr, p_bytes); return;
+// 	case 0xBE: ABSY(dis, dis_size, "LDX", addr, p_bytes); return;
 
-	case 0xC0: IM(dis, dis_size, "CPY", addr, p_bytes); return;
-	case 0xC1: IndX(dis, dis_size, "CMP", addr, p_bytes); return;
-	case 0xC4: ZP(dis, dis_size, "CPY", addr, p_bytes); return;
-	case 0xC5: ZP(dis, dis_size, "CMP", addr, p_bytes); return;
-	case 0xC6: ZP(dis, dis_size, "DEC", addr, p_bytes); return;
-	case 0xC8: strcpy_s(dis, dis_size, "INY"); return;
-	case 0xC9: IM(dis, dis_size, "CMP", addr, p_bytes); return;
-	case 0xCA: strcpy_s(dis, dis_size, "DEX"); return;
-	case 0xCC: ABS(dis, dis_size, "CPY", addr, p_bytes); return;
-	case 0xCD: ABS(dis, dis_size, "CMP", addr, p_bytes); return;
-	case 0xCE: ABS(dis, dis_size, "DEC", addr, p_bytes); return;
+// 	case 0xC0: IM(dis, dis_size, "CPY", addr, p_bytes); return;
+// 	case 0xC1: IndX(dis, dis_size, "CMP", addr, p_bytes); return;
+// 	case 0xC4: ZP(dis, dis_size, "CPY", addr, p_bytes); return;
+// 	case 0xC5: ZP(dis, dis_size, "CMP", addr, p_bytes); return;
+// 	case 0xC6: ZP(dis, dis_size, "DEC", addr, p_bytes); return;
+// 	case 0xC8: strcpy_s(dis, dis_size, "INY"); return;
+// 	case 0xC9: IM(dis, dis_size, "CMP", addr, p_bytes); return;
+// 	case 0xCA: strcpy_s(dis, dis_size, "DEX"); return;
+// 	case 0xCC: ABS(dis, dis_size, "CPY", addr, p_bytes); return;
+// 	case 0xCD: ABS(dis, dis_size, "CMP", addr, p_bytes); return;
+// 	case 0xCE: ABS(dis, dis_size, "DEC", addr, p_bytes); return;
 
-	case 0xD0: BRX(dis, dis_size, "BNE", addr, p_conditional, p_addr2, p_bytes); return;
-	case 0xD1: IndY(dis, dis_size, "CMP", addr, p_bytes); return;
-	case 0xD5: ZPX(dis, dis_size, "CMP", addr, p_bytes); return;
-	case 0xD6: ZPX(dis, dis_size, "DEC", addr, p_bytes); return;
-	case 0xD8: strcpy_s(dis, dis_size, "CLD"); return;
-	case 0xD9: ABSY(dis, dis_size, "CMP", addr, p_bytes); return;
-	case 0xDD: ABSX(dis, dis_size, "CMP", addr, p_bytes); return;
-	case 0xDE: ABSX(dis, dis_size, "DEC", addr, p_bytes); return;
+// 	case 0xD0: BRX(dis, dis_size, "BNE", addr, p_conditional, p_addr2, p_bytes); return;
+// 	case 0xD1: IndY(dis, dis_size, "CMP", addr, p_bytes); return;
+// 	case 0xD5: ZPX(dis, dis_size, "CMP", addr, p_bytes); return;
+// 	case 0xD6: ZPX(dis, dis_size, "DEC", addr, p_bytes); return;
+// 	case 0xD8: strcpy_s(dis, dis_size, "CLD"); return;
+// 	case 0xD9: ABSY(dis, dis_size, "CMP", addr, p_bytes); return;
+// 	case 0xDD: ABSX(dis, dis_size, "CMP", addr, p_bytes); return;
+// 	case 0xDE: ABSX(dis, dis_size, "DEC", addr, p_bytes); return;
 
-	case 0xE0: IM(dis, dis_size, "CPX", addr, p_bytes); return;
-	case 0xE1: IndX(dis, dis_size, "SBC", addr, p_bytes); return;
-	case 0xE4: ZP(dis, dis_size, "CPX", addr, p_bytes); return;
-	case 0xE5: ZP(dis, dis_size, "SBC", addr, p_bytes); return;
-	case 0xE6: ZP(dis, dis_size, "INC", addr, p_bytes); return;
-	case 0xE8: strcpy_s(dis, dis_size, "INX"); return;
-	case 0xE9: IM(dis, dis_size, "SBC", addr, p_bytes); return;
-	case 0xEA: strcpy_s(dis, dis_size, "NOP"); return;
-	case 0xEC: ABS(dis, dis_size, "CPX", addr, p_bytes); return;
-	case 0xED: ABS(dis, dis_size, "SBC", addr, p_bytes); return;
-	case 0xEE: ABS(dis, dis_size, "INC", addr, p_bytes); return;
+// 	case 0xE0: IM(dis, dis_size, "CPX", addr, p_bytes); return;
+// 	case 0xE1: IndX(dis, dis_size, "SBC", addr, p_bytes); return;
+// 	case 0xE4: ZP(dis, dis_size, "CPX", addr, p_bytes); return;
+// 	case 0xE5: ZP(dis, dis_size, "SBC", addr, p_bytes); return;
+// 	case 0xE6: ZP(dis, dis_size, "INC", addr, p_bytes); return;
+// 	case 0xE8: strcpy_s(dis, dis_size, "INX"); return;
+// 	case 0xE9: IM(dis, dis_size, "SBC", addr, p_bytes); return;
+// 	case 0xEA: strcpy_s(dis, dis_size, "NOP"); return;
+// 	case 0xEC: ABS(dis, dis_size, "CPX", addr, p_bytes); return;
+// 	case 0xED: ABS(dis, dis_size, "SBC", addr, p_bytes); return;
+// 	case 0xEE: ABS(dis, dis_size, "INC", addr, p_bytes); return;
 
-	case 0xF0: BRX(dis, dis_size, "BEQ", addr, p_conditional, p_addr2, p_bytes); return;
-	case 0xF1: IndY(dis, dis_size, "SBC", addr, p_bytes); return;
-	case 0xF5: ZPX(dis, dis_size, "SBC", addr, p_bytes); return;
-	case 0xF6: ZPX(dis, dis_size, "INC", addr, p_bytes); return;
-	case 0xF8: strcpy_s(dis, dis_size, "SED"); return;
-	case 0xF9: ABSY(dis, dis_size, "SBC", addr, p_bytes); return;
-	case 0xFD: ABSX(dis, dis_size, "SBC", addr, p_bytes); return;
-	case 0xFE: ABSX(dis, dis_size, "INC", addr, p_bytes); return;
+// 	case 0xF0: BRX(dis, dis_size, "BEQ", addr, p_conditional, p_addr2, p_bytes); return;
+// 	case 0xF1: IndY(dis, dis_size, "SBC", addr, p_bytes); return;
+// 	case 0xF5: ZPX(dis, dis_size, "SBC", addr, p_bytes); return;
+// 	case 0xF6: ZPX(dis, dis_size, "INC", addr, p_bytes); return;
+// 	case 0xF8: strcpy_s(dis, dis_size, "SED"); return;
+// 	case 0xF9: ABSY(dis, dis_size, "SBC", addr, p_bytes); return;
+// 	case 0xFD: ABSX(dis, dis_size, "SBC", addr, p_bytes); return;
+// 	case 0xFE: ABSX(dis, dis_size, "INC", addr, p_bytes); return;
 
-	default:
-		strcpy_s(dis, dis_size, "???");
-		return;
-		//throw new Exception(string.Format("Invalid opcode {0:X2}", memory[addr]));
-	}
-}
+// 	default:
+// 		strcpy_s(dis, dis_size, "???");
+// 		return;
+// 		//throw new Exception(string.Format("Invalid opcode {0:X2}", memory[addr]));
+// 	}
+// }
