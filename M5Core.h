@@ -1,5 +1,5 @@
 // select board, options
-#define BASIC_CORE
+#define CORE2
 
 #ifdef BASIC_CORE
 #include <M5Stack.h>

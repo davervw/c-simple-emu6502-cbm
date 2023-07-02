@@ -134,7 +134,9 @@ EmuD64* GetDisk()
 
 static byte* OpenRead(const char* filename, int* p_ret_file_len)
 {
-	static unsigned char buffer[27000]; // TODO: get actual file size, and allow up to 64K
+  static const int read_buffer_size = 65536;
+	static unsigned char* read_buffer = new unsigned char[read_buffer_size];
+
   EmuD64* disk = GetDisk();
   if (disk == 0)
   {
@@ -144,9 +146,9 @@ static byte* OpenRead(const char* filename, int* p_ret_file_len)
 
 	if (filename != NULL && filename[0] == '$' && filename[1] == '\0')
 	{
-		*p_ret_file_len = sizeof(buffer);
-		if (disk->GetDirectoryProgram(buffer, *p_ret_file_len))
-			return &buffer[0];
+		*p_ret_file_len = read_buffer_size;
+		if (disk->GetDirectoryProgram(read_buffer, *p_ret_file_len))
+			return &read_buffer[0];
 		else
 		{
       *p_ret_file_len = 0;
@@ -155,12 +157,12 @@ static byte* OpenRead(const char* filename, int* p_ret_file_len)
 	}
 	else
 	{
-		*p_ret_file_len = sizeof(buffer);
-		disk->ReadFileByName(filename, buffer, *p_ret_file_len);
+		*p_ret_file_len = read_buffer_size;
+		disk->ReadFileByName(filename, read_buffer, *p_ret_file_len);
     if (*p_ret_file_len == 0)
        return (byte*)NULL;
     else
-		   return buffer;
+		   return &read_buffer[0];
 	}
 }
 
@@ -1183,8 +1185,8 @@ void C64_Init(void)
   //File_ReadAllBytes(chargen_rom, sizeof(chargen_rom), chargen_file);
 	//File_ReadAllBytes(kernal_rom, sizeof(kernal_rom), kernal_file);
 
-  //disks[0] = new EmuD64("drive8.d64");
-  //disks[1] = new EmuD64("drive9.d64");
+  disks[0] = new EmuD64("/drive8.d64");
+  disks[1] = new EmuD64("/drive9.d64");
 
 	for (unsigned i = 0; i < sizeof(ram); ++i)
 		ram[i] = 0;

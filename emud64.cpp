@@ -1128,6 +1128,9 @@ void EmuD64::FlushDisk()
                 track_dirty[dir_track] = false;
             }
 
+            // seek to end of disk, otherwise close will truncate at current location
+            fp.seek(GetSectorOffset(35, 0) + sectors_per_track[35] * bytes_per_sector);
+
             fp.close();
         }
     }
