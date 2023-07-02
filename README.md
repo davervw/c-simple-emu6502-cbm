@@ -10,7 +10,7 @@ TODO: integrate web-serial-polyfill because Chrome mobile web browser doesn't su
 
 Note: with additional work one can integrate  in this solution for a mobile web browser (e.g. Chrome) that is missing the Serial APIs, and substitute use of USB APIs for CDC instead.
 
-SD support not integrated yet (should be a simple port for Core2, CoreS3).
+SD support is now integrated, currently requires Core2.
 
 ![M5 Basic Core shown next to mini USB keyboard](browser-keyscan-helper/core_keyboard.jpg)
 
