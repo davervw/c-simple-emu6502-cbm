@@ -53,9 +53,10 @@ void setup() {
   M5Serial.begin(115200);
   M5Serial.setTimeout(0); // so we don't wait for reads
 
-  if(!SD.begin()){
+  if(!SD.begin(SD_CS_OVERRIDE)){
       M5Serial.println("Card Mount Failed");
-      return;
+      M5.Lcd.println("Card Mount Failed");
+      delay(2000);
   }
 
   C64_Init();
