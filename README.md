@@ -9,9 +9,10 @@ This portable version has been tested with:
 * Ubuntu Linux (gcc) x64
 * Raspberry Pi 4 (gcc, Linux ARM)
 * NXP LPC1768 (ARM MBED): [forked](https://os.mbed.com/users/davervw/code/c-simple-emu6502-cbm/)
-* STM32F429 (ARM MBED, note must rename ADC() method)
+* STM32F429 (ARM MBED, note must rename ADC() method) [forked](https://os.mbed.com/users/davervw/code/C64-stm429_discovery/)
 * [Arduino](https://github.com/davervw/c-simple-emu6502-cbm/tree/arduino) branched from [master](https://github.com/davervw/c-simple-emu6502-cbm/tree/master)
-* [Teensy_LCD](https://github.com/davervw/c-simple-emu6502-cbm/tree/teensy_lcd) branched from [master](https://github.com/davervw/c-simple-emu6502-cbm/tree/master)
+* [Teensy_LCD](https://github.com/davervw/c-simple-emu6502-cbm/tree/teensy_lcd) branched from Arduino, keyboard mapping from STM32
+* [M5stack](https://github.com/davervw/c-simple-emu6502-cbm/tree/m5) branched from Teensy_LCD
 
 Only CHRIN/CHROUT/READY(for startup program)/SETLFS/SETNAM/LOAD/SAVE are hooked, so no, it won't run your favorite games, only maybe simple ASCII text adventures or such.  Sorry no PETSCII either.   The base portable version (Windows, Linux) also has D64 support for simple emulation of 1541 disk images so you can have a persistant collection of files that should be compatible with other emulators (WARNING: new, only lightly tested).
 
