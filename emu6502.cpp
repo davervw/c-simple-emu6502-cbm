@@ -678,16 +678,18 @@ void Emu6502::Execute(ushort addr)
 	byte bytes;
 
 	PC = addr;
+	bool breakpoint = false;
 
 	while (true)
 	{
 		while (true)
 		{
+			if (quit)
+				return;
 			bytes = 1;
-			//bool breakpoint = false;
 			//if (Breakpoints.Contains(PC))
 			//	breakpoint = true;
-			if (trace /*|| breakpoint*/ || step)
+			if (trace || breakpoint || step)
 			{
 				ushort addr2;
 				char line[27];
@@ -704,8 +706,8 @@ void Emu6502::Execute(ushort addr)
 #endif				
 				if (step)
 					step = step; // user can put debug breakpoint here to allow stepping
-				//if (breakpoint)
-				//	breakpoint = breakpoint; // user can put debug breakpoint here to allow break
+				if (breakpoint)
+					breakpoint = breakpoint; // user can put debug breakpoint here to allow break;
 			}
 			if (!ExecutePatch()) // allow execute to be overriden at a specific address
 				break;

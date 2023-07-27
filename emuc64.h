@@ -49,21 +49,8 @@ protected:
 	bool ExecutePatch();
 
 private:
-	const char* FileName;
-	byte FileNum;
-	byte FileDev;
-	byte FileSec;
-	bool FileVerify;
-	ushort FileAddr;
-
-private:
 	byte GetMemory(ushort addr);
 	void SetMemory(ushort addr, byte value);
-	bool ExecuteRTS();
-	bool ExecuteJSR(ushort addr);
-	bool FileLoad(byte* p_err);
-	bool FileSave(const char* filename, ushort addr1, ushort addr2);
-	bool LoadStartupPrg();
 	void CheckBypassSETNAM();
 	void CheckBypassSETLFS();
 
@@ -75,22 +62,23 @@ private:
 class C64Memory : public Emu6502::Memory
 {
 public:
-	C64Memory(
-		int ram_size,
-		const char* basic_file,
-		const char* chargen_file,
-		const char* kernal_file
-	);
+	C64Memory(int ram_size);
 	~C64Memory();
 	byte read(ushort addr);
 	void write(ushort addr, byte value);
 
-private:
-	int ram_size;
-	byte* ram;
+public:
 	byte* basic_rom;
 	byte* char_rom;
 	byte* kernal_rom;
+
+	static const int basic_rom_size = 8 * 1024;
+	static const int char_rom_size = 4 * 1024;
+	static const int kernal_rom_size = 8 * 1024;
+
+private:
+	int ram_size;
+	byte* ram;
 	//byte* io;
 	byte* color_nybles;
 

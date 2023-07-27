@@ -1,4 +1,4 @@
-// c-simple-emu-cbm.cs - main()
+// main.cpp - main()
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -33,8 +33,6 @@
 #include <stdio.h>
 #include "emuc64.h"
 
-extern const char* StartupPRG = 0;
-
 int main(int argc, char* argv[])
 {
 	fprintf(stderr, "\n");
@@ -44,7 +42,7 @@ int main(int argc, char* argv[])
 	fprintf(stderr, "github.com/davervw\n");
 	fprintf(stderr, "\n");
 	if (argc > 1)
-		StartupPRG = argv[1];
+		EmuCBM::StartupPRG = argv[1];
 
 	EmuC64* cbm = new EmuC64(64*1024, "c64\\basic", "c64\\chargen", "c64\\kernal");
 	cbm->ResetRun();

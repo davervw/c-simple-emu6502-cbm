@@ -86,16 +86,8 @@ extern "C" int gettimeofday(struct timeval* tp, struct timezone* tzp);
 #include <sys/time.h> // gettimeofday, struct timeval
 #endif
 
-extern "C" void* D64_CreateOrLoad(const char* filename);
-extern "C" int D64_GetDirectoryProgram(void* disk, unsigned char* buffer, int* p_ret_file_len);
-extern "C" void D64_ReadFileByName(void* disk, unsigned char* filename, unsigned char* buffer, int* p_ret_file_len);
-extern "C" int D64_FileSave(void* disk, char* filename, unsigned char* buffer, int buffer_len);
-
 extern const char* StartupPRG;
 int startup_state = 0;
-int LOAD_TRAP = -1;
-byte* attach = NULL;
-void* disk = NULL;
 
 #include "emuc64.h"
 
@@ -103,17 +95,11 @@ EmuC64::EmuC64(int ram_size,
 	const char* basic_file,
 	const char* chargen_file,
 	const char* kernal_file)
-	: EmuCBM(new C64Memory(ram_size,
-		basic_file,
-		chargen_file,
-		kernal_file))
+	: EmuCBM(new C64Memory(ram_size))
 {
-	FileName = NULL;
-	FileNum = 0;
-	FileDev = 0;
-	FileSec = 0;
-	FileVerify = false;
-	FileAddr = 0;
+	File_ReadAllBytes(((C64Memory*)memory)->basic_rom, C64Memory::basic_rom_size, basic_file);
+	File_ReadAllBytes(((C64Memory*)memory)->char_rom, C64Memory::char_rom_size, chargen_file);
+	File_ReadAllBytes(((C64Memory*)memory)->kernal_rom, C64Memory::kernal_rom_size, kernal_file);
 }
 
 EmuC64::~EmuC64()
@@ -131,223 +117,6 @@ void EmuC64::SetMemory(ushort addr, byte value)
 	memory->write(addr, value);
 }
 
-static void File_ReadAllBytes(byte* bytes, unsigned int size, const char* filename)
-{
-	int file;
-#ifdef WIN32	
-	_set_errno(0);
-	_sopen_s(&file, filename, _O_RDONLY | _O_BINARY, _SH_DENYNO, _S_IREAD);
-#else
-	file = open(filename, O_RDONLY);
-#endif	
-	if (file < 0)
-	{
-		char buffer[40];
-#ifdef WIN32
-		strerror_s(buffer, sizeof(buffer), errno);
-#else		
-		strerror_r(errno, buffer, sizeof(buffer));
-#endif		
-		printf("file ""%""s, errno=%d, %s", filename, errno, buffer);
-		exit(1);
-	}
-#ifdef WIN32
-	_read(file, bytes, size);
-	_close(file);
-#else
-	read(file, bytes, size);
-	close(file);
-#endif	
-}
-
-// returns true if BASIC
-bool EmuCBM::LoadPRG(const char* filename)
-{
-	bool result;
-	byte lo, hi;
-	int file;
-	ushort loadaddr;
-
-#ifdef WIN32	
-	_set_errno(0);
-	_sopen_s(&file, filename, _O_RDONLY | _O_BINARY, _SH_DENYNO, _S_IREAD);
-#else
-	file = open(filename, O_RDONLY);
-#endif	
-	if (file < 0
-#ifdef WIN32
-		|| _read(file, &lo, 1) != 1
-		|| _read(file, &hi, 1) != 1
-#else
-		|| read(file, &lo, 1) != 1
-		|| read(file, &hi, 1) != 1
-#endif		
-		)
-	{
-		char buffer[40];
-#ifdef WIN32
-		strerror_s(buffer, sizeof(buffer), errno);
-#else
-		strerror_r(errno, buffer, sizeof(buffer));
-#endif		
-		printf("file ""%""s, errno=%d, %s", filename, errno, buffer);
-		exit(1);
-	}
-	if (lo == 1)
-	{
-		loadaddr = (ushort)(GetMemory(43) | (GetMemory(44) << 8));
-		result = true;
-	}
-	else
-	{
-		loadaddr = (ushort)(lo | (hi << 8));
-		result = false;
-	}
-	while (true)
-	{
-		byte value;
-#ifdef WIN32
-		if (_read(file, &value, 1) == 1)
-#else
-		if (read(file, &value, 1) == 1)
-#endif		
-			SetMemory(loadaddr++, value);
-		else
-			break;
-	}
-#ifdef WIN32
-	_close(file);
-#else
-	close(file);
-#endif	
-	return result;
-}
-
-bool EmuC64::ExecuteRTS()
-{
-	byte bytes;
-	RTS(&PC, &bytes);
-	return true; // return value for ExecutePatch so will reloop execution to allow berakpoint/trace/ExecutePatch/etc.
-}
-
-bool EmuC64::ExecuteJSR(ushort addr)
-{
-	ushort retaddr = (PC - 1) & 0xFFFF;
-	Push(HI(retaddr));
-	Push(LO(retaddr));
-	PC = addr;
-	return true; // return value for ExecutePatch so will reloop execution to allow berakpoint/trace/ExecutePatch/etc.
-}
-
-static byte* OpenRead(const char* filename, int* p_ret_file_len)
-{
-	static unsigned char buffer[65536]; // TODO: get actual file size
-
-	if (disk == 0)
-	{
-		return (byte*)NULL;
-		*p_ret_file_len = 0;
-	}
-
-	if (filename != NULL && filename[0] == '$' && filename[1] == '\0')
-	{
-		*p_ret_file_len = sizeof(buffer);
-		if (D64_GetDirectoryProgram(disk, buffer, p_ret_file_len))
-			return &buffer[0];
-		else
-		{
-			return (byte*)NULL;
-			*p_ret_file_len = 0;
-		}
-	}
-	else
-	{
-		*p_ret_file_len = sizeof(buffer);
-		D64_ReadFileByName(disk, (unsigned char*)filename, buffer, p_ret_file_len);
-		return buffer;
-	}
-}
-
-// returns success
-bool EmuC64::FileLoad(byte* p_err)
-{
-	bool startup = (StartupPRG != NULL);
-	ushort addr = FileAddr;
-	bool success = true;
-	byte err = 0;
-	const char* filename = (StartupPRG != NULL) ? StartupPRG : FileName;
-	int file_len;
-	byte* bytes = OpenRead(filename, &file_len);
-	ushort si = 0;
-	if (bytes == 0 || file_len == 0) {
-		*p_err = 4; // FILE NOT FOUND
-		success = false;
-		FileAddr = addr;
-		return success;
-	}
-
-	byte lo = bytes[si++];
-	byte hi = bytes[si++];
-	if (startup) {
-		if (lo == 1)
-			FileSec = 0;
-		else
-			FileSec = 1;
-	}
-	if (FileSec == 1) // use address in file? yes-use, no-ignore
-		addr = lo | (hi << 8); // use address specified in file
-	while (success) {
-		if (si < file_len) {
-			byte i = bytes[si++];
-			if (FileVerify) {
-				if (GetMemory(addr) != i) {
-					*p_err = 28; // VERIFY
-					success = false;
-				}
-			}
-			else
-				SetMemory(addr, i);
-			++addr;
-		}
-		else
-			break; // end of file
-	}
-	FileAddr = addr;
-	return success;
-}
-
-bool EmuC64::FileSave(const char* filename, ushort addr1, ushort addr2)
-{
-	if (filename == NULL || *filename == 0)
-		filename = "FILENAME";
-	if (disk == 0)
-		return false;
-	int len = addr2 - addr1 + 2;
-	unsigned char* bytes = (unsigned char*)malloc(len);
-	if (bytes == 0 || len < 2)
-		return false;
-	bytes[0] = LO(addr1);
-	bytes[1] = HI(addr1);
-	for (int i = 0; i < len-2; ++i)
-		bytes[i+2] = GetMemory(addr1+i);
-	int result = D64_FileSave(disk, (char*)filename, bytes, len);
-	free(bytes);
-	return result;
-}
-
-bool EmuC64::LoadStartupPrg()
-{
-	bool result;
-	byte err;
-	if (disk == 0)
-		disk = D64_CreateOrLoad(FileName);
-	result = FileLoad(&err);
-	if (!result)
-		return false;
-	else
-		return FileSec == 0 ? true : false; // relative is BASIC, absolute is ML
-}
-
 void EmuC64::CheckBypassSETNAM()
 {
 	// In case caller bypassed calling SETNAM, get from lower memory
@@ -357,6 +126,7 @@ void EmuC64::CheckBypassSETNAM()
 	memset(name, 0, sizeof(name));
 	for (int i = 0; i < name_len; ++i)
 		name[i] = GetMemory(name_addr + i);
+	name[name_len] = 0;
 	if (FileName != 0 || strlen(FileName) != strlen(name) || memcmp(FileName, name, strlen(name)) != 0)
 		FileName = name;
 }
@@ -378,28 +148,7 @@ void EmuC64::CheckBypassSETLFS()
 
 bool EmuC64::ExecutePatch()
 {
-	if (PC == 0xFFD2) // CHROUT
-	{
-		CBM_Console_WriteChar((char)A);
-		// fall through to regular routine to draw character in screen memory too
-	}
-	else if (PC == 0xFFCF) // CHRIN
-	{
-		A = CBM_Console_ReadChar();
-
-		// SetA equivalent for flags
-		Z = (A == 0);
-		N = ((A & 0x80) != 0);
-		C = false;
-
-		// RTS equivalent
-		byte lo = Pop();
-		byte hi = Pop();
-		PC = (ushort)(((hi << 8) | lo) + 1);
-
-		return true; // overriden, and PC changed, so caller should reloop before execution to allow breakpoint/trace/ExecutePatch/etc.
-	}
-	else if (PC == 0xA474 || PC == LOAD_TRAP) // READY
+	if (PC == 0xA474 || PC == LOAD_TRAP) // READY
 	{
 		if (startup_state == 0 && ((StartupPRG != 0 && strlen(StartupPRG) > 0) || PC == LOAD_TRAP))
 		{
@@ -429,7 +178,6 @@ bool EmuC64::ExecutePatch()
 					// so doesn't repeat
 					StartupPRG = "";
 					LOAD_TRAP = -1;
-					attach = NULL;
 
 					return true; // overriden, and PC changed, so caller should reloop before execution to allow breakpoint/trace/ExecutePatch/etc.
 				}
@@ -441,7 +189,6 @@ bool EmuC64::ExecutePatch()
 			}
 
 			StartupPRG = 0;
-			attach = NULL;
 
 			if (is_basic) {
 				// UNNEW that I used in late 1980s, should work well for loading a program too, probably gleaned from BASIC ROM
@@ -506,66 +253,6 @@ bool EmuC64::ExecutePatch()
 			return true; // overriden, and PC changed, so caller should reloop before execution to allow breakpoint/trace/ExecutePatch/etc.
 		}
 	}
-	else if (PC == 0xFFBA) // SETLFS
-	{
-		FileNum = A;
-		FileDev = X;
-		FileSec = Y;
-		//console.log("SETLFS " + FileNum + ", " + FileDev + ", " + FileSec);
-	}
-	else if (PC == 0xFFBD) // SETNAM
-	{
-		static char name[256];
-		memset(name, 0, sizeof(name));
-		ushort addr = X | (Y << 8);
-		for (int i = 0; i < A; ++i)
-			name[i] = GetMemory(addr + i);
-		//console.log("SETNAM " + name);
-		FileName = name;
-	}
-	else if (PC == 0xFFD5) // LOAD
-	{
-		FileAddr = X | (Y << 8);
-		//let op : string;
-		//if (A == 0)
-		//	op = "LOAD";
-		//else if (A == 1)
-		//	op = "VERIFY";
-		//else
-		//	op = "LOAD (A=" + A + ") ???";
-		FileVerify = (A == 1);
-		//console.log(op + " @" + Emu6502.toHex16(FileAddr));
-
-		ExecuteRTS();
-
-		if (strlen(FileName) == 0)
-		{
-			SetA(8); // EMPTY filename message
-			C = true; // failure
-		}
-		else if (A == 0 || A == 1) {
-			LOAD_TRAP = PC;
-			C = false; // success
-		}
-		else {
-			FileName = 0;
-			SetA(14); // ILLEGAL QUANTITY message
-			C = true; // failure
-		}
-
-		return true; // overriden, and PC changed, so caller should reloop before execution to allow breakpoint/trace/ExecutePatch/etc.
-	}
-	else if (PC == 0xFFD8) // SAVE
-	{
-		ushort addr1 = GetMemory(A) | (GetMemory((A + 1) & 0xFF) << 8);
-		ushort addr2 = X | (Y << 8);
-		//console.log("SAVE " + Emu6502.toHex16(addr1) + "-" + Emu6502.toHex16(addr2));
-
-		// Set success
-		C = !FileSave(FileName, addr1, addr2);
-
-		return ExecuteRTS();
-	}
 	if (GetMemory(PC) == 0x6C && GetMemory((ushort)(PC + 1)) == 0x30 && GetMemory((ushort)(PC + 2)) == 0x03) // catch JMP(LOAD_VECTOR), redirect to jump table
 	{
 		CheckBypassSETLFS();
@@ -591,7 +278,7 @@ bool EmuC64::ExecutePatch()
 	//     trace = true;
 	//     return true; // call again, so traces this line
 	// } 
-	return false;
+	return EmuCBM::ExecutePatch();
 }
 
 // note ram starts at 0x0000
@@ -602,18 +289,11 @@ const int io_size = 0x1000;
 const int color_addr = 0xD800;
 const int open_addr = 0xC000;
 const int open_size = 0x1000;
-const int basic_rom_size = 8 * 1024;
-const int char_rom_size = 4 * 1024;
-const int kernal_rom_size = 8 * 1024;
 const int color_nybles_size = 1024;
 
 // C64Memory //////////////////////////////////////////////////////////////////
 
-C64Memory::C64Memory(int memory_size,
-	const char* basic_file,
-	const char* chargen_file,
-	const char* kernal_file
-)
+C64Memory::C64Memory(int memory_size)
 {
 	ram_size = memory_size;
 	ram = new byte[ram_size];
@@ -621,10 +301,6 @@ C64Memory::C64Memory(int memory_size,
 	char_rom = new byte[char_rom_size];
 	kernal_rom = new byte[kernal_rom_size];
 	color_nybles = new byte[color_nybles_size];
-
-	File_ReadAllBytes(basic_rom, basic_rom_size, basic_file);
-	File_ReadAllBytes(char_rom, char_rom_size, chargen_file);
-	File_ReadAllBytes(kernal_rom, kernal_rom_size, kernal_file);
 
 	for (int i = 0; i < ram_size; ++i)
 		ram[i] = 0;
