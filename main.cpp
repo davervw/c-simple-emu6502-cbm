@@ -32,6 +32,9 @@
 
 #include <stdio.h>
 #include "emuc64.h"
+#include "emuc128.h"
+
+extern int main_go_num = 0;
 
 int main(int argc, char* argv[])
 {
@@ -44,8 +47,16 @@ int main(int argc, char* argv[])
 	if (argc > 1)
 		EmuCBM::StartupPRG = argv[1];
 
-	EmuC64* cbm = new EmuC64(64*1024, "c64\\basic", "c64\\chargen", "c64\\kernal");
-	cbm->ResetRun();
+	while (true)
+	{
+		EmuCBM* cbm;
+		if (main_go_num == 64)
+			cbm = new EmuC64(64*1024, "c64\\basic", "c64\\chargen", "c64\\kernal");
+		else
+			cbm = new EmuC128("c128\\basiclo", "c128\\basichi", "c128\\chargen", "c128\\kernal");
+		cbm->ResetRun();
+		delete cbm;
+	}
 
 	return 0;
 }
