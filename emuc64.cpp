@@ -104,7 +104,6 @@ EmuC64::EmuC64(int ram_size,
 
 EmuC64::~EmuC64()
 {
-	delete memory;
 }
 
 byte EmuC64::GetMemory(ushort addr)
@@ -253,6 +252,28 @@ bool EmuC64::ExecutePatch()
 			return true; // overriden, and PC changed, so caller should reloop before execution to allow breakpoint/trace/ExecutePatch/etc.
 		}
 	}
+	else if (PC == 0xA815) // Execute after GO
+	{
+		if (go_state == 0 && A >= (byte)'0' && A <= (byte)'9')
+		{
+			go_state = 1;
+			return ExecuteJSR(0xAD8A); // Evaluate expression, check data type
+		}
+		else if (go_state == 1)
+		{
+			go_state = 2;
+			return ExecuteJSR(0xB7F7); // Convert fp to 2 byte integer
+		}
+		else if (go_state == 2)
+		{
+			extern int main_go_num;
+
+			main_go_num = (ushort)(Y + (A << 8));
+			quit = true;
+			return true;
+		}
+	}	
+	
 	if (GetMemory(PC) == 0x6C && GetMemory((ushort)(PC + 1)) == 0x30 && GetMemory((ushort)(PC + 2)) == 0x03) // catch JMP(LOAD_VECTOR), redirect to jump table
 	{
 		CheckBypassSETLFS();

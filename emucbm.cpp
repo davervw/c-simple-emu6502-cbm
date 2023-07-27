@@ -35,6 +35,10 @@ EmuCBM::EmuCBM(Memory* mem) : Emu6502(mem)
 	LOAD_TRAP = -1;
 }
 
+EmuCBM::~EmuCBM()
+{
+}
+
 bool EmuCBM::ExecutePatch()
 {
     if (PC == 0xFFD2) // CHROUT

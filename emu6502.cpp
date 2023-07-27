@@ -61,6 +61,11 @@ Emu6502::Emu6502(Memory* mem)
 	quit = false;
 }
 
+Emu6502::~Emu6502()
+{
+	delete memory;
+}
+
 byte Emu6502::GetMemory(ushort addr)
 {
 	return memory->read(addr);
@@ -78,12 +83,12 @@ void Emu6502::ResetRun()
 }
 
 #ifndef WIN32
-void Emu6502:: strcpy_s(char* dest, size_t size, const char* src)
+void strcpy_s(char* dest, size_t size, const char* src)
 {
 	strncpy(dest, src, size);
 }
 
-void Emu6502:: strcat_s(char* dest, size_t size, const char* src)
+void strcat_s(char* dest, size_t size, const char* src)
 {
 	strncat(dest, src, size);
 }
@@ -154,7 +159,7 @@ void Emu6502::SetReg(byte *p_reg, int value)
 	N = ((*p_reg & 0x80) != 0);
 }
 
-void Emu6502:: SetA(int value)
+void Emu6502::SetA(int value)
 {
 	SetReg(&A, value);
 }
@@ -278,7 +283,7 @@ byte Emu6502::ROR(int value)
 	return (byte)value;
 }
 
-void Emu6502:: Push(int value)
+void Emu6502::Push(int value)
 {
 	SetMemory((ushort)(0x100 + (S--)), (byte)value);
 }
@@ -485,7 +490,7 @@ void Emu6502::JSR(ushort *p_addr, byte *p_bytes)
 	*p_bytes = 0; // addr already changed
 }
 
-void Emu6502:: RTS(ushort *p_addr, byte *p_bytes)
+void Emu6502::RTS(ushort *p_addr, byte *p_bytes)
 {
 	byte lo = Pop();
 	byte hi = Pop();
@@ -896,7 +901,7 @@ void Emu6502::Execute(ushort addr)
 // Examples:
 // FFFF FF FF FF JMP ($FFFF)
 // FFFF FF FF FF LDA $FFFF,X
-void Emu6502:: DisassembleLong(ushort addr, bool *p_conditional, byte *p_bytes, ushort *p_addr2, char *dis, int dis_size, char *line, int line_size)
+void Emu6502::DisassembleLong(ushort addr, bool *p_conditional, byte *p_bytes, ushort *p_addr2, char *dis, int dis_size, char *line, int line_size)
 {
 	DisassembleShort(addr, p_conditional, p_bytes, p_addr2, dis, dis_size);
 	snprintf(line, line_size, "%04X ", addr);
@@ -990,7 +995,7 @@ void Emu6502::BRX(char *dis, int dis_size, const char* opcode, ushort addr, bool
 
 // JMP ($FFFF)
 // LDA $FFFF,X
-void Emu6502:: DisassembleShort(ushort addr, bool *p_conditional, byte *p_bytes, ushort *p_addr2, char *dis, int dis_size)
+void Emu6502::DisassembleShort(ushort addr, bool *p_conditional, byte *p_bytes, ushort *p_addr2, char *dis, int dis_size)
 {
 	*p_conditional = false;
 	*p_addr2 = 0;

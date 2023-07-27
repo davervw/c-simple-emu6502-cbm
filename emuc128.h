@@ -13,7 +13,7 @@ public:
 		const char* chargen_file,
 		const char* kernal_file
 	);
-	~EmuC128();
+	virtual ~EmuC128();
 
 protected:
 	bool ExecutePatch();
@@ -34,13 +34,14 @@ class VDC8563
 {
 private:
 	byte* registers;
-	byte* ram;
+	byte* vdc_ram;
 	byte register_addr;
 	byte data;
 	bool ready = false;
 
 public:
 	VDC8563();
+	~VDC8563();
 
 	byte GetAddressRegister();
 	void SetAddressRegister(byte value);
@@ -52,9 +53,9 @@ class C128Memory : public Emu6502::Memory
 {
 public:
 	C128Memory();
-	~C128Memory();
-	byte read(ushort addr);
-	void write(ushort addr, byte value);
+	virtual ~C128Memory();
+	virtual byte read(ushort addr);
+	virtual void write(ushort addr, byte value);
 	bool IsChargen(ushort addr);
 	bool IsKernal(ushort addr);
 	bool IsBasicHigh(ushort addr);

@@ -96,7 +96,6 @@ EmuC128::EmuC128(
 
 EmuC128::~EmuC128()
 {
-    delete memory;
 }
 
 static int startup_state = 0;
@@ -674,8 +673,14 @@ VDC8563::VDC8563()
         0, 0, 125, 100, 245, 63
     };
 
-    ram = new byte[vdc_ram_size];
-    memset(ram, 0, vdc_ram_size);
+    vdc_ram = new byte[vdc_ram_size];
+    memset(vdc_ram, 0, vdc_ram_size);
+}
+
+VDC8563::~VDC8563()
+{
+    delete[] registers;
+    delete[] vdc_ram;
 }
 
 byte VDC8563::GetAddressRegister()
@@ -737,11 +742,11 @@ void VDC8563::SetDataRegister(byte value)
         {
             ushort dest = (ushort)(registers[18] + (registers[19] << 8));
             if ((registers[24] & 0x80) == 0)
-                ram[dest++] = data;
+                vdc_ram[dest++] = data;
             else
             {
                 ushort src = (ushort)(registers[32] + (registers[33] << 8));
-                ram[dest++] = ram[src++];
+                vdc_ram[dest++] = vdc_ram[src++];
                 registers[32] = (byte)src;
                 registers[33] = (byte)(src >> 8);
             }
@@ -754,13 +759,13 @@ void VDC8563::SetDataRegister(byte value)
             if ((registers[24] & 0x80) == 0)
             {
                 for (int i = 0; i < value; ++i)
-                    ram[dest++] = registers[31];
+                    vdc_ram[dest++] = registers[31];
             }
             else
             {
                 ushort src = (ushort)(registers[32] + (registers[33] << 8));
                 for (int i = 0; i < value; ++i)
-                    ram[dest++] = ram[src++];
+                    vdc_ram[dest++] = vdc_ram[src++];
                 registers[32] = (byte)src;
                 registers[33] = (byte)(src >> 8);
             }

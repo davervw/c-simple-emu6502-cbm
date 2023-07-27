@@ -43,6 +43,7 @@ public:
 	{
 	public:
 		Memory() {}
+		virtual ~Memory() {}
 		virtual byte read(ushort addr) = 0;
 		virtual void write(ushort addr, byte value) = 0;
 
@@ -83,6 +84,7 @@ public:
     bool trace;
 
     Emu6502(Memory* memory);
+	virtual ~Emu6502();
     void ResetRun();
 
 	byte LO(ushort value);
@@ -95,6 +97,8 @@ public:
 private:
 	Emu6502(const Emu6502& other); // disabled
 	bool operator==(const Emu6502& other) const; // disabled
+
+private:
 	void PHP();
 	byte Subtract(byte reg, byte value, bool* p_overflow);
 	byte SubtractWithoutOverflow(byte reg, byte value);

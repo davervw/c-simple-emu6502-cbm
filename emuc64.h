@@ -43,7 +43,7 @@ public:
 		const char* chargen_file,
 		const char* kernal_file
 	);
-	~EmuC64();
+	virtual ~EmuC64();
 
 protected:
 	bool ExecutePatch();
@@ -55,6 +55,9 @@ private:
 	void CheckBypassSETLFS();
 
 private:
+	int go_state = 0;
+
+private:
 	EmuC64(const EmuC64& other); // disabled
 	bool operator==(const EmuC64& other) const; // disabled
 };
@@ -63,9 +66,9 @@ class C64Memory : public Emu6502::Memory
 {
 public:
 	C64Memory(int ram_size);
-	~C64Memory();
-	byte read(ushort addr);
-	void write(ushort addr, byte value);
+	virtual ~C64Memory();
+	virtual byte read(ushort addr);
+	virtual void write(ushort addr, byte value);
 
 public:
 	byte* basic_rom;

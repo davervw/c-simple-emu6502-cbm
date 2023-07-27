@@ -6,6 +6,7 @@ class EmuCBM : public Emu6502
 {
 public:
 	EmuCBM(Memory* mem);
+	virtual ~EmuCBM();
 	bool LoadPRG(const char* filename);
 
 public:
