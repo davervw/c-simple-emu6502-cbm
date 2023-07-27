@@ -18,7 +18,7 @@ SD support is now integrated, currently requires Core2 or CoreS3 (must change de
 
 ![Block diagram showing bluetooth Palm Portable Keyboard, Phone running key scan helper with serial USB to M5](browser-keyscan-helper/block_diagram.png)
 
-![Early prototype with various M5 Core models](m5cores.jpg)
+![Early prototype with various M5 Core models](media/m5cores.jpg)
 
 * Basic Core
 * Core2
