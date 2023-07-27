@@ -1,4 +1,4 @@
-// cbmconsole.c - Commodore Console Emulation
+// cbmconsole.cpp - Commodore Console Emulation
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -7,7 +7,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2021 by David R. Van Wagner
+// Copyright(c) 2023 by David R. Van Wagner
 // davevw.com
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -250,10 +250,10 @@ extern unsigned char CBM_Console_ReadChar(void)
       //ApplyColor ? .Invoke();
       while (1)
       {
-         fgets(buffer, sizeof(buffer) - 1, stdin); // save room for carriage return and null
-         buffer[strlen(buffer)-1] = '\r'; // replace newline
+         fgets((char*)& buffer[0], sizeof(buffer) - 1, stdin); // save room for carriage return and null
+         buffer[strlen((char*)buffer)-1] = '\r'; // replace newline
          buffer_head = 0;
-         buffer_tail = buffer_count = (int)strlen(buffer);
+         buffer_tail = buffer_count = (int)strlen((char*)buffer);
          Console_Cursor_Up();
          break;
       }
