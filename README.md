@@ -2,6 +2,10 @@
 
 Here is a simple Commodore 64/128 and 6502 Emulator I wrote from scratch, ported to C++ from my C# [simple-emu-c64](https://github.com/davervw/simple-emu-c64) project.  Runs in a text console window.  Optionally can specify a binary Commodore program to load, BASIC programs will auto-run.   Requires Commodore 64 ROMs (not included) present in the current directory (chargen, kernal and basic).   More details may be relevant from the [simple-emu-c64](https://github.com/davervw/simple-emu-c64) project.
 
+## C++ Version ##
+
+This is a mostly object-oriented version to more closely match the C# version with the intent to port features and fixes back and forth between the versions, starting with C128.  Yay!  C128 is working.   But goodbye plain old C; we will miss you.  Long live C++.  (The original port from C# to C is still available in the branches, and commit history.)
+
 ## GO 128 ##
 
 Special feature is called GO 128.  Just like the counterpart GO 64 implemented in the C128 ROMs, GO 128 will reset the system from 64 to 128 mode.   And GO 64 and GO 128 both work in their respective environments to completely reset them, not retaining any memory or state (except disk state).  
