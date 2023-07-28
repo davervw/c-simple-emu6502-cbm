@@ -578,11 +578,11 @@ const int color_addr = 0xD800;
 const int open_addr = 0xC000;
 const int open_size = 0x1000;
 
-extern void C64_Init(int ram_size, const char* basic_file, const char* chargen_file, const char* kernal_file)
+extern void C64_Init(int ram_size)
 {
-	File_ReadAllBytes(basic_rom, sizeof(basic_rom), basic_file);
-	File_ReadAllBytes(char_rom, sizeof(char_rom), chargen_file);
-	File_ReadAllBytes(kernal_rom, sizeof(kernal_rom), kernal_file);
+	File_ReadAllBytes(basic_rom, sizeof(basic_rom), "roms/c64/basic");
+	File_ReadAllBytes(char_rom, sizeof(char_rom), "roms/c64/chargen");
+	File_ReadAllBytes(kernal_rom, sizeof(kernal_rom), "roms/c64/kernal");
 
 	for (int i = 0; i < sizeof(ram); ++i)
 		ram[i] = 0;

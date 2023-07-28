@@ -32,5 +32,5 @@
 
 #pragma once
 
-extern void C64_Init(int ram_size, const char* basic_file, const char* chargen_file, const char* kernal_file);
+extern void C64_Init(int ram_size);
 extern char* StartupPRG;
