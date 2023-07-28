@@ -1,4 +1,4 @@
-// emuc64.h - Commodore 64 Emulator
+// emucbm.h - class EmuCBM - Commodore Business Machines Emulator
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -32,48 +32,31 @@
 
 #pragma once
 
-#include "emucbm.h"
+#include "emu6502.h"
+#include "emud64.h"
 
-class EmuC64 : public EmuCBM
+class EmuCBM : public Emu6502
 {
-  class C64Memory : public Memory
-  {
-  public:
-    C64Memory();
-    ~C64Memory();
-    virtual byte read(ushort addr);
-    virtual void write(ushort addr, byte value);
-    void DrawChar(byte c, int col, int row, int fg, int bg);
-    void DrawChar(int offset);
-    void RedrawScreen();
-    void RedrawScreenEfficientlyAfterPostponed();
-    void SaveOldVideoAndColor();
-
-  private:
-    byte* ram;
-    byte* color_nybles;
-    byte* io;
-    byte* basic_rom;
-    byte* kernal_rom;
-    byte* chargen_rom;
-    byte* old_video;
-    byte* old_color;
-
-  private:
-    C64Memory(const C64Memory& other); // disabled
-    bool operator==(const C64Memory& other) const; // disabled    
-  };
-
 public:
-  EmuC64();
-  virtual ~EmuC64();
+  EmuCBM(Memory* memory);
+  virtual ~EmuCBM();
 
 protected:
-  C64Memory* c64memory;
+  int LOAD_TRAP;
+  const char* FileName;
+  byte FileNum;
+  byte FileDev;
+  byte FileSec;
+  bool FileVerify;
+  ushort FileAddr;
 
 protected:
+  EmuD64* GetDisk();
+  byte* OpenRead(const char* filename, int* p_ret_file_len);
+  bool FileLoad(byte* p_err);
+  bool FileSave(const char* filename, ushort addr1, ushort addr2);
+  bool LoadStartupPrg();
   bool ExecutePatch();
-  void CheckBypassSETNAM();
-  void CheckBypassSETLFS();
-  static int C64ColorToLCDColor(byte value);
+  bool ExecuteRTS();
+  bool ExecuteJSR(ushort addr);
 };

@@ -60,33 +60,21 @@
 #include <SPI.h>
 
 #include "emuc64.h"
-#include "emud64.h"
 
 // externs (globals)
 extern char* StartupPRG;
 
 // locals
 static int startup_state = 0;
-static const char* FileName = NULL;
-static byte FileNum = 0;
-static byte FileDev = 0;
-static byte FileSec = 0;
-static bool FileVerify = false;
-static ushort FileAddr = 0;
-static int LOAD_TRAP = -1;
 static int DRAW_TRAP = -1;
-static EmuD64* disks[4] = {NULL,NULL,NULL,NULL};
 static bool postponeDrawChar = false;
 
 // array allows multiple keys/modifiers pressed at one time
 static int scan_codes[16] = { 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64 } ;
 
-EmuC64::EmuC64() : Emu6502(new C64Memory())
+EmuC64::EmuC64() : EmuCBM(new C64Memory())
 {
   c64memory = (C64Memory*)memory;
-
-  disks[0] = new EmuD64("/disks/drive8.d64");
-  disks[1] = new EmuD64("/disks/drive9.d64");
 
   // initialize LCD screen
   M5.Lcd.fillScreen(0x0000); // BLACK
@@ -119,157 +107,13 @@ static void ReadKeyboard()
   }
 }
 
-bool EmuC64::ExecuteRTS()
-{
-	byte bytes;
-	RTS(&PC, &bytes);
-	return true; // return value for ExecutePatch so will reloop execution to allow berakpoint/trace/ExecutePatch/etc.
-}
-
-bool EmuC64::ExecuteJSR(ushort addr)
-{
-	ushort retaddr = (PC - 1) & 0xFFFF;
-	Push(HI(retaddr));
-	Push(LO(retaddr));
-	PC = addr;
-	return true; // return value for ExecutePatch so will reloop execution to allow berakpoint/trace/ExecutePatch/etc.
-}
-
-static EmuD64* GetDisk()
-{
-  if (FileDev == 0 || FileDev == 1)
-    return disks[0];
-  else if (FileDev >=8 && FileDev <= 11)
-    return disks[FileDev-8];
-  else
-    return 0;
-}
-
-static byte* OpenRead(const char* filename, int* p_ret_file_len)
-{
-  static const int read_buffer_size = 65536;
-	static unsigned char* read_buffer = new unsigned char[read_buffer_size];
-
-  EmuD64* disk = GetDisk();
-  if (disk == 0)
-  {
-      *p_ret_file_len = 0;
-      return (byte*)NULL;
-  }
-
-	if (filename != NULL && filename[0] == '$' && filename[1] == '\0')
-	{
-		*p_ret_file_len = read_buffer_size;
-		if (disk->GetDirectoryProgram(read_buffer, *p_ret_file_len))
-			return &read_buffer[0];
-		else
-		{
-      *p_ret_file_len = 0;
-			return (byte*)NULL;
-		}
-	}
-	else
-	{
-		*p_ret_file_len = read_buffer_size;
-		disk->ReadFileByName(filename, read_buffer, *p_ret_file_len);
-    if (*p_ret_file_len == 0)
-       return (byte*)NULL;
-    else
-		   return &read_buffer[0];
-	}
-}
-
-// returns success
-bool EmuC64::FileLoad(byte* p_err)
-{
-	bool startup = (StartupPRG != NULL);
-	ushort addr = FileAddr;
-	bool success = true;
-	const char* filename = (StartupPRG != NULL) ? StartupPRG : FileName;
-	int file_len;
-	byte* bytes = OpenRead(filename, &file_len);
-	ushort si = 0;
-	if (file_len == 0) {
-		*p_err = 4; // FILE NOT FOUND
-  	FileAddr = addr;
-		return false;
-	}
-
-	byte lo = bytes[si++];
-	byte hi = bytes[si++];
-	if (startup) {
-		if (lo == 1)
-			FileSec = 0;
-		else
-			FileSec = 1;
-	}
-	if (FileSec == 1) // use address in file? yes-use, no-ignore
-		addr = lo | (hi << 8); // use address specified in file
-	while (success) {
-		if (si < file_len) {
-			byte i = bytes[si++];
-			if (FileVerify) {
-				if (GetMemory(addr) != i) {
-					*p_err = 28; // VERIFY
-					success = false;
-				}
-			}
-			else
-				SetMemory(addr, i);
-			++addr;
-		}
-		else
-			break; // end of file
-	}
-	FileAddr = addr;
-	return success;
-}
-
-bool EmuC64::FileSave(const char* filename, ushort addr1, ushort addr2)
-{
-  EmuD64* disk = GetDisk();
-	if (filename == NULL || *filename == 0)
-		filename = "FILENAME";
-	if (disk == 0)
-		return false;
-	int len = addr2 - addr1 + 2;
-	unsigned char* bytes = (unsigned char*)malloc(len);
-	if (bytes == 0 || len < 2)
-		return false;
-	bytes[0] = LO(addr1);
-	bytes[1] = HI(addr1);
-	for (int i = 0; i < len-2; ++i)
-		bytes[i+2] = GetMemory(addr1+i);
-	disk->StoreFileByName(filename, bytes, len);
-	free(bytes);
-	return true;
-}
-
-bool EmuC64::LoadStartupPrg()
-{
-	bool result;
-	byte err;
-  EmuD64* disk = GetDisk();
-  if (disk == 0)
-    return false;
-	result = FileLoad(&err);
-	if (!result)
-		return false;
-	else
-		return FileSec == 0 ? true : false; // relative is BASIC, absolute is ML
-}
-
-// forward declaration
-static void CheckBypassSETNAM();
-static void CheckBypassSETLFS();
-
 bool EmuC64::ExecutePatch()
 {
   static bool NMI = false;
   
   int found_NMI = 0;
   for (int i=0; !found_NMI && i<16; ++i)
-    if (scan_codes[i] == 1024+64)
+    if (scan_codes[i] & 1024)
       found_NMI = 1;
   
   if (NMI)
@@ -397,66 +241,6 @@ bool EmuC64::ExecutePatch()
 			return true; // overriden, and PC changed, so caller should reloop before execution to allow breakpoint/trace/ExecutePatch/etc.
 		}
 	}
-	else if (PC == 0xFFBA) // SETLFS
-	{
-		FileNum = A;
-		FileDev = X;
-		FileSec = Y;
-		//console.log("SETLFS " + FileNum + ", " + FileDev + ", " + FileSec);
-	}
-	else if (PC == 0xFFBD) // SETNAM
-	{
-		static char name[256];
-		memset(name, 0, sizeof(name));
-		ushort addr = X | (Y << 8);
-		for (int i = 0; i < A; ++i)
-			name[i] = GetMemory(addr + i);
-		//console.log("SETNAM " + name);
-		FileName = name;
-	}
-	else if (PC == 0xFFD5) // LOAD
-	{
-		FileAddr = X | (Y << 8);
-		//let op : string;
-		//if (A == 0)
-		//	op = "LOAD";
-		//else if (A == 1)
-		//	op = "VERIFY";
-		//else
-		//	op = "LOAD (A=" + A + ") ???";
-		FileVerify = (A == 1);
-		//console.log(op + " @" + Emu6502.toHex16(FileAddr));
-
-		ExecuteRTS();
-
-    if (strlen(FileName) == 0)
-    {
-      SetA(8); // MISSING file name message
-      C = true; // failure
-    }
-		else if (A == 0 || A == 1) {
-			LOAD_TRAP = PC;
-			C = false; // success
-		}
-		else {
-      FileName = "";
-			SetA(14); // ILLEGAL QUANTITY message
-			C = true; // failure
-		}
-
-		return true; // overriden, and PC changed, so caller should reloop before execution to allow breakpoint/trace/ExecutePatch/etc.
-	}
-	else if (PC == 0xFFD8) // SAVE
-	{
-		ushort addr1 = GetMemory(A) | (GetMemory((A + 1) & 0xFF) << 8);
-		ushort addr2 = X | (Y << 8);
-		//console.log("SAVE " + Emu6502.toHex16(addr1) + "-" + Emu6502.toHex16(addr2));
-
-		// Set success
-		C = !FileSave(FileName, addr1, addr2);
-
-		return ExecuteRTS();
-	}
   else if (DRAW_TRAP == -1 && !postponeDrawChar &&
     (PC == 0xE8EA // SCROLL SCREEN
     || PC == 0xE965 // INSERT BLANK LINE
@@ -497,7 +281,7 @@ bool EmuC64::ExecutePatch()
 		return true; // re-execute
 	}
 
-	return false; // execute normally
+	return EmuCBM::ExecutePatch();
 }
 
 void EmuC64::CheckBypassSETNAM()
