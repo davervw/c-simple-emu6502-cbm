@@ -52,14 +52,14 @@ int main(int argc, char* argv[])
 		EmuCBM* cbm;
 #ifdef WIN32
 		if (main_go_num == 64)
-			cbm = new EmuC64(64*1024, "c64\\basic", "c64\\chargen", "c64\\kernal");
+			cbm = new EmuC64(64*1024);
 		else
-			cbm = new EmuC128("c128\\basiclo", "c128\\basichi", "c128\\chargen", "c128\\kernal");
+			cbm = new EmuC128();
 #else
 		if (main_go_num == 64)
-			cbm = new EmuC64(64*1024, "c64/basic", "c64/chargen", "c64/kernal");
+			cbm = new EmuC64(64*1024);
 		else
-			cbm = new EmuC128("c128/basiclo", "c128/basichi", "c128/chargen", "c128/kernal");
+			cbm = new EmuC128();
 #endif
 		cbm->ResetRun();
 		delete cbm;

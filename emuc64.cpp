@@ -91,15 +91,12 @@ int startup_state = 0;
 
 #include "emuc64.h"
 
-EmuC64::EmuC64(int ram_size,
-	const char* basic_file,
-	const char* chargen_file,
-	const char* kernal_file)
+EmuC64::EmuC64(int ram_size)
 	: EmuCBM(new C64Memory(ram_size))
 {
-	File_ReadAllBytes(((C64Memory*)memory)->basic_rom, C64Memory::basic_rom_size, basic_file);
-	File_ReadAllBytes(((C64Memory*)memory)->char_rom, C64Memory::char_rom_size, chargen_file);
-	File_ReadAllBytes(((C64Memory*)memory)->kernal_rom, C64Memory::kernal_rom_size, kernal_file);
+	File_ReadAllBytes(((C64Memory*)memory)->basic_rom, C64Memory::basic_rom_size, "roms/c64/basic");
+	File_ReadAllBytes(((C64Memory*)memory)->char_rom, C64Memory::char_rom_size, "roms/c64/chargen");
+	File_ReadAllBytes(((C64Memory*)memory)->kernal_rom, C64Memory::kernal_rom_size, "roms/c64/kernal");
 }
 
 EmuC64::~EmuC64()

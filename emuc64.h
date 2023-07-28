@@ -37,12 +37,7 @@
 class EmuC64 : public EmuCBM
 {
 public:
-	EmuC64(
-		int ram_size,
-		const char* basic_file,
-		const char* chargen_file,
-		const char* kernal_file
-	);
+	EmuC64(int ram_size);
 	virtual ~EmuC64();
 
 protected:

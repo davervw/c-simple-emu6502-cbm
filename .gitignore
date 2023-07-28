@@ -2,8 +2,7 @@
 Debug
 Release
 c-simple-emu6502-cbm.vcxproj.user
-c64/
-c128/
+roms/
 *.exe
 obj/
 enc_temp_folder/

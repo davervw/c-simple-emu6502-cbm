@@ -80,18 +80,14 @@
 
 extern int main_go_num;
 
-EmuC128::EmuC128(
-    const char* basic_lo_file,
-    const char* basic_hi_file,
-    const char* chargen_file,
-    const char* kernal_file)
+EmuC128::EmuC128()
     : EmuCBM(new C128Memory())
 {
     c128memory = (C128Memory*)memory;
-    File_ReadAllBytes(c128memory->basic_lo_rom, C128Memory::basic_lo_size, basic_lo_file);
-    File_ReadAllBytes(c128memory->basic_hi_rom, C128Memory::basic_hi_size, basic_hi_file);
-    File_ReadAllBytes(c128memory->char_rom, C128Memory::chargen_size, chargen_file);
-    File_ReadAllBytes(c128memory->kernal_rom, C128Memory::kernal_size, kernal_file);
+    File_ReadAllBytes(c128memory->basic_lo_rom, C128Memory::basic_lo_size, "roms/c128/basiclo");
+    File_ReadAllBytes(c128memory->basic_hi_rom, C128Memory::basic_hi_size, "roms/c128/basichi");
+    File_ReadAllBytes(c128memory->char_rom, C128Memory::chargen_size, "roms/c128/chargen");
+    File_ReadAllBytes(c128memory->kernal_rom, C128Memory::kernal_size, "roms/c128/kernal");
 }
 
 EmuC128::~EmuC128()

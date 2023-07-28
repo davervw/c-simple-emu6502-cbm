@@ -7,12 +7,7 @@ class C128Memory;
 class EmuC128 : public EmuCBM
 {
 public:
-	EmuC128(
-		const char* basic_lo_file,
-		const char* basic_hi_file,
-		const char* chargen_file,
-		const char* kernal_file
-	);
+	EmuC128();
 	virtual ~EmuC128();
 
 protected:
