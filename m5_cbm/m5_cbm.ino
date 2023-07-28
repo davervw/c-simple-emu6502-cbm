@@ -58,7 +58,7 @@ void setup() {
   if(!SD.begin(SD_CS_OVERRIDE)){
       M5Serial.println("Card Mount Failed");
       M5.Lcd.println("Card Mount Failed");
-      delay(2000);
+      while(1); // cannot continue, so hang around
   }
 }
 
