@@ -1,4 +1,4 @@
-// c-simple-emu6502-cbm.ino - Commodore Console Emulation
+// cbmconsole.h - Commodore Console Emulation
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -7,10 +7,11 @@
 //
 // MIT License
 //
-// Copyright (c) 2023 by David R. Van Wagner
+// Copyright(c) 2020 by David R.Van Wagner
 // davevw.com
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
+//
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
@@ -29,43 +30,10 @@
 // SOFTWARE.
 //
 ////////////////////////////////////////////////////////////////////////////////
-// IMPORTANT!
-//
-// This port is for M5Stack with IPS LCD, USB keyboard, and D64 disk (SD)
-// Note: other ports are available for other hardware platforms
-// Tested with Arduino 2.1.0
-// Requires M5 Basic Core (or Core2, or CoreS3)
-// Note: Serial diagnostics commented out so can start immediately without terminal
-////////////////////////////////////////////////////////////////////////////////
 
-#include "emuc64.h"
-#include "emuc128.h"
+#pragma once
 
-#include <SD.h>
-#include <SPI.h>
-#include "emud64.h"
-#include "M5Core.h"
+extern void CBM_Console_WriteChar(unsigned char c);
+extern unsigned char CBM_Console_ReadChar(void);
+extern void CBM_Console_Push(const char* s);
 
-// globals
-const char* StartupPRG = 0;
-int main_go_num = 0;
-
-void setup() {
-  M5.begin();
-
-  //Initialize serial (but don't wait for it to be connected, until there is an exception
-  M5Serial.begin(115200);
-  M5Serial.setTimeout(0); // so we don't wait for reads
-
-  if(!SD.begin(SD_CS_OVERRIDE)){
-      M5Serial.println("Card Mount Failed");
-      M5.Lcd.println("Card Mount Failed");
-      while(1); // cannot continue, so hang around
-  }
-}
-
-void loop() {
-  EmuC128 *cbm = new EmuC128();
-  cbm->ResetRun();
-  delete cbm;
-}

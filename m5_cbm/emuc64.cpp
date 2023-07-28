@@ -54,12 +54,8 @@
 // ROMs copyright Commodore or their assignees
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "M5Core.h"
-#include <FS.h>
-#include <SD.h>
-#include <SPI.h>
-
 #include "emuc64.h"
+#include "M5Core.h"
 
 // externs (globals)
 extern char* StartupPRG;
@@ -325,15 +321,6 @@ static const int open_addr = 0xC000;
 static const int open_size = 0x1000;
 static const int ram_size = 64 * 1024;
 const int color_nybles_size = 1024;
-
-static void File_ReadAllBytes(byte* bytes, int size, const char* filename)
-{
-    File fp = SD.open(filename, FILE_READ);
-    if (!fp)
-      return;
-    fp.read(bytes, size);
-    fp.close();
-}
 
 EmuC64::C64Memory::C64Memory()
 {

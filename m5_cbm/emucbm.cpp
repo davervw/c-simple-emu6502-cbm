@@ -32,7 +32,11 @@
 
 #include "emucbm.h"
 #include "emud64.h"
+
 #include "M5Core.h"
+#include <FS.h>
+#include <SD.h>
+#include <SPI.h>
 
 // externs (globals)
 extern char* StartupPRG;
@@ -263,4 +267,13 @@ bool EmuCBM::ExecuteJSR(ushort addr)
 	Push(LO(retaddr));
 	PC = addr;
 	return true; // return value for ExecutePatch so will reloop execution to allow berakpoint/trace/ExecutePatch/etc.
+}
+
+void EmuCBM::File_ReadAllBytes(byte* bytes, int size, const char* filename)
+{
+    File fp = SD.open(filename, FILE_READ);
+    if (!fp)
+      return;
+    fp.read(bytes, size);
+    fp.close();
 }
