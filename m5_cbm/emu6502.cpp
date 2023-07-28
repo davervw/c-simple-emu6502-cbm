@@ -56,6 +56,7 @@ Emu6502::Emu6502(Memory* mem)
   PC = 0;
   trace = false;
   step = false;
+  quit = false;
 }
 
 Emu6502::~Emu6502()
@@ -665,6 +666,8 @@ void Emu6502::Execute(ushort addr)
 	{
 		while (true)
 		{
+      if (quit)
+        return;
 			bytes = 1;
 			bool breakpoint = false;
       if (!I && (micros()-timer_then) >= interrupt_time) // IRQ

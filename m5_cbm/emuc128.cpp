@@ -82,6 +82,7 @@ EmuC128::EmuC128()
     : EmuCBM(new C128Memory())
 {
     c128memory = (C128Memory*)memory;
+    M5.Lcd.println("Wait a bit for C128 emulation to prompt on serial...");
 }
 
 EmuC128::~EmuC128()
@@ -292,6 +293,9 @@ bool EmuC128::ExecutePatch()
     }
     else if (PC == 0x05A4D) // GO value expression evaluated to byte stored in .X, catch other byte values that are not 64
     {
+        M5.Lcd.print("GO ");
+        M5.Lcd.println(X);
+
         if (X != 64)
         {
             main_go_num = X;
@@ -364,6 +368,7 @@ static const int color_size = 0x0400;
 static const int mmu_addr = 0xD500;
 static const int mmu_size = 0xC;
 static const int chargen_addr = io_addr;
+static const int color_nybles_size = 0x400;
 
 C128Memory::C128Memory()
 {
@@ -376,6 +381,10 @@ C128Memory::C128Memory()
     basic_hi_rom = new byte[basic_hi_size];
     char_rom = new byte[chargen_size];
     kernal_rom = new byte[kernal_size];
+    color_nybles = new byte[color_nybles_size];
+
+    for (int i = 0; i < color_nybles_size; ++i)
+      color_nybles[i] = 0x0;
 
     EmuCBM::File_ReadAllBytes(basic_lo_rom, basic_lo_size, "/roms/c128/basiclo");
     EmuCBM::File_ReadAllBytes(basic_hi_rom, basic_hi_size, "/roms/c128/basichi");

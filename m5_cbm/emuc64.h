@@ -70,6 +70,7 @@ public:
 
 protected:
   C64Memory* c64memory;
+  int go_state;
 
 protected:
   bool ExecutePatch();

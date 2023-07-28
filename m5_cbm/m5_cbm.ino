@@ -48,7 +48,7 @@
 
 // globals
 const char* StartupPRG = 0;
-int main_go_num = 0;
+int main_go_num = 128;
 
 void setup() {
   M5.begin();
@@ -65,7 +65,14 @@ void setup() {
 }
 
 void loop() {
-  EmuC128 *cbm = new EmuC128();
+  M5.Lcd.println(main_go_num);
+  EmuCBM* cbm;
+  if (main_go_num == 128)
+    cbm = new EmuC128();
+  else
+    cbm = new EmuC64();
   cbm->ResetRun();
   delete cbm;
+  M5.Lcd.println(main_go_num);
+  delay(1000);
 }

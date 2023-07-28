@@ -72,13 +72,14 @@ EmuC64::EmuC64() : EmuCBM(new C64Memory())
 {
   c64memory = (C64Memory*)memory;
 
+  go_state = 0;
+
   // initialize LCD screen
   M5.Lcd.fillScreen(0x0000); // BLACK
 }
 
 EmuC64::~EmuC64()
 {
-  delete memory;
 }
 
 static void ReadKeyboard()
@@ -276,6 +277,27 @@ bool EmuC64::ExecutePatch()
 		PC = 0xFFD8; // use KERNAL JUMP TABLE instead, so SAVE is hooked by base
 		return true; // re-execute
 	}
+	else if (PC == 0xA815) // Execute after GO
+	{
+		if (go_state == 0 && A >= (byte)'0' && A <= (byte)'9')
+		{
+			go_state = 1;
+			return ExecuteJSR(0xAD8A); // Evaluate expression, check data type
+		}
+		else if (go_state == 1)
+		{
+			go_state = 2;
+			return ExecuteJSR(0xB7F7); // Convert fp to 2 byte integer
+		}
+		else if (go_state == 2)
+		{
+			extern int main_go_num;
+
+			main_go_num = (ushort)(Y + (A << 8));
+			quit = true;
+			return true;
+		}
+	}	
 
 	return EmuCBM::ExecutePatch();
 }
