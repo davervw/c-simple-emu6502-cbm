@@ -50,6 +50,16 @@ class EmuC64 : public Emu6502
     void SaveOldVideoAndColor();
 
   private:
+    byte* ram;
+    byte* color_nybles;
+    byte* io;
+    byte* basic_rom;
+    byte* kernal_rom;
+    byte* chargen_rom;
+    byte* old_video;
+    byte* old_color;
+
+  private:
     C64Memory(const C64Memory& other); // disabled
     bool operator==(const C64Memory& other) const; // disabled    
   };

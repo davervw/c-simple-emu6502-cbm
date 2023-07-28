@@ -77,8 +77,6 @@ static int LOAD_TRAP = -1;
 static int DRAW_TRAP = -1;
 static EmuD64* disks[4] = {NULL,NULL,NULL,NULL};
 static bool postponeDrawChar = false;
-static byte old_video[1000];
-static byte old_color[1000];
 
 // array allows multiple keys/modifiers pressed at one time
 static int scan_codes[16] = { 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64 } ;
@@ -532,21 +530,17 @@ void EmuC64::CheckBypassSETLFS()
 
 // note ram starts at 0x0000
 static const int basic_addr = 0xA000;
+static const int basic_size = 0x2000;
 static const int kernal_addr = 0xE000;
+static const int kernal_size = 0x2000;
 static const int io_addr = 0xD000;
 static const int io_size = 0x1000;
+static const int chargen_size = 0x1000;
 static const int color_addr = 0xD800;
 static const int open_addr = 0xC000;
 static const int open_size = 0x1000;
 static const int ram_size = 64 * 1024;
 const int color_nybles_size = 1024;
-
-static byte ram[ram_size];
-static byte color_nybles[color_nybles_size];
-static byte io[io_size];
-static byte basic_rom[8 * 1024];
-static byte kernal_rom[8 * 1024];
-static byte chargen_rom[4 * 1024];
 
 static void File_ReadAllBytes(byte* bytes, int size, const char* filename)
 {
@@ -559,15 +553,24 @@ static void File_ReadAllBytes(byte* bytes, int size, const char* filename)
 
 EmuC64::C64Memory::C64Memory()
 {
-  File_ReadAllBytes(basic_rom, sizeof(basic_rom), "/roms/c64/basic");
-  File_ReadAllBytes(chargen_rom, sizeof(chargen_rom), "/roms/c64/chargen");
-  File_ReadAllBytes(kernal_rom, sizeof(kernal_rom), "/roms/c64/kernal");
+  ram = new byte[ram_size];
+  color_nybles = new byte[color_nybles_size];
+  io = new byte[io_size];
+  basic_rom = new byte[basic_size];
+  kernal_rom = new byte[kernal_size];
+  chargen_rom = new byte[chargen_size];
+  old_video = new byte[1000];
+  old_color = new byte[1000];
 
-	for (unsigned i = 0; i < sizeof(ram); ++i)
+  File_ReadAllBytes(basic_rom, basic_size, "/roms/c64/basic");
+  File_ReadAllBytes(chargen_rom, chargen_size, "/roms/c64/chargen");
+  File_ReadAllBytes(kernal_rom, kernal_size, "/roms/c64/kernal");
+
+	for (unsigned i = 0; i < ram_size; ++i)
 		ram[i] = 0;
-	for (unsigned i = 0; i < sizeof(color_nybles); ++i)
+	for (unsigned i = 0; i < color_nybles_size; ++i)
 		color_nybles[i] = 0;
-  for (unsigned i = 0; i < sizeof(io); ++i)
+  for (unsigned i = 0; i < io_size; ++i)
     io[i] = 0;
   
   // initialize DDR and memory mapping to defaults
@@ -577,6 +580,14 @@ EmuC64::C64Memory::C64Memory()
 
 EmuC64::C64Memory::~C64Memory()
 {
+  delete[] ram;
+  delete[] color_nybles;
+  delete[] io;
+  delete[] basic_rom;
+  delete[] kernal_rom;
+  delete[] chargen_rom;
+  delete[] old_video;
+  delete[] old_color;
 }
 
 // RGB565 colors picked with http://www.barth-dev.de/online/rgb565-color-picker/
@@ -670,23 +681,23 @@ void EmuC64::C64Memory::RedrawScreenEfficientlyAfterPostponed()
 
 byte EmuC64::C64Memory::read(ushort addr)
 {
-  if (addr <= sizeof(ram) - 1
+  if (addr <= ram_size - 1
       && (
         addr < basic_addr // always RAM
         || (addr >= open_addr && addr < open_addr + open_size) // always open RAM C000.CFFF
-        || (((ram[1] & 3) != 3) && addr >= basic_addr && addr < basic_addr + sizeof(basic_rom)) // RAM banked instead of BASIC
-        || (((ram[1] & 2) == 0) && addr >= kernal_addr && addr <= kernal_addr + sizeof(kernal_rom) - 1) // RAM banked instead of KERNAL
+        || (((ram[1] & 3) != 3) && addr >= basic_addr && addr < basic_addr + basic_size) // RAM banked instead of BASIC
+        || (((ram[1] & 2) == 0) && addr >= kernal_addr && addr <= kernal_addr + kernal_size - 1) // RAM banked instead of KERNAL
         || (((ram[1] & 3) == 0) && addr >= io_addr && addr < io_addr + io_size) // RAM banked instead of IO
       )
     )
     return ram[addr];
-  else if (addr >= basic_addr && addr < basic_addr + sizeof(basic_rom))
+  else if (addr >= basic_addr && addr < basic_addr + basic_size)
     return basic_rom[addr - basic_addr];
   else if (addr >= io_addr && addr < io_addr + io_size)
   {
     if ((ram[1] & 4) == 0)
       return chargen_rom[addr - io_addr];
-    else if (addr >= color_addr && addr < color_addr + sizeof(color_nybles))
+    else if (addr >= color_addr && addr < color_addr + color_nybles_size)
       return color_nybles[addr - color_addr] | 0xF0;
     else if (addr == 0xDC01)
     {
@@ -712,7 +723,7 @@ byte EmuC64::C64Memory::read(ushort addr)
     else
       return io[addr - io_addr];
   }
-  else if (addr >= kernal_addr && addr <= kernal_addr + sizeof(kernal_rom)-1)
+  else if (addr >= kernal_addr && addr <= kernal_addr + kernal_size-1)
     return kernal_rom[addr - kernal_addr];
   else
     return 0xFF;
@@ -720,10 +731,10 @@ byte EmuC64::C64Memory::read(ushort addr)
 
 void EmuC64::C64Memory::write(ushort addr, byte value)
 {
-  if (addr <= sizeof(ram) - 1
+  if (addr <= ram_size - 1
     && (
       addr < io_addr // RAM, including open RAM, and RAM under BASIC
-      || (addr >= kernal_addr && addr <= kernal_addr + sizeof(kernal_rom) - 1) // RAM under KERNAL
+      || (addr >= kernal_addr && addr <= kernal_addr + kernal_size - 1) // RAM under KERNAL
       || (((ram[1] & 7) == 0) && addr >= io_addr && addr < io_addr + io_size) // RAM banked in instead of IO
       )
     )
@@ -753,7 +764,7 @@ void EmuC64::C64Memory::write(ushort addr, byte value)
     io[addr - io_addr] = value & 0xF;
     RedrawScreen();
   }
-  else if (addr >= color_addr && addr < color_addr + sizeof(color_nybles))
+  else if (addr >= color_addr && addr < color_addr + color_nybles_size)
   {
     int offset = addr - color_addr;
     bool colorChange = (color_nybles[offset] != value);
