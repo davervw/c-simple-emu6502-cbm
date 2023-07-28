@@ -2,7 +2,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
-// c-simple-emu-cbm (C Portable Version)
+// c-simple-emu-cbm (C Portable Version);
 // C64/6502 Emulator for M5Stack Cores
 //
 // MIT License
@@ -32,6 +32,43 @@
 
 #pragma once
 
-extern void C64_Init(void);
-extern char* StartupPRG;
+#include "emu6502.h"
 
+class EmuC64 : public Emu6502
+{
+  class C64Memory : public Memory
+  {
+  public:
+    C64Memory();
+    ~C64Memory();
+    virtual byte read(ushort addr);
+    virtual void write(ushort addr, byte value);
+    void DrawChar(byte c, int col, int row, int fg, int bg);
+    void DrawChar(int offset);
+    void RedrawScreen();
+    void RedrawScreenEfficientlyAfterPostponed();
+    void SaveOldVideoAndColor();
+
+  private:
+    C64Memory(const C64Memory& other); // disabled
+    bool operator==(const C64Memory& other) const; // disabled    
+  };
+
+public:
+  EmuC64();
+  virtual ~EmuC64();
+
+protected:
+  C64Memory* c64memory;
+
+protected:
+  bool ExecuteRTS();
+  bool ExecuteJSR(ushort addr);
+  bool FileLoad(byte* p_err);
+  bool FileSave(const char* filename, ushort addr1, ushort addr2);
+  bool LoadStartupPrg();
+  bool ExecutePatch();
+  void CheckBypassSETNAM();
+  void CheckBypassSETLFS();
+  static int C64ColorToLCDColor(byte value);
+};

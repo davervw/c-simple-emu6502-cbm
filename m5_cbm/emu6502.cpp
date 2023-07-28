@@ -36,41 +36,40 @@
 #include <string.h>
 #include <stdio.h>
 
-// globals
-byte A = 0;
-byte X = 0;
-byte Y = 0;
-byte S = 0xFF;
-bool N = false;
-bool V = false;
-bool B = true; // 6502 PHP instructions always treats B flag as true, so keep it true
-bool D = false;
-bool I = false;
-bool Z = false;
-bool C = false;
-ushort PC = 0;
-bool trace = false;
-bool step = false;
+void strcpy_s(char* dest, size_t size, const char* src) { strncpy(dest, src, size); }
+void strcat_s(char* dest, size_t size, const char* src) { strncat(dest, src, size); }
 
-extern void ResetRun(bool (*ExecutePatch)(void))
+Emu6502::Emu6502(Memory* mem)
+{
+  memory = mem;
+  A = 0;
+  X = 0;
+  Y = 0;
+  S = 0xFF;
+  N = false;
+  V = false;
+  B = true; // 6502 PHP instructions always treats B flag as true, so keep it true
+  D = false;
+  I = false;
+  Z = false;
+  C = false;
+  PC = 0;
+  trace = false;
+  step = false;
+}
+
+Emu6502::~Emu6502()
+{
+  delete memory;
+}
+
+void Emu6502::ResetRun()
 {
 	ushort addr = (ushort)((GetMemory(0xFFFC) | (GetMemory(0xFFFD) << 8))); // RESET vector
-	Execute(addr, ExecutePatch);
+	Execute(addr);
 }
 
-#ifndef WIN32
-static void strcpy_s(char* dest, size_t size, const char* src)
-{
-	strncpy(dest, src, size);
-}
-
-static void strcat_s(char* dest, size_t size, const char* src)
-{
-	strncat(dest, src, size);
-}
-#endif
-
-extern void PHP()
+void Emu6502::PHP()
 {
 	int flags = (N ? 0x80 : 0)
 		| (V ? 0x40 : 0)
@@ -83,17 +82,17 @@ extern void PHP()
 	Push(flags);
 }
 
-extern byte LO(ushort value)
+byte Emu6502::LO(ushort value)
 {
 	return (byte)value;
 }
 
-extern byte HI(ushort value)
+byte Emu6502::HI(ushort value)
 {
 	return (byte)(value >> 8);
 }
 
-static byte Subtract(byte reg, byte value, bool *p_overflow)
+byte Emu6502::Subtract(byte reg, byte value, bool *p_overflow)
 {
 	bool old_reg_neg = (reg & 0x80) != 0;
 	bool value_neg = (value & 0x80) != 0;
@@ -107,51 +106,51 @@ static byte Subtract(byte reg, byte value, bool *p_overflow)
 	return (byte)result;
 }
 
-static byte SubtractWithoutOverflow(byte reg, byte value)
+byte Emu6502::SubtractWithoutOverflow(byte reg, byte value)
 {
 	C = true; // init for CMP, etc.
 	bool unused;
 	return Subtract(reg, value, &unused);
 }
 
-static void CMP(byte value)
+void Emu6502::CMP(byte value)
 {
 	SubtractWithoutOverflow(A, value);
 }
 
-static void CPX(byte value)
+void Emu6502::CPX(byte value)
 {
 	SubtractWithoutOverflow(X, value);
 }
 
-static void CPY(byte value)
+void Emu6502::CPY(byte value)
 {
 	SubtractWithoutOverflow(Y, value);
 }
 
-static void SetReg(byte *p_reg, int value)
+void Emu6502::SetReg(byte *p_reg, int value)
 {
 	*p_reg = (byte)value;
 	Z = (*p_reg == 0);
 	N = ((*p_reg & 0x80) != 0);
 }
 
-extern void SetA(int value)
+void Emu6502::SetA(int value)
 {
 	SetReg(&A, value);
 }
 
-static void SetX(int value)
+void Emu6502::SetX(int value)
 {
 	SetReg(&X, value);
 }
 
-static void SetY(int value)
+void Emu6502::SetY(int value)
 {
 	SetReg(&Y, value);
 }
 
-static void SBC(byte value)
+void Emu6502::SBC(byte value)
 {
 	if (D)
 	{
@@ -173,7 +172,7 @@ static void SBC(byte value)
 	}
 }
 
-static void ADDC(byte value)
+void Emu6502::ADDC(byte value)
 {
 	int result;
 	if (D)
@@ -200,29 +199,29 @@ static void ADDC(byte value)
 	}
 }
 
-static void ORA(int value)
+void Emu6502::ORA(int value)
 {
 	SetA(A | value);
 }
 
-static void EOR(int value)
+void Emu6502::EOR(int value)
 {
 	SetA(A ^ value);
 }
 
-static void AND(int value)
+void Emu6502::AND(int value)
 {
 	SetA(A & value);
 }
 
-static void BITOP(byte value)
+void Emu6502::BITOP(byte value)
 {
 	Z = (A & value) == 0;
 	N = (value & 0x80) != 0;
 	V = (value & 0x40) != 0;
 }
 
-static byte ASL(int value)
+byte Emu6502::ASL(int value)
 {
 	C = (value & 0x80) != 0;
 	value = (byte)(value << 1);
@@ -231,7 +230,7 @@ static byte ASL(int value)
 	return (byte)value;
 }
 
-static byte LSR(int value)
+byte Emu6502::LSR(int value)
 {
 	C = (value & 0x01) != 0;
 	value = (byte)(value >> 1);
@@ -240,7 +239,7 @@ static byte LSR(int value)
 	return (byte)value;
 }
 
-static byte ROL(int value)
+byte Emu6502::ROL(int value)
 {
 	bool newC = (value & 0x80) != 0;
 	value = (byte)((value << 1) | (C ? 1 : 0));
@@ -250,7 +249,7 @@ static byte ROL(int value)
 	return (byte)value;
 }
 
-static byte ROR(int value)
+byte Emu6502::ROR(int value)
 {
 	bool newC = (value & 0x01) != 0;
 	N = C;
@@ -260,17 +259,17 @@ static byte ROR(int value)
 	return (byte)value;
 }
 
-extern void Push(int value)
+void Emu6502::Push(int value)
 {
 	SetMemory((ushort)(0x100 + (S--)), (byte)value);
 }
 
-extern byte Pop(void)
+byte Emu6502::Pop(void)
 {
 	return GetMemory((ushort)(0x100 + (++S)));
 }
 
-static void PLP()
+void Emu6502::PLP()
 {
 	int flags = Pop();
 	N = (flags & 0x80) != 0;
@@ -281,52 +280,52 @@ static void PLP()
 	C = (flags & 0x01) != 0;
 }
 
-static void PHA()
+void Emu6502::PHA()
 {
 	Push(A);
 }
 
-static void PLA()
+void Emu6502::PLA()
 {
 	SetA(Pop());
 }
 
-static void CLC()
+void Emu6502::CLC()
 {
 	C = false;
 }
 
-static void CLD()
+void Emu6502::CLD()
 {
 	D = false;
 }
 
-static void CLI()
+void Emu6502::CLI()
 {
 	I = false;
 }
 
-static void CLV()
+void Emu6502::CLV()
 {
 	V = false;
 }
 
-static void SEC()
+void Emu6502::SEC()
 {
 	C = true;
 }
 
-static void SED()
+void Emu6502::SED()
 {
 	D = true;
 }
 
-static void SEI()
+void Emu6502::SEI()
 {
 	I = true;
 }
 
-static byte INC(byte value)
+byte Emu6502::INC(byte value)
 {
 	++value;
 	Z = (value == 0);
@@ -334,17 +333,17 @@ static byte INC(byte value)
 	return (byte)value;
 }
 
-static void INX()
+void Emu6502::INX()
 {
 	X = INC(X);
 }
 
-static void INY()
+void Emu6502::INY()
 {
 	Y = INC(Y);
 }
 
-static byte DECR(byte value)
+byte Emu6502::DECR(byte value)
 {
 	--value;
 	Z = (value == 0);
@@ -352,51 +351,51 @@ static byte DECR(byte value)
 	return (byte)value;
 }
 
-static void DEX()
+void Emu6502::DEX()
 {
 	X = DECR(X);
 }
 
-static void DEY()
+void Emu6502::DEY()
 {
 	Y = DECR(Y);
 }
 
-static void NO_OP()
+void Emu6502::NO_OP()
 {
 }
 
-static void TXA()
+void Emu6502::TXA()
 {
 	SetReg(&A, X);
 }
 
-static void TAX()
+void Emu6502::TAX()
 {
 	SetReg(&X, A);
 }
 
-static void TYA()
+void Emu6502::TYA()
 {
 	SetReg(&A, Y);
 }
 
-static void TAY()
+void Emu6502::TAY()
 {
 	SetReg(&Y, A);
 }
 
-static void TXS()
+void Emu6502::TXS()
 {
 	S = X;
 }
 
-static void TSX()
+void Emu6502::TSX()
 {
 	SetReg(&X, S);
 }
 
-static ushort GetBR(ushort addr, bool *p_conditional, byte *p_bytes)
+ushort Emu6502::GetBR(ushort addr, bool *p_conditional, byte *p_bytes)
 {
 	*p_conditional = true;
 	*p_bytes = 2;
@@ -405,7 +404,7 @@ static ushort GetBR(ushort addr, bool *p_conditional, byte *p_bytes)
 	return addr2;
 }
 
-static void BRANCH(bool branch, ushort *p_addr, bool *p_conditional, byte *p_bytes)
+void Emu6502::BRANCH(bool branch, ushort *p_addr, bool *p_conditional, byte *p_bytes)
 {
 	ushort addr2 = GetBR(*p_addr, p_conditional, p_bytes);
 	if (branch)
@@ -415,47 +414,47 @@ static void BRANCH(bool branch, ushort *p_addr, bool *p_conditional, byte *p_byt
 	}
 }
 
-static void BPL(ushort *p_addr, bool *p_conditional, byte *p_bytes)
+void Emu6502::BPL(ushort *p_addr, bool *p_conditional, byte *p_bytes)
 {
    BRANCH(!N, p_addr, p_conditional, p_bytes);
 }
 
-static void BMI(ushort *p_addr, bool *p_conditional, byte *p_bytes)
+void Emu6502::BMI(ushort *p_addr, bool *p_conditional, byte *p_bytes)
 {
    BRANCH(N, p_addr, p_conditional, p_bytes);
 }
 
-static void BCC(ushort *p_addr, bool *p_conditional, byte *p_bytes)
+void Emu6502::BCC(ushort *p_addr, bool *p_conditional, byte *p_bytes)
 {
    BRANCH(!C, p_addr, p_conditional, p_bytes);
 }
 
-static void BCS(ushort *p_addr, bool *p_conditional, byte *p_bytes)
+void Emu6502::BCS(ushort *p_addr, bool *p_conditional, byte *p_bytes)
 {
    BRANCH(C, p_addr, p_conditional, p_bytes);
 }
 
-static void BVC(ushort *p_addr, bool *p_conditional, byte *p_bytes)
+void Emu6502::BVC(ushort *p_addr, bool *p_conditional, byte *p_bytes)
 {
    BRANCH(!V, p_addr, p_conditional, p_bytes);
 }
 
-static void BVS(ushort *p_addr, bool *p_conditional, byte *p_bytes)
+void Emu6502::BVS(ushort *p_addr, bool *p_conditional, byte *p_bytes)
 {
    BRANCH(V, p_addr, p_conditional, p_bytes);
 }
 
-static void BNE(ushort *p_addr, bool *p_conditional, byte *p_bytes)
+void Emu6502::BNE(ushort *p_addr, bool *p_conditional, byte *p_bytes)
 {
    BRANCH(!Z, p_addr, p_conditional, p_bytes);
 }
 
-static void BEQ(ushort *p_addr, bool *p_conditional, byte *p_bytes)
+void Emu6502::BEQ(ushort *p_addr, bool *p_conditional, byte *p_bytes)
 {
    BRANCH(Z, p_addr, p_conditional, p_bytes);
 }
 
-static void JSR(ushort *p_addr, byte *p_bytes)
+void Emu6502::JSR(ushort *p_addr, byte *p_bytes)
 {
 	*p_bytes = 3; // for next calculation
 	ushort addr2 = (ushort)(*p_addr + *p_bytes - 1);
@@ -466,7 +465,7 @@ static void JSR(ushort *p_addr, byte *p_bytes)
 	*p_bytes = 0; // addr already changed
 }
 
-extern void RTS(ushort *p_addr, byte *p_bytes)
+void Emu6502::RTS(ushort *p_addr, byte *p_bytes)
 {
 	byte lo = Pop();
 	byte hi = Pop();
@@ -474,7 +473,7 @@ extern void RTS(ushort *p_addr, byte *p_bytes)
 	*p_bytes = 0; // addr already changed
 }
 
-static void RTI(ushort *p_addr, byte *p_bytes)
+void Emu6502::RTI(ushort *p_addr, byte *p_bytes)
 {
 	PLP();
 	byte lo = Pop();
@@ -483,7 +482,7 @@ static void RTI(ushort *p_addr, byte *p_bytes)
 	*p_addr = (ushort)((hi << 8) | lo);
 }
 
-static void BRK(byte *p_bytes)
+void Emu6502::BRK(byte *p_bytes)
 {
 	++PC;
 	++PC;
@@ -494,14 +493,14 @@ static void BRK(byte *p_bytes)
 	*p_bytes = 0;
 }
 
-static void JMP(ushort *p_addr, byte *p_bytes)
+void Emu6502::JMP(ushort *p_addr, byte *p_bytes)
 {
 	*p_bytes = 0; // caller should not advance address
 	ushort addr2 = (ushort)(GetMemory((ushort)(*p_addr + 1)) | (GetMemory((ushort)(*p_addr + 2)) << 8));
 	*p_addr = addr2;
 }
 
-static void JMPIND(ushort *p_addr, byte *p_bytes)
+void Emu6502::JMPIND(ushort *p_addr, byte *p_bytes)
 {
 	*p_bytes = 0; // caller should not advance address
 	ushort addr2 = (ushort)(GetMemory((ushort)(*p_addr + 1)) | (GetMemory((ushort)(*p_addr + 2)) << 8));
@@ -531,14 +530,14 @@ static void JMPIND(ushort *p_addr, byte *p_bytes)
 // 	);
 // }
 
-static byte GetIndX(ushort addr, byte *p_bytes)
+byte Emu6502::GetIndX(ushort addr, byte *p_bytes)
 {
 	*p_bytes = 2;
 	ushort addr2 = (ushort)(GetMemory((ushort)(addr + 1)) + X);
 	return GetMemory((ushort)(GetMemory(addr2) | (GetMemory((ushort)(addr2 + 1)) << 8)));
 }
 
-static void SetIndX(byte value, ushort addr, byte *p_bytes)
+void Emu6502::SetIndX(byte value, ushort addr, byte *p_bytes)
 {
 	*p_bytes = 2;
 	ushort addr2 = (ushort)(GetMemory((ushort)(addr + 1)) + X);
@@ -546,7 +545,7 @@ static void SetIndX(byte value, ushort addr, byte *p_bytes)
 	SetMemory(addr3, value);
 }
 
-static byte GetIndY(ushort addr, byte *p_bytes)
+byte Emu6502::GetIndY(ushort addr, byte *p_bytes)
 {
 	*p_bytes = 2;
 	ushort addr2 = (ushort)(GetMemory((ushort)(addr + 1)));
@@ -554,7 +553,7 @@ static byte GetIndY(ushort addr, byte *p_bytes)
 	return GetMemory(addr3);
 }
 
-static void SetIndY(byte value, ushort addr, byte *p_bytes)
+void Emu6502::SetIndY(byte value, ushort addr, byte *p_bytes)
 {
 	*p_bytes = 2;
 	ushort addr2 = (ushort)(GetMemory((ushort)(addr + 1)));
@@ -562,97 +561,97 @@ static void SetIndY(byte value, ushort addr, byte *p_bytes)
 	SetMemory(addr3, value);
 }
 
-static byte GetZP(ushort addr, byte *p_bytes)
+byte Emu6502::GetZP(ushort addr, byte *p_bytes)
 {
 	*p_bytes = 2;
 	ushort addr2 = GetMemory((ushort)(addr + 1));
 	return GetMemory(addr2);
 }
 
-static void SetZP(byte value, ushort addr, byte *p_bytes)
+void Emu6502::SetZP(byte value, ushort addr, byte *p_bytes)
 {
 	*p_bytes = 2;
 	ushort addr2 = GetMemory((ushort)(addr + 1));
 	SetMemory(addr2, value);
 }
 
-static byte GetZPX(ushort addr, byte *p_bytes)
+byte Emu6502::GetZPX(ushort addr, byte *p_bytes)
 {
 	*p_bytes = 2;
 	ushort addr2 = GetMemory((ushort)(addr + 1));
 	return GetMemory((byte)(addr2 + X));
 }
 
-static void SetZPX(byte value, ushort addr, byte *p_bytes)
+void Emu6502::SetZPX(byte value, ushort addr, byte *p_bytes)
 {
 	*p_bytes = 2;
 	ushort addr2 = GetMemory((ushort)(addr + 1));
 	SetMemory((byte)(addr2 + X), value);
 }
 
-static byte GetZPY(ushort addr, byte *p_bytes)
+byte Emu6502::GetZPY(ushort addr, byte *p_bytes)
 {
 	*p_bytes = 2;
 	ushort addr2 = GetMemory((ushort)(addr + 1));
 	return GetMemory((byte)(addr2 + Y));
 }
 
-static void SetZPY(byte value, ushort addr, byte *p_bytes)
+void Emu6502::SetZPY(byte value, ushort addr, byte *p_bytes)
 {
 	*p_bytes = 2;
 	ushort addr2 = GetMemory((ushort)(addr + 1));
 	SetMemory((byte)(addr2 + Y), value);
 }
 
-static byte GetABS(ushort addr, byte *p_bytes)
+byte Emu6502::GetABS(ushort addr, byte *p_bytes)
 {
 	*p_bytes = 3;
 	ushort addr2 = (ushort)(GetMemory((ushort)(addr + 1)) | (GetMemory((ushort)(addr + 2)) << 8));
 	return GetMemory(addr2);
 }
 
-static void SetABS(byte value, ushort addr, byte *p_bytes)
+void Emu6502::SetABS(byte value, ushort addr, byte *p_bytes)
 {
 	*p_bytes = 3;
 	ushort addr2 = (ushort)(GetMemory((ushort)(addr + 1)) | (GetMemory((ushort)(addr + 2)) << 8));
 	SetMemory(addr2, value);
 }
 
-static byte GetABSX(ushort addr, byte *p_bytes)
+byte Emu6502::GetABSX(ushort addr, byte *p_bytes)
 {
 	*p_bytes = 3;
 	ushort addr2 = (ushort)(GetMemory((ushort)(addr + 1)) | (GetMemory((ushort)(addr + 2)) << 8));
 	return GetMemory((ushort)(addr2 + X));
 }
 
-static void SetABSX(byte value, ushort addr, byte *p_bytes)
+void Emu6502::SetABSX(byte value, ushort addr, byte *p_bytes)
 {
 	*p_bytes = 3;
 	ushort addr2 = (ushort)((GetMemory((ushort)(addr + 1)) | (GetMemory((ushort)(addr + 2)) << 8)) + X);
 	SetMemory(addr2, value);
 }
 
-static byte GetABSY(ushort addr, byte *p_bytes)
+byte Emu6502::GetABSY(ushort addr, byte *p_bytes)
 {
 	*p_bytes = 3;
 	ushort addr2 = (ushort)(GetMemory((ushort)(addr + 1)) | (GetMemory((ushort)(addr + 2)) << 8));
 	return GetMemory((ushort)(addr2 + Y));
 }
 
-static void SetABSY(byte value, ushort addr, byte *p_bytes)
+void Emu6502::SetABSY(byte value, ushort addr, byte *p_bytes)
 {
 	*p_bytes = 3;
 	ushort addr2 = (ushort)((GetMemory((ushort)(addr + 1)) | (GetMemory((ushort)(addr + 2)) << 8)) + Y);
 	SetMemory(addr2, value);
 }
 
-static byte GetIM(ushort addr, byte *p_bytes)
+byte Emu6502::GetIM(ushort addr, byte *p_bytes)
 {
 	*p_bytes = 2;
 	return GetMemory((ushort)(addr + 1));
 }
 
-extern void Execute(ushort addr, bool (*ExecutePatch)(void))
+void Emu6502::Execute(ushort addr)
 {
 	bool conditional;
 	byte bytes;
@@ -700,7 +699,7 @@ extern void Execute(ushort addr, bool (*ExecutePatch)(void))
 // 				if (breakpoint)
 // 					breakpoint = breakpoint; // user can put debug breakpoint here to allow break
 // 			}
-			if (ExecutePatch != 0 && !ExecutePatch()) // allow execute to be overriden at a specific address
+			if (!ExecutePatch()) // allow execute to be overriden at a specific address
 				break;
 		}
 
@@ -889,7 +888,7 @@ extern void Execute(ushort addr, bool (*ExecutePatch)(void))
 // Examples:
 // FFFF FF FF FF JMP ($FFFF)
 // FFFF FF FF FF LDA $FFFF,X
-// extern void DisassembleLong(ushort addr, bool *p_conditional, byte *p_bytes, ushort *p_addr2, char *dis, int dis_size, char *line, int line_size)
+// void DisassembleLong(ushort addr, bool *p_conditional, byte *p_bytes, ushort *p_addr2, char *dis, int dis_size, char *line, int line_size)
 // {
 // 	DisassembleShort(addr, p_conditional, p_bytes, p_addr2, dis, dis_size);
 // 	snprintf(line, line_size, "%04X ", addr);
@@ -983,7 +982,7 @@ extern void Execute(ushort addr, bool (*ExecutePatch)(void))
 
 // JMP ($FFFF)
 // LDA $FFFF,X
-// extern void DisassembleShort(ushort addr, bool *p_conditional, byte *p_bytes, ushort *p_addr2, char *dis, int dis_size)
+// void DisassembleShort(ushort addr, bool *p_conditional, byte *p_bytes, ushort *p_addr2, char *dis, int dis_size)
 // {
 // 	*p_conditional = false;
 // 	*p_addr2 = 0;
@@ -1164,3 +1163,4 @@ extern void Execute(ushort addr, bool (*ExecutePatch)(void))
 // 		//throw new Exception(string.Format("Invalid opcode {0:X2}", memory[addr]));
 // 	}
 // }
+

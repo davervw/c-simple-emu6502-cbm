@@ -46,6 +46,8 @@
 #include "emud64.h"
 #include "M5Core.h"
 
+const char* StartupPRG = 0;
+
 void setup() {
   M5.begin();
 
@@ -58,12 +60,10 @@ void setup() {
       M5.Lcd.println("Card Mount Failed");
       delay(2000);
   }
-
-  C64_Init();
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-  ResetRun(ExecutePatch); 
+  EmuC64 *cbm = new EmuC64();
+  cbm->ResetRun();
+  delete cbm;
 }
-

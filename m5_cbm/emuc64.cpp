@@ -56,11 +56,11 @@
 
 #include "M5Core.h"
 
-#include "emu6502.h"
+#include "emuc64.h"
 #include "emud64.h"
 
-// globals
-const char* StartupPRG = 0;
+// externs (globals)
+extern char* StartupPRG;
 
 // locals
 static int startup_state = 0;
@@ -72,17 +72,29 @@ static bool FileVerify = false;
 static ushort FileAddr = 0;
 static int LOAD_TRAP = -1;
 static int DRAW_TRAP = -1;
-static byte* attach = NULL;
 static EmuD64* disks[4] = {NULL,NULL,NULL,NULL};
 static bool postponeDrawChar = false;
 static byte old_video[1000];
 static byte old_color[1000];
 
-static byte ram[64 * 1024];
-static byte color_nybles[1024];
-
 // array allows multiple keys/modifiers pressed at one time
 static int scan_codes[16] = { 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64 } ;
+
+EmuC64::EmuC64() : Emu6502(new C64Memory())
+{
+  c64memory = (C64Memory*)memory;
+
+  disks[0] = new EmuD64("/disks/drive8.d64");
+  disks[1] = new EmuD64("/disks/drive9.d64");
+
+  // initialize LCD screen
+  M5.Lcd.fillScreen(0x0000); // BLACK
+}
+
+EmuC64::~EmuC64()
+{
+  delete memory;
+}
 
 static void ReadKeyboard()
 {
@@ -106,14 +118,14 @@ static void ReadKeyboard()
   }
 }
 
-static bool ExecuteRTS()
+bool EmuC64::ExecuteRTS()
 {
 	byte bytes;
 	RTS(&PC, &bytes);
 	return true; // return value for ExecutePatch so will reloop execution to allow berakpoint/trace/ExecutePatch/etc.
 }
 
-static bool ExecuteJSR(ushort addr)
+bool EmuC64::ExecuteJSR(ushort addr)
 {
 	ushort retaddr = (PC - 1) & 0xFFFF;
 	Push(HI(retaddr));
@@ -122,7 +134,7 @@ static bool ExecuteJSR(ushort addr)
 	return true; // return value for ExecutePatch so will reloop execution to allow berakpoint/trace/ExecutePatch/etc.
 }
 
-EmuD64* GetDisk()
+static EmuD64* GetDisk()
 {
   if (FileDev == 0 || FileDev == 1)
     return disks[0];
@@ -167,7 +179,7 @@ static byte* OpenRead(const char* filename, int* p_ret_file_len)
 }
 
 // returns success
-bool FileLoad(byte* p_err)
+bool EmuC64::FileLoad(byte* p_err)
 {
 	bool startup = (StartupPRG != NULL);
 	ushort addr = FileAddr;
@@ -212,7 +224,7 @@ bool FileLoad(byte* p_err)
 	return success;
 }
 
-bool FileSave(const char* filename, ushort addr1, ushort addr2)
+bool EmuC64::FileSave(const char* filename, ushort addr1, ushort addr2)
 {
   EmuD64* disk = GetDisk();
 	if (filename == NULL || *filename == 0)
@@ -232,7 +244,7 @@ bool FileSave(const char* filename, ushort addr1, ushort addr2)
 	return true;
 }
 
-static bool LoadStartupPrg()
+bool EmuC64::LoadStartupPrg()
 {
 	bool result;
 	byte err;
@@ -247,11 +259,10 @@ static bool LoadStartupPrg()
 }
 
 // forward declaration
-static void RedrawScreenEfficientlyAfterPostponed();
 static void CheckBypassSETNAM();
 static void CheckBypassSETLFS();
 
-bool ExecutePatch(void)
+bool EmuC64::ExecutePatch()
 {
   static bool NMI = false;
   
@@ -306,7 +317,6 @@ bool ExecutePatch(void)
 					// so doesn't repeat
 					StartupPRG = "";
 					LOAD_TRAP = -1;
-					attach = NULL;
 
 					return true; // overriden, and PC changed, so caller should reloop before execution to allow breakpoint/trace/ExecutePatch/etc.
 				}
@@ -318,7 +328,6 @@ bool ExecutePatch(void)
 			}
 
 			StartupPRG = 0;
-			attach = NULL;
 
 			if (is_basic) {
 				// UNNEW that I used in late 1980s, should work well for loading a program too, probably gleaned from BASIC ROM
@@ -458,14 +467,13 @@ bool ExecutePatch(void)
     byte hi = GetMemory((ushort)(0x100 + (S+2)));
     DRAW_TRAP = (ushort)(((hi << 8) | lo) + 1); // return address
     postponeDrawChar = true;
-    memcpy(&old_video[0], &ram[1024], 1000);
-    memcpy(&old_color[0], &color_nybles[0], 1000);
+    c64memory->SaveOldVideoAndColor();
   }
   else if (PC == DRAW_TRAP && postponeDrawChar) // returned from drawing postponement
   {
     DRAW_TRAP = -1;
     postponeDrawChar = false;
-    RedrawScreenEfficientlyAfterPostponed();
+    c64memory->RedrawScreenEfficientlyAfterPostponed();
   }
 	else if (GetMemory(PC) == 0x6C && GetMemory((ushort)(PC + 1)) == 0x30 && GetMemory((ushort)(PC + 2)) == 0x03) // catch JMP(LOAD_VECTOR), redirect to jump table
 	{
@@ -491,7 +499,7 @@ bool ExecutePatch(void)
 	return false; // execute normally
 }
 
-static void CheckBypassSETNAM()
+void EmuC64::CheckBypassSETNAM()
 {
 	// In case caller bypassed calling SETNAM, get from lower memory
 	byte name_len = GetMemory(0xB7);
@@ -504,7 +512,7 @@ static void CheckBypassSETNAM()
 		FileName = name;
 }
 
-static void CheckBypassSETLFS()
+void EmuC64::CheckBypassSETLFS()
 {
 	// In case caller bypassed calling SETLFS, get from lower memory
 	if (
@@ -1176,17 +1184,19 @@ static const int io_size = 0x1000;
 static const int color_addr = 0xD800;
 static const int open_addr = 0xC000;
 static const int open_size = 0x1000;
+static const int ram_size = 64 * 1024;
+const int color_nybles_size = 1024;
 
+static byte ram[ram_size];
+static byte color_nybles[color_nybles_size];
 static byte io[io_size];
 
-void C64_Init(void)
+EmuC64::C64Memory::C64Memory()
 {
 	//File_ReadAllBytes(basic_rom, sizeof(basic_rom), basic_file);
   //File_ReadAllBytes(chargen_rom, sizeof(chargen_rom), chargen_file);
 	//File_ReadAllBytes(kernal_rom, sizeof(kernal_rom), kernal_file);
 
-  disks[0] = new EmuD64("/disks/drive8.d64");
-  disks[1] = new EmuD64("/disks/drive9.d64");
 
 	for (unsigned i = 0; i < sizeof(ram); ++i)
 		ram[i] = 0;
@@ -1198,17 +1208,14 @@ void C64_Init(void)
   // initialize DDR and memory mapping to defaults
   ram[0] = 0xEF;
   ram[1] = 0x07;
+}
 
-  // initialize LCD screen
-  M5.Lcd.fillScreen(0x0000); // BLACK
-
-  // myusb.begin();
-  // keyboard1.attachRawPress(onKbdRawPress);
-  // keyboard1.attachRawRelease(onKbdRawRelease);
+EmuC64::C64Memory::~C64Memory()
+{
 }
 
 // RGB565 colors picked with http://www.barth-dev.de/online/rgb565-color-picker/
-int C64ColorToLCDColor(byte value)
+int EmuC64::C64ColorToLCDColor(byte value)
 {
   switch (value & 0xF)
   {
@@ -1232,23 +1239,7 @@ int C64ColorToLCDColor(byte value)
   }
 }
 
-#ifdef ILI9488  
-int colors[12][12];
-int scale_index(int i)
-{
-  return (i*3+1)/2;
-}
-void store_color(int row, int col, int color)
-{
-  colors[scale_index(row)][scale_index(col)]=color;
-}
-int get_color(int row, int col)
-{
-  return colors[scale_index(row)][scale_index(col)];
-}
-#endif
-
-void DrawChar(byte c, int col, int row, int fg, int bg)
+void EmuC64::C64Memory::DrawChar(byte c, int col, int row, int fg, int bg)
 {
   if (postponeDrawChar)
     return;
@@ -1268,39 +1259,39 @@ void DrawChar(byte c, int col, int row, int fg, int bg)
   }
 }
 
-static void DrawChar(int offset)
+void EmuC64::C64Memory::DrawChar(int offset)
 {
   int col = offset % 40;
   int row = offset / 40;
-  int fg = C64ColorToLCDColor(color_nybles[offset]);
-  int bg = C64ColorToLCDColor(io[0x21]);
+  int fg = EmuC64::C64ColorToLCDColor(color_nybles[offset]);
+  int bg = EmuC64::C64ColorToLCDColor(io[0x21]);
   DrawChar(ram[1024+offset], col, row, fg, bg);
 }
 
-static void RedrawScreen()
+void EmuC64::C64Memory::RedrawScreen()
 {
-  int bg = C64ColorToLCDColor(io[0x21]);
+  int bg = EmuC64::C64ColorToLCDColor(io[0x21]);
   int offset = 0;
   for (int row = 0; row < 25; ++row)
   {
     for (int col = 0; col < 40; ++col)
     {
-      int fg = C64ColorToLCDColor(color_nybles[offset]);
+      int fg = EmuC64::C64ColorToLCDColor(color_nybles[offset]);
       DrawChar(ram[1024 + offset], col, row, fg, bg);
       ++offset;
     }
   }
 }
 
-static void RedrawScreenEfficientlyAfterPostponed()
+void EmuC64::C64Memory::RedrawScreenEfficientlyAfterPostponed()
 {
-  int bg = C64ColorToLCDColor(io[0x21]);
+  int bg = EmuC64::C64ColorToLCDColor(io[0x21]);
   int offset = 0;
   for (int row = 0; row < 25; ++row)
   {
     for (int col = 0; col < 40; ++col)
     {
-      int fg = C64ColorToLCDColor(color_nybles[offset]);
+      int fg = EmuC64::C64ColorToLCDColor(color_nybles[offset]);
       byte old_char = old_video[offset];
       byte new_char = ram[1024 + offset];
       byte old_fg_index = old_color[offset] & 0xF;
@@ -1312,7 +1303,7 @@ static void RedrawScreenEfficientlyAfterPostponed()
   }
 }
 
-extern byte GetMemory(ushort addr)
+byte EmuC64::C64Memory::read(ushort addr)
 {
   if (addr <= sizeof(ram) - 1
       && (
@@ -1362,7 +1353,7 @@ extern byte GetMemory(ushort addr)
     return 0xFF;
 }
 
-extern void SetMemory(ushort addr, byte value)
+void EmuC64::C64Memory::write(ushort addr, byte value)
 {
   if (addr <= sizeof(ram) - 1
     && (
@@ -1387,7 +1378,7 @@ extern void SetMemory(ushort addr, byte value)
   }
   else if (addr == 0xD020) // border
   {
-    int border = C64ColorToLCDColor(value);
+    int border = EmuC64::C64ColorToLCDColor(value);
     M5.Lcd.fillRect(0, 0, 320, 20, border);
     M5.Lcd.fillRect(0, 220, 320, 20, border);
     io[addr - io_addr] = value & 0xF;
@@ -1415,4 +1406,10 @@ extern void SetMemory(ushort addr, byte value)
   {
     io[addr - io_addr] = value;
   } 
+}
+
+void EmuC64::C64Memory::SaveOldVideoAndColor()
+{
+    memcpy(&old_video[0], &ram[1024], 1000);
+    memcpy(&old_color[0], &color_nybles[0], 1000);
 }
