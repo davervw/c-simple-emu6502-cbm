@@ -33,6 +33,7 @@
 #pragma once
 
 #include "emucbm.h"
+#include "vicii.h"
 
 class C128Memory;
 
@@ -105,8 +106,8 @@ public:
 private:
 	byte* ram;
 	byte* io;
-	byte* color_nybles;
 	VDC8563* vdc;
+  EmuVicII* vicii;
 
 private:
 	C128Memory(const C128Memory& other); // disabled

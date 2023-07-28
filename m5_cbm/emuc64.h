@@ -33,6 +33,7 @@
 #pragma once
 
 #include "emucbm.h"
+#include "vicii.h"
 
 class EmuC64 : public EmuCBM
 {
@@ -58,6 +59,9 @@ class EmuC64 : public EmuCBM
     byte* chargen_rom;
     byte* old_video;
     byte* old_color;
+
+  public:
+    EmuVicII* vicii;
 
   private:
     C64Memory(const C64Memory& other); // disabled

@@ -63,7 +63,6 @@ extern char* StartupPRG;
 // locals
 static int startup_state = 0;
 static int DRAW_TRAP = -1;
-static bool postponeDrawChar = false;
 
 // array allows multiple keys/modifiers pressed at one time
 static int scan_codes[16] = { 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64 } ;
@@ -73,9 +72,6 @@ EmuC64::EmuC64() : EmuCBM(new C64Memory())
   c64memory = (C64Memory*)memory;
 
   go_state = 0;
-
-  // initialize LCD screen
-  M5.Lcd.fillScreen(0x0000); // BLACK
 }
 
 EmuC64::~EmuC64()
@@ -238,7 +234,7 @@ bool EmuC64::ExecutePatch()
 			return true; // overriden, and PC changed, so caller should reloop before execution to allow breakpoint/trace/ExecutePatch/etc.
 		}
 	}
-  else if (DRAW_TRAP == -1 && !postponeDrawChar &&
+  else if (DRAW_TRAP == -1 && !c64memory->vicii->postponeDrawChar &&
     (PC == 0xE8EA // SCROLL SCREEN
     || PC == 0xE965 // INSERT BLANK LINE
     || PC == 0xE9C8 // MOVE SCREEN LINE
@@ -248,14 +244,14 @@ bool EmuC64::ExecutePatch()
     byte lo = GetMemory((ushort)(0x100 + (S+1)));
     byte hi = GetMemory((ushort)(0x100 + (S+2)));
     DRAW_TRAP = (ushort)(((hi << 8) | lo) + 1); // return address
-    postponeDrawChar = true;
-    c64memory->SaveOldVideoAndColor();
+    c64memory->vicii->postponeDrawChar = true;
+    c64memory->vicii->SaveOldVideoAndColor();
   }
-  else if (PC == DRAW_TRAP && postponeDrawChar) // returned from drawing postponement
+  else if (PC == DRAW_TRAP && c64memory->vicii->postponeDrawChar) // returned from drawing postponement
   {
     DRAW_TRAP = -1;
-    postponeDrawChar = false;
-    c64memory->RedrawScreenEfficientlyAfterPostponed();
+    c64memory->vicii->postponeDrawChar = false;
+    c64memory->vicii->RedrawScreenEfficientlyAfterPostponed();
   }
 	else if (GetMemory(PC) == 0x6C && GetMemory((ushort)(PC + 1)) == 0x30 && GetMemory((ushort)(PC + 2)) == 0x03) // catch JMP(LOAD_VECTOR), redirect to jump table
 	{
@@ -352,8 +348,6 @@ EmuC64::C64Memory::C64Memory()
   basic_rom = new byte[basic_size];
   kernal_rom = new byte[kernal_size];
   chargen_rom = new byte[chargen_size];
-  old_video = new byte[1000];
-  old_color = new byte[1000];
 
   File_ReadAllBytes(basic_rom, basic_size, "/roms/c64/basic");
   File_ReadAllBytes(chargen_rom, chargen_size, "/roms/c64/chargen");
@@ -369,6 +363,8 @@ EmuC64::C64Memory::C64Memory()
   // initialize DDR and memory mapping to defaults
   ram[0] = 0xEF;
   ram[1] = 0x07;
+
+  vicii = new EmuVicII(ram, io, color_nybles, chargen_rom);
 }
 
 EmuC64::C64Memory::~C64Memory()
@@ -379,97 +375,7 @@ EmuC64::C64Memory::~C64Memory()
   delete[] basic_rom;
   delete[] kernal_rom;
   delete[] chargen_rom;
-  delete[] old_video;
-  delete[] old_color;
-}
-
-// RGB565 colors picked with http://www.barth-dev.de/online/rgb565-color-picker/
-int EmuC64::C64ColorToLCDColor(byte value)
-{
-  switch (value & 0xF)
-  {
-    case 0: return TFT_BLACK;
-    case 1: return TFT_WHITE;
-    case 2: return TFT_RED;
-    case 3: return TFT_CYAN;
-    case 4: return 0x8118; // DARKMAGENTA OR PURPLE
-    case 5: return 0x0400; // DARKGREEN
-    case 6: return TFT_BLUE;
-    case 7: return TFT_YELLOW;
-    case 8: return TFT_ORANGE;
-    case 9: return 0x8283; // BROWN;
-    case 10: return 0xFC10; // PINK OR LT RED
-    case 11: return TFT_DARKGREY;
-    case 12: return TFT_DARKCYAN; // MED GRAY
-    case 13: return 0x07E0; // LIGHTGREEN;
-    case 14: return 0x841F; // LIGHTBLUE;
-    case 15: return TFT_LIGHTGREY;
-    default: return 0;
-  }
-}
-
-void EmuC64::C64Memory::DrawChar(byte c, int col, int row, int fg, int bg)
-{
-  if (postponeDrawChar)
-    return;
-  
-  int offset = ((io[0x18] & 2) == 0) ? 0 : (8*256);
-  const byte* shape = &chargen_rom[c*8+offset];
-  int x0 = 0 + col*8;
-  int y0 = 20 + row*8;
-  for (int row_i=0; row_i<8; ++row_i)
-  {
-    int mask = 128;
-    for (int col_i=0; col_i<8; ++col_i)
-    {
-      M5.Lcd.drawPixel(x0+col_i, y0+row_i, ((shape[row_i] & mask) == 0) ? bg : fg);
-      mask = mask >> 1;
-    }
-  }
-}
-
-void EmuC64::C64Memory::DrawChar(int offset)
-{
-  int col = offset % 40;
-  int row = offset / 40;
-  int fg = EmuC64::C64ColorToLCDColor(color_nybles[offset]);
-  int bg = EmuC64::C64ColorToLCDColor(io[0x21]);
-  DrawChar(ram[1024+offset], col, row, fg, bg);
-}
-
-void EmuC64::C64Memory::RedrawScreen()
-{
-  int bg = EmuC64::C64ColorToLCDColor(io[0x21]);
-  int offset = 0;
-  for (int row = 0; row < 25; ++row)
-  {
-    for (int col = 0; col < 40; ++col)
-    {
-      int fg = EmuC64::C64ColorToLCDColor(color_nybles[offset]);
-      DrawChar(ram[1024 + offset], col, row, fg, bg);
-      ++offset;
-    }
-  }
-}
-
-void EmuC64::C64Memory::RedrawScreenEfficientlyAfterPostponed()
-{
-  int bg = EmuC64::C64ColorToLCDColor(io[0x21]);
-  int offset = 0;
-  for (int row = 0; row < 25; ++row)
-  {
-    for (int col = 0; col < 40; ++col)
-    {
-      int fg = EmuC64::C64ColorToLCDColor(color_nybles[offset]);
-      byte old_char = old_video[offset];
-      byte new_char = ram[1024 + offset];
-      byte old_fg_index = old_color[offset] & 0xF;
-      byte new_fg_index = color_nybles[offset] & 0xF;
-      if (old_char != new_char || old_fg_index != new_fg_index)
-        DrawChar(new_char, col, row, fg, bg);
-      ++offset;
-    }
-  }
+  delete vicii;
 }
 
 byte EmuC64::C64Memory::read(ushort addr)
@@ -537,25 +443,23 @@ void EmuC64::C64Memory::write(ushort addr, byte value)
     {
       ram[addr] = value;
       if (addr >= 1024 && addr < 2024)
-        DrawChar(addr-1024);
+        vicii->DrawChar(addr-1024);
     }
   }
   else if (addr == 0xD018) // VIC-II Chip Memory Control Register
   {
     io[addr - io_addr] = value;
-    RedrawScreen(); // upper to lower or lower to upper
+    vicii->RedrawScreen(); // upper to lower or lower to upper
   }
   else if (addr == 0xD020) // border
   {
-    int border = EmuC64::C64ColorToLCDColor(value);
-    M5.Lcd.fillRect(0, 0, 320, 20, border);
-    M5.Lcd.fillRect(0, 220, 320, 20, border);
+    vicii->DrawBorder(value);
     io[addr - io_addr] = value & 0xF;
   } 
   else if (addr == 0xD021) // background
   {
     io[addr - io_addr] = value & 0xF;
-    RedrawScreen();
+    vicii->RedrawScreen();
   }
   else if (addr >= color_addr && addr < color_addr + color_nybles_size)
   {
@@ -568,17 +472,11 @@ void EmuC64::C64Memory::write(ushort addr, byte value)
       bool isBlank = (charAtOffset == ' ' || charAtOffset == 96);
       bool requiresRedraw = !isBlank;
       if (requiresRedraw)
-        DrawChar(offset);
+        vicii->DrawChar(offset);
     }
   }
   else if (addr == 0xDC00)
   {
     io[addr - io_addr] = value;
   } 
-}
-
-void EmuC64::C64Memory::SaveOldVideoAndColor()
-{
-    memcpy(&old_video[0], &ram[1024], 1000);
-    memcpy(&old_color[0], &color_nybles[0], 1000);
 }

@@ -368,7 +368,6 @@ static const int color_size = 0x0400;
 static const int mmu_addr = 0xD500;
 static const int mmu_size = 0xC;
 static const int chargen_addr = io_addr;
-static const int color_nybles_size = 0x400;
 
 C128Memory::C128Memory()
 {
@@ -381,10 +380,6 @@ C128Memory::C128Memory()
     basic_hi_rom = new byte[basic_hi_size];
     char_rom = new byte[chargen_size];
     kernal_rom = new byte[kernal_size];
-    color_nybles = new byte[color_nybles_size];
-
-    for (int i = 0; i < color_nybles_size; ++i)
-      color_nybles[i] = 0x0;
 
     EmuCBM::File_ReadAllBytes(basic_lo_rom, basic_lo_size, "/roms/c128/basiclo");
     EmuCBM::File_ReadAllBytes(basic_hi_rom, basic_hi_size, "/roms/c128/basichi");
@@ -410,6 +405,7 @@ C128Memory::C128Memory()
     io[0xDD01 - io_addr] = 0xFF; // CIA #2 PORT B
 
     vdc = new VDC8563();
+    vicii = new EmuVicII(ram, io, &io[color_addr - io_addr], char_rom);
 }
 
 C128Memory::~C128Memory()
@@ -421,9 +417,9 @@ C128Memory::~C128Memory()
     
     delete[] ram;
     delete[] io;
-    delete[] color_nybles;
 
     delete vdc;
+    delete vicii;
 }
 
 static void ApplyColor()
@@ -538,6 +534,21 @@ void C128Memory::write(ushort addr, byte value)
         {
             io[addr - io_addr] = (byte)((value & 0xF) | 0xF0); // store value so can be retrieved
             ApplyColor();
+            vicii->RedrawScreen();
+        }
+        else if (addr == 0xD020) // border
+        {
+            io[addr - io_addr] = (byte)((value & 0xF) | 0xF0); // store value so can be retrieved
+            vicii->DrawBorder(value);
+        }
+        else if (addr == 0xD018) // character set (upper/lower/etc.)
+        {
+            io[addr - io_addr] = (byte)((value & 0xF) | 0xF0); // store value so can be retrieved
+        }
+        else if (IsColor(addr))
+        {
+            io[addr - io_addr] = value;
+            vicii->DrawChar(addr - 0xD800);
         }
         else if (addr == 0xD505)
         {
@@ -559,7 +570,7 @@ void C128Memory::write(ushort addr, byte value)
         if (IsRam(addr128k, true))
         {
             ram[addr128k] = value;
-            if (addr128k == 241 || addr128k == 243)
+            if (addr128k == 241/*foreground*/ || addr128k == 243/*reverse*/)
                 ApplyColor();
             else if (addr128k == 0xA2C || addr128k == 0xF1)
                 CheckLowercase();
@@ -567,6 +578,8 @@ void C128Memory::write(ushort addr, byte value)
             //    CBM_Console_QuoteMode = (value != 0);
             //else if (addr128k == 245)
             //    CBM_Console_InsertMode = (value != 0);
+            else if (addr128k >= 1024 && addr128k < 2024)
+              vicii->DrawChar(addr128k - 1024);
         }
     }
 }
