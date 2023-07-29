@@ -71,18 +71,19 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "emuc128.h"
-#include "cbmconsole.h"
 #include "M5Core.h"
 
 // externs (globals)
 extern char* StartupPRG;
 extern int main_go_num;
 
+// array allows multiple keys/modifiers pressed at one time
+static int scan_codes[16] = { 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64 } ;
+
 EmuC128::EmuC128()
     : EmuCBM(new C128Memory())
 {
     c128memory = (C128Memory*)memory;
-    M5.Lcd.println("Wait a bit for C128 emulation to prompt on serial...");
 }
 
 EmuC128::~EmuC128()
@@ -94,35 +95,6 @@ static bool esc_mode = false;
 
 bool EmuC128::ExecutePatch()
 {
-    if (PC == 0xFFD2)
-    {
-        if (A == 27)
-            esc_mode = !esc_mode;
-        else if (esc_mode)
-        {
-            esc_mode = false;
-            return false; // suppress output to Console
-        }
-        if (A != 27)
-          CBM_Console_WriteChar((char)A);
-        return EmuCBM::ExecutePatch();
-    }
-  	else if (PC == 0xFFCF) // CHRIN
-    {
-      A = CBM_Console_ReadChar();
-
-      // SetA equivalent for flags
-      Z = (A == 0);
-      N = ((A & 0x80) != 0);
-      C = false;
-
-      // RTS equivalent
-      byte lo = Pop();
-      byte hi = Pop();
-      PC = (ushort)(((hi << 8) | lo) + 1);
-
-      return true; // overriden, and PC changed, so caller should reloop before execution to allow breakpoint/trace/ExecutePatch/etc.
-    }
     if (GetMemory(PC) == 0x6C && GetMemory((ushort)(PC + 1)) == 0x30 && GetMemory((ushort)(PC + 2)) == 0x03) // catch JMP(LOAD_VECTOR), redirect to jump table
     {
         int addr128k = 0x330;
@@ -293,9 +265,6 @@ bool EmuC128::ExecutePatch()
     }
     else if (PC == 0x05A4D) // GO value expression evaluated to byte stored in .X, catch other byte values that are not 64
     {
-        M5.Lcd.print("GO ");
-        M5.Lcd.println(X);
-
         if (X != 64)
         {
             main_go_num = X;
@@ -422,66 +391,26 @@ C128Memory::~C128Memory()
     delete vicii;
 }
 
-static void ApplyColor()
+static void ReadKeyboard()
 {
-//    CBM_Console.Reverse = (this[243] != 0);
-//
-//    if (CBM_Console.Color)
-//    {
-//        if (CBM_Console.Reverse && CBM_Console.Encoding != CBM_Console.CBMEncoding.petscii)
-//        {
-//            Console.BackgroundColor = ToConsoleColor(this[241]);
-//            Console.ForegroundColor = ToConsoleColor(this[0xD021]);
-//        }
-//        else
-//        {
-//            Console.ForegroundColor = ToConsoleColor(this[241]);
-//            Console.BackgroundColor = ToConsoleColor(this[0xD021]);
-//        }
-//    }
-//    else
-//    {
-//        if (CBM_Console.Reverse && CBM_Console.Encoding != CBM_Console.CBMEncoding.petscii)
-//        {
-//            Console.BackgroundColor = startup_fg;
-//            Console.ForegroundColor = startup_bg;
-//        }
-//        else
-//        {
-//            Console.ForegroundColor = startup_fg;
-//            Console.BackgroundColor = startup_bg;
-//        }
-//    }
-}
-
-//private ConsoleColor ToConsoleColor(byte CommodoreColor)
-//{
-//    switch (CommodoreColor & 0xF)
-//    {
-//    case 0: return ConsoleColor.Black;
-//    case 1: return ConsoleColor.White;
-//    case 2: return ConsoleColor.Red;
-//    case 3: return ConsoleColor.Cyan;
-//    case 4: return ConsoleColor.DarkMagenta;
-//    case 5: return ConsoleColor.DarkGreen;
-//    case 6: return ConsoleColor.DarkBlue;
-//    case 7: return ConsoleColor.Yellow;
-//    case 8: return ConsoleColor.DarkYellow;
-//    case 9: return ConsoleColor.DarkRed;
-//    case 10: return ConsoleColor.Magenta;
-//    case 11: return ConsoleColor.DarkCyan;
-//    case 12: return ConsoleColor.DarkGray;
-//    case 13: return ConsoleColor.Green;
-//    case 14: return ConsoleColor.Blue;
-//    case 15: return ConsoleColor.Gray;
-//    default: throw new InvalidOperationException("Missing case number in ToConsoleColor");
-//    }
-//}
-
-static void CheckLowercase()
-{
-//    CBM_Console.Lowercase = ((ram[0xD7] & 0x80) == 0) && ((ram[0xA2C] & 2) != 0)
-//        || ((ram[0xD7] & 0x80) != 0) && ((ram[0xF1] & 0x80) != 0);
+  if (M5Serial.available()) {
+    String s = M5Serial.readString();
+    int src = 0;
+    int dest = 0;
+    int scan = 0;
+    while (src < s.length() && dest < 16) {
+      char c = s.charAt(src++);
+      if (c >= '0' && c <= '9')
+        scan = scan * 10 + (c - '0');
+      else
+      {
+        scan_codes[dest++] = scan;
+        scan = 0;
+      }
+    }
+    while (dest < 16)
+      scan_codes[dest++] = 64;
+  }
 }
 
 byte C128Memory::read(ushort addr)
@@ -495,6 +424,27 @@ byte C128Memory::read(ushort addr)
     {
         if (IsColor(addr))
             return (byte)((io[addr - io_addr] & 0xF) | 0xF0);
+        else if (addr == 0xDC01)
+        {
+          ReadKeyboard();
+
+          int value = 0;
+          
+          for (int i=0; i<16; ++i)
+          {
+            int scan_code = scan_codes[i] & 127; // remove any modifiers
+            if (scan_code < 64)
+            {     
+              int col = scan_code / 8;
+              int row = scan_code % 8;
+              
+              if ((io[0xC00] & (1 << col)) == 0)
+                value |= (1 << row);
+            }
+          }
+          
+          return ~value;
+        }
         else if (addr == 0xD011)
             io[addr - io_addr] ^= 0x80; // toggle 9th raster line bit, so seems like raster is moving
         else if (addr == 0xD600)
@@ -530,10 +480,13 @@ void C128Memory::write(ushort addr, byte value)
         io[mmu_addr - io_addr] = io[mmu_addr - io_addr + 4];
     else if (IsIO(addr))
     {
-        if (addr == 0xD021) // background
+        if (addr == 0xDC00 || addr == 0xD02F) // keyboard scan write
+        {
+          io[addr - io_addr] = value;
+        } 
+        else if (addr == 0xD021) // background
         {
             io[addr - io_addr] = (byte)((value & 0xF) | 0xF0); // store value so can be retrieved
-            ApplyColor();
             vicii->RedrawScreen();
         }
         else if (addr == 0xD020) // border
@@ -570,15 +523,15 @@ void C128Memory::write(ushort addr, byte value)
         if (IsRam(addr128k, true))
         {
             ram[addr128k] = value;
-            if (addr128k == 241/*foreground*/ || addr128k == 243/*reverse*/)
-                ApplyColor();
-            else if (addr128k == 0xA2C || addr128k == 0xF1)
-                CheckLowercase();
+            // if (addr128k == 241/*foreground*/ || addr128k == 243/*reverse*/)
+            //     ;
+            // else if (addr128k == 0xA2C || addr128k == 0xF1) // lowercase
+            //     ;
             //else if (addr128k == 244)
             //    CBM_Console_QuoteMode = (value != 0);
             //else if (addr128k == 245)
             //    CBM_Console_InsertMode = (value != 0);
-            else if (addr128k >= 1024 && addr128k < 2024)
+            if (addr128k >= 1024 && addr128k < 2024)
               vicii->DrawChar(addr128k - 1024);
         }
     }
