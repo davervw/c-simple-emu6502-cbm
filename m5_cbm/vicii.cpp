@@ -42,8 +42,8 @@ int EmuVicII::C64ColorToLCDColor(byte value)
     case 10: return 0xFC10; // PINK OR LT RED
     case 11: return TFT_DARKGREY;
     case 12: return TFT_DARKCYAN; // MED GRAY
-    case 13: return 0x07E0; // LIGHTGREEN;
-    case 14: return 0x841F; // LIGHTBLUE;
+    case 13: return 0xBFF7; // LIGHTGREEN
+    case 14: return 0x841F; // LIGHTBLUE
     case 15: return TFT_LIGHTGREY;
     default: return 0;
   }
