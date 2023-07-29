@@ -95,6 +95,31 @@ static bool esc_mode = false;
 
 bool EmuC128::ExecutePatch()
 {
+    static bool NMI = false;
+    
+    int found_NMI = 0;
+    for (int i=0; !found_NMI && i<16; ++i)
+      if (scan_codes[i] & 1024)
+        found_NMI = 1;
+    
+    if (NMI)
+    {
+      if (!found_NMI)
+        NMI = false; // reset when not pressed
+    }
+    else if (found_NMI) // newly pressed, detected edge
+    {
+      NMI = true; // set so won't trigger again until cleared
+      Push(HI(PC));
+      Push(LO(PC));
+      B = false; // only false on stack for NMI and IRQ
+      PHP();
+      B = true; // return to normal state
+      SetMemory(0xFF00, 0); // switch in KERNAL where mcr table is located
+      PC = (ushort)(GetMemory(0xFFFA) + (GetMemory(0xFFFB) << 8)); // JMP(NMI)
+      return true; // overriden, and PC changed, so caller should reloop before execution to allow breakpoint/trace/ExecutePatch/etc.
+    }
+
     if (GetMemory(PC) == 0x6C && GetMemory((ushort)(PC + 1)) == 0x30 && GetMemory((ushort)(PC + 2)) == 0x03) // catch JMP(LOAD_VECTOR), redirect to jump table
     {
         int addr128k = 0x330;
