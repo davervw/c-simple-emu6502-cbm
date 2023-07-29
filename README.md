@@ -18,7 +18,7 @@ TODO: integrate web-serial-polyfill because Chrome mobile web browser doesn't su
 
 ![Early prototype with various M5 Core models](media/m5cores.jpg)
 
-* Basic Core
+* Basic Core (not supported without extra RAM)
 * Core2
 * CoreS3
 * Whoops, screen not big enough on StickC
