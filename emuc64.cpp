@@ -108,7 +108,7 @@ static void ReadKeyboard()
       } else if (len > 0)
       {
         if (scan > 64)
-          scan = 64;
+          scan = (scan & 0xFF80) | 0x40;
         scan_codes[dest++] = scan;
         scan = 0;
         len = 0;
