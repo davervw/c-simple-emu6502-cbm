@@ -40,15 +40,16 @@
 
 #include "emuc64.h"
 #include "emuc128.h"
+#include "emuted.h"
+#include "emud64.h"
 
 #include <SD.h>
 #include <SPI.h>
-#include "emud64.h"
 #include "M5Core.h"
 
 // globals
 const char* StartupPRG = 0;
-int main_go_num = 128;
+int main_go_num = 64;
 
 void setup() {
   M5.begin();
@@ -68,6 +69,10 @@ void loop() {
   EmuCBM* cbm;
   if (main_go_num == 128)
     cbm = new EmuC128();
+  else if (main_go_num == 4)
+    cbm = new EmuTed(64);
+  else if (main_go_num == 16)
+    cbm = new EmuTed(16);
   else
     cbm = new EmuC64();
   cbm->ResetRun();
