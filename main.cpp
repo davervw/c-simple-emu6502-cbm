@@ -33,6 +33,7 @@
 #include <stdio.h>
 #include "emuc64.h"
 #include "emuc128.h"
+#include "emuted.h"
 
 int main_go_num = 0;
 
@@ -53,6 +54,10 @@ int main(int argc, char* argv[])
 #ifdef WIN32
 		if (main_go_num == 64)
 			cbm = new EmuC64(64*1024);
+		else if (main_go_num == 4)
+			cbm = new EmuTed(64);
+		else if (main_go_num == 16)
+			cbm = new EmuTed(16);
 		else
 			cbm = new EmuC128();
 #else

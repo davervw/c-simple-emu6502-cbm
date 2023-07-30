@@ -16,7 +16,7 @@ protected:
 	bool ExecutePatch();
 	bool ExecuteRTS();
 	bool ExecuteJSR(ushort addr);
-	void File_ReadAllBytes(byte* bytes, unsigned int size, const char* filename);
+	static void File_ReadAllBytes(byte* bytes, unsigned int size, const char* filename);
 	bool FileLoad(byte* p_err);
 	bool FileSave(const char* filename, ushort addr1, ushort addr2);
 	bool LoadStartupPrg();

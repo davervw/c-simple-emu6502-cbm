@@ -25,6 +25,7 @@
     <ClCompile Include="emuc64.cpp" />
     <ClCompile Include="emucbm.cpp" />
     <ClCompile Include="emud64.cpp" />
+    <ClCompile Include="emuted.cpp" />
     <ClCompile Include="gettimeofday.c" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
@@ -35,6 +36,7 @@
     <ClInclude Include="emuc64.h" />
     <ClInclude Include="emucbm.h" />
     <ClInclude Include="emud64.h" />
+    <ClInclude Include="emuted.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>

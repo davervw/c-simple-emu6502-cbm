@@ -39,6 +39,9 @@
     <ClCompile Include="emuc128.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="emuted.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="emu6502.h">
@@ -57,6 +60,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="emuc128.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="emuted.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
