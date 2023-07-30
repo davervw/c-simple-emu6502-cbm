@@ -57,6 +57,8 @@ void setup() {
   //Initialize serial (but don't wait for it to be connected, until there is an exception
   M5Serial.begin(115200);
   M5Serial.setTimeout(0); // so we don't wait for reads
+  Serial2.begin(115200, SERIAL_8N1, SW_RX, -1);
+  Serial2.setTimeout(0); // so we don't wait for reads
 
   if(!SD.begin(SD_CS_OVERRIDE)){
       M5Serial.println("Card Mount Failed");

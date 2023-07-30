@@ -80,19 +80,31 @@ EmuC64::~EmuC64()
 
 static void ReadKeyboard()
 {
-  if (M5Serial.available()) {
-    String s = M5Serial.readString();
+  String s;
+  if (Serial2.available())
+    s = Serial2.readString();
+  else if (M5Serial.available())
+    s = M5Serial.readString();
+  else
+    return;
+  {
+    M5Serial.print(s);
     int src = 0;
     int dest = 0;
     int scan = 0;
+    int len = 0;
     while (src < s.length() && dest < 16) {
       char c = s.charAt(src++);
-      if (c >= '0' && c <= '9')
+      if (c >= '0' && c <= '9') {
         scan = scan * 10 + (c - '0');
-      else
+        ++len;
+      } else if (len > 0)
       {
+        if (scan > 64)
+          scan = (scan & 0xFF80) | 0x40;
         scan_codes[dest++] = scan;
         scan = 0;
+        len = 0;
       }
     }
     while (dest < 16)
