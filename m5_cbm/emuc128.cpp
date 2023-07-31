@@ -438,15 +438,15 @@ static void ReadKeyboard()
         ++len;
       } else if (len > 0)
       {
-        if (scan > 64)
-          scan = (scan & 0xFF80) | 0x40;
+        if (scan > 88)
+          scan = (scan & 0xFF80) | 88;
         scan_codes[dest++] = scan;
         scan = 0;
         len = 0;
       }
     }
     while (dest < 16)
-      scan_codes[dest++] = 64;
+      scan_codes[dest++] = 88;
   }
 }
 
@@ -470,13 +470,21 @@ byte C128Memory::read(ushort addr)
           for (int i=0; i<16; ++i)
           {
             int scan_code = scan_codes[i] & 127; // remove any modifiers
-            if (scan_code < 64)
+            if (scan_code < 88)
             {     
               int col = scan_code / 8;
               int row = scan_code % 8;
               
-              if ((io[0xC00] & (1 << col)) == 0)
-                value |= (1 << row);
+              if (col < 8) 
+              {
+                if ((io[0xC00] & (1 << col)) == 0)
+                  value |= (1 << row);
+              } 
+              else 
+              {
+                if ((io[0x02F] & (1 << (col-8))) == 0)
+                  value |= (1 << row);
+              }
             }
           }
           
