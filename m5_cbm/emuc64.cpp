@@ -88,7 +88,6 @@ static void ReadKeyboard()
   else
     return;
   {
-    M5Serial.print(s);
     int src = 0;
     int dest = 0;
     int scan = 0;
