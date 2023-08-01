@@ -1,4 +1,4 @@
-# M5Core C64 with GO 128#
+# M5Core C64 with GO 128 #
 
 ![GO 128](media/c128_on_m5.png)
 
