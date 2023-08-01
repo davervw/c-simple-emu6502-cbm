@@ -4,6 +4,32 @@
 
 Work in progress.  Current state includes rendering full color screen on M5Core LCD and supporting multiple Core models with a define change in M5Core.h.  60 times a second IRQ implemented to blink cursor. Requires SD support for roms, tested with Core2 and CoreS3 (must change defines in local M5Core.h).   GO 128 and GO 64 switch back and forth.
 
+Build instructions
+
+1. Clone repository, switch to branch m5
+2. Open m5cbm/m5cbm.ino with Arduino 2.x IDE
+3. Modify M5Core.h to #define target, e.g. Core2 or CoreS3 (note Basic not supported at this time, see below)
+4. Build and deploy to M5Stack Core device, should complain "Card Mount Failed"
+5. Insert MicroSD with the following files (roms from Vice or similar, disk files optional), and reset
+
+```
+roms\c64\basic
+roms\c64\chargen
+roms\c64\kernal
+roms\c128\basiclo
+roms\c128\basichi
+roms\c128\chargen
+roms\c128\kernal
+disks\drive8.d64
+disks\drive9.d64
+```
+
+Notes:
+
+* LOAD/SAVE/VERIFY commands are intercepted by emulator.  There are some bugs in C128 for LOAD, so user beware.
+* GO 128 command added for switching to Commodore 128 mode (how? intercepted by the emulator)
+* Keyboard is a serial attached helper that sends scan codes.  It can either be a web page -- see [browser-keyscan-helper](https://github.com/davervw/c-simple-emu6502-cbm/tree/m5/browser-keyscan-helper) with USB serial attachment, or a physical device attached to Port.A -- see project [c128_keyscan](https://github.com/davervw/c128_keyscan/tree/ninetyone_tx2_itsy_bitsy).  I use both standard USB or Bluetooth keyboards, and my original C128D external keyboard.
+
 Open browser-keyscan-helper/index.html to run an adapter with instructions how to use a keyboard via serial from a desktop web browser (e.g. Chrome).
 
 ```
