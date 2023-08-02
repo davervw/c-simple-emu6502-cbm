@@ -50,7 +50,7 @@
 
 // globals
 const char* StartupPRG = 0;
-int main_go_num = 64;
+int main_go_num = 20;
 
 void setup() {
   M5.begin();

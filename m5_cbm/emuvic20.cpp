@@ -194,7 +194,11 @@ bool EmuVic20::ExecutePatch()
 			}
 			else
 			{
-				//CBM_Console.Push("RUN\r");
+        SetMemory(198, 4);
+        SetMemory(631, 'R');
+        SetMemory(632, 'U');
+        SetMemory(633, 'N');
+        SetMemory(634, '\r');
 				PC = 0xA47B; // skip READY message, but still set direct mode, and continue to MAIN
 			}
 			C = false; // signal success
@@ -314,7 +318,7 @@ static void ReadKeyboard()
   else
     return;
   {
-    M5Serial.print(s);
+    //M5Serial.print(s);
     int src = 0;
     int dest = 0;
     int scan = 0;
@@ -326,10 +330,15 @@ static void ReadKeyboard()
         ++len;
       } else if (len > 0)
       {
-        if (scan > 64)
-          scan = (scan & 0xFF80) | 0x40;
-        else
+        if (scan < 89) {
+          M5Serial.print("was ");
+          M5Serial.print(scan);
           scan = map64to20[scan];
+          M5Serial.print(" now ");
+          M5Serial.println(scan);
+        }
+        else
+          scan = (scan & 0xFF80) | 0x40;
         scan_codes[dest++] = scan;
         scan = 0;
         len = 0;
@@ -358,14 +367,14 @@ byte EmuVic20::Vic20Memory::read(ushort addr)
 		return char_rom[addr - char_addr];
 	else if (addr >= io_addr && addr < io_addr + io_size)
   {
-    if (addr == 0x911c)
-      return 0xFE;
-    else if (addr = 0x911F)
-      return 0x7E;
-    else if (io_addr == 0x9121)
+    if (addr == 0x912F)
+			return 0xFF;
+		else if (addr == 0x911C)
+			return 0xFE;
+		else if (addr == 0x911F)
+			return 0x7E;
+    else if (addr == 0x9121)
     {
-      ReadKeyboard();
-
       int value = 0;
       
       for (int i=0; i<16; ++i)
@@ -381,14 +390,14 @@ byte EmuVic20::Vic20Memory::read(ushort addr)
         }
       }
       
-      if (value != 0)
+      if (value != 0 && io[0x120] != 0)
       {
         M5Serial.print("scan ");
-        M5Serial.println(~value);
+        M5Serial.print(io[0x120], HEX);
+        M5Serial.print(" ");
+        M5Serial.println((byte)~value, HEX);
       }
-
-      return 32;
-      //return ~value;
+      return ~value;
     }
 		return io[addr - io_addr];
   }
@@ -430,6 +439,8 @@ void EmuVic20::Vic20Memory::write(ushort addr, byte value)
 		ram[addr] = value;
 	else if (addr >= io_addr && addr < io_addr + io_size)
 	{
+    if (addr == 0x9120)
+      ReadKeyboard();
 		io[addr - io_addr] = value;
 		if (addr == 0x900F) // background/border/inverse
     {
