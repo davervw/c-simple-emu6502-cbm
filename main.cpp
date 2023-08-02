@@ -34,6 +34,7 @@
 #include "emuc64.h"
 #include "emuc128.h"
 #include "emuted.h"
+#include "emuvic20.h"
 
 int main_go_num = 0;
 
@@ -52,19 +53,21 @@ int main(int argc, char* argv[])
 	{
 		EmuCBM* cbm;
 #ifdef WIN32
-		if (main_go_num == 64)
-			cbm = new EmuC64(64*1024);
+		if (main_go_num == 128)
+			cbm = new EmuC128();
 		else if (main_go_num == 4)
 			cbm = new EmuTed(64);
 		else if (main_go_num == 16)
 			cbm = new EmuTed(16);
+		else if (main_go_num == 20)
+			cbm = new EmuVic20(5);
 		else
-			cbm = new EmuC128();
+			cbm = new EmuC64(64 * 1024);
 #else
-		if (main_go_num == 64)
-			cbm = new EmuC64(64*1024);
+		if (main_go_num == 128)
+			cbm = new EmuC64(64 * 1024);
 		else
-			cbm = new EmuC128();
+			cbm = new EmuC64(64 * 1024);
 #endif
 		cbm->ResetRun();
 		delete cbm;
