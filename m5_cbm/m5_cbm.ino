@@ -43,6 +43,7 @@
 #include "emuted.h"
 #include "emud64.h"
 #include "emuvic20.h"
+#include "emupet.h"
 
 #include <SD.h>
 #include <SPI.h>
@@ -78,6 +79,8 @@ void loop() {
     cbm = new EmuTed(16);
   else if (main_go_num == 20)
     cbm = new EmuVic20(5);
+  else if (main_go_num == 2001)
+    cbm = new EmuPET(32);
   else
     cbm = new EmuC64();
   cbm->ResetRun();
