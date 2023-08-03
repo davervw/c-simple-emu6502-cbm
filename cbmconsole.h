@@ -32,6 +32,6 @@
 
 #pragma once
 
-extern void CBM_Console_WriteChar(unsigned char c);
+extern void CBM_Console_WriteChar(unsigned char c, bool supress_next_home = false);
 extern unsigned char CBM_Console_ReadChar(void);
 extern void CBM_Console_Push(const char* s);

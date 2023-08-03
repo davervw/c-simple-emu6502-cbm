@@ -41,6 +41,7 @@
 #endif
 
 int supress_first_clear = 1;
+static bool supress_next_home = false;
 
 static unsigned char buffer[256];
 int buffer_head = 0;
@@ -180,6 +181,11 @@ static void Console_Cursor_Right()
 
 static void Console_Cursor_Home()
 {
+    if (supress_next_home)
+    {
+        supress_next_home = false;
+        return;
+    }
 #ifdef WIN32
    HANDLE hStdout;
    hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -210,8 +216,11 @@ static void Console_Reverse_Off()
    }
 }
 
-extern void CBM_Console_WriteChar(unsigned char c)
+extern void CBM_Console_WriteChar(unsigned char c, bool supress_next_home)
 {
+    if (supress_next_home)
+        ::supress_next_home = true;
+
    // we're emulating, so draw character on local console window
    if (c == 0x0D)
    {

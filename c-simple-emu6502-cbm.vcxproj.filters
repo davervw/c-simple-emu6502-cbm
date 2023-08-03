@@ -45,6 +45,9 @@
     <ClCompile Include="emuvic20.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="emupet.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="emu6502.h">
@@ -69,6 +72,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="emuvic20.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="emupet.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

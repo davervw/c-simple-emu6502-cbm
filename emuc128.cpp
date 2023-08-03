@@ -77,6 +77,7 @@
 #else
 #include <unistd.h>
 #endif
+#include <stdlib.h>
 
 extern int main_go_num;
 
@@ -270,13 +271,13 @@ bool EmuC128::ExecutePatch()
             else if (c == 0 || strlen(s) > 0)
                 break;
         }
-//        ushort go_num;
-//        if (ushort.TryParse(s.ToString(), out go_num) && go_num == 2001)
-//        {
-//            main_go_num = go_num;
-//            quit = true;
-//            return true;
-//        }
+        int go_num = atoi(s);
+        if (go_num == 2001)
+        {
+            main_go_num = go_num;
+            quit = true;
+            return true;
+        }
     }
     else if (PC == 0x05A4D) // GO value expression evaluated to byte stored in .X, catch other byte values that are not 64
     {

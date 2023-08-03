@@ -43,7 +43,7 @@ bool EmuCBM::ExecutePatch()
 {
     if (PC == 0xFFD2) // CHROUT
     {
-        CBM_Console_WriteChar((char)A);
+        CBM_Console_WriteChar((char)A, false);
 		// fall through to regular routine to draw character in screen memory too
     }
     else if (PC == 0xFFCF) // CHRIN

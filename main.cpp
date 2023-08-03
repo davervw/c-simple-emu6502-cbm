@@ -35,6 +35,7 @@
 #include "emuc128.h"
 #include "emuted.h"
 #include "emuvic20.h"
+#include "emupet.h"
 
 int main_go_num = 0;
 
@@ -61,6 +62,8 @@ int main(int argc, char* argv[])
 			cbm = new EmuTed(16);
 		else if (main_go_num == 20)
 			cbm = new EmuVic20(5);
+		else if (main_go_num == 2001)
+			cbm = new EmuPET(32);
 		else
 			cbm = new EmuC64(64 * 1024);
 #else
