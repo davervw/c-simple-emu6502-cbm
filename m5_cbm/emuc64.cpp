@@ -180,7 +180,7 @@ bool EmuC64::ExecutePatch()
 					SetA(err); // FILE NOT FOUND or VERIFY
 
 					// so doesn't repeat
-					StartupPRG = "";
+					StartupPRG = 0;
 					LOAD_TRAP = -1;
 
 					return true; // overriden, and PC changed, so caller should reloop before execution to allow breakpoint/trace/ExecutePatch/etc.
