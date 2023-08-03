@@ -548,8 +548,12 @@ void C128Memory::write(ushort addr, byte value)
         }
         else if (IsColor(addr))
         {
-            io[addr - io_addr] = value;
-            vicii->DrawChar(addr - 0xD800);
+            bool changedRequiresUpdate =  io[addr - io_addr] != value;
+            if (changedRequiresUpdate)
+            {
+              io[addr - io_addr] = value;
+              vicii->DrawChar(addr - 0xD800);
+            }
         }
         else if (addr == 0xD505)
         {
@@ -570,7 +574,6 @@ void C128Memory::write(ushort addr, byte value)
         int addr128k = addr;
         if (IsRam(addr128k, true))
         {
-            ram[addr128k] = value;
             // if (addr128k == 241/*foreground*/ || addr128k == 243/*reverse*/)
             //     ;
             // else if (addr128k == 0xA2C || addr128k == 0xF1) // lowercase
@@ -579,8 +582,13 @@ void C128Memory::write(ushort addr, byte value)
             //    CBM_Console_QuoteMode = (value != 0);
             //else if (addr128k == 245)
             //    CBM_Console_InsertMode = (value != 0);
-            if (addr128k >= 1024 && addr128k < 2024)
-              vicii->DrawChar(addr128k - 1024);
+            bool changedRequiresUpdate = ram[addr128k] != value;
+            if (changedRequiresUpdate)
+            {
+              ram[addr128k] = value;
+              if (addr128k >= 1024 && addr128k < 2024)
+                vicii->DrawChar(addr128k-1024);
+            }
         }
     }
 }
