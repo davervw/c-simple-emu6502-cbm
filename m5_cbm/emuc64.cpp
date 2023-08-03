@@ -80,6 +80,12 @@ EmuC64::~EmuC64()
 
 static void ReadKeyboard()
 {
+  static const byte extras[24] = {
+    64, 27, 16, 64, 59, 11, 24, 56,
+    64, 40, 43, 64, 1, 19, 32, 8,
+    64, 35, 44, 7, 7, 2, 2, 64
+  };
+
   String s;
   if (Serial2.available())
     s = Serial2.readString();
@@ -99,6 +105,16 @@ static void ReadKeyboard()
         ++len;
       } else if (len > 0)
       {
+        int lobits = scan & 127;
+        if (lobits >= 64 && lobits < 88)
+        {
+          scan = extras[lobits - 64];
+          for (int i=0; i<dest; ++i)
+            if (scan_codes[i] == 15 || scan_codes[i] == 52)
+              scan_codes[i] = 64;
+          if (lobits == 83 || lobits == 85)
+              scan_codes[dest++] = 15;
+        }
         if (scan > 64)
           scan = (scan & 0xFF80) | 0x40;
         scan_codes[dest++] = scan;
