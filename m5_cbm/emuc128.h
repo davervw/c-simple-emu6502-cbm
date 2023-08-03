@@ -110,6 +110,9 @@ private:
   EmuVicII* vicii;
 
 private:
+  void ReadKeyboard();
+
+private:
 	C128Memory(const C128Memory& other); // disabled
 	bool operator==(const C128Memory& other) const; // disabled
 };

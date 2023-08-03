@@ -416,7 +416,7 @@ C128Memory::~C128Memory()
     delete vicii;
 }
 
-static void ReadKeyboard()
+void C128Memory::ReadKeyboard()
 {
   String s;
   if (Serial2.available())
@@ -425,28 +425,32 @@ static void ReadKeyboard()
     s = M5Serial.readString();
   else
     return;
-  {
-    int src = 0;
-    int dest = 0;
-    int scan = 0;
-    int len = 0;
-    while (src < s.length() && dest < 16) {
-      char c = s.charAt(src++);
-      if (c >= '0' && c <= '9') {
-        scan = scan * 10 + (c - '0');
-        ++len;
-      } else if (len > 0)
-      {
-        if (scan > 88)
-          scan = (scan & 0xFF80) | 88;
-        scan_codes[dest++] = scan;
-        scan = 0;
-        len = 0;
-      }
+
+  int src = 0;
+  int dest = 0;
+  int scan = 0;
+  int len = 0;
+  bool caps = false;
+  while (src < s.length() && dest < 16) {
+    char c = s.charAt(src++);
+    if (c >= '0' && c <= '9') {
+      scan = scan * 10 + (c - '0');
+      ++len;
+    } else if (len > 0)
+    {
+      if (scan & 128)
+        caps = true;
+      if (scan > 88)
+        scan = (scan & 0xFF80) | 88;
+      scan_codes[dest++] = scan;
+      scan = 0;
+      len = 0;
     }
-    while (dest < 16)
-      scan_codes[dest++] = 88;
   }
+  while (dest < 16)
+    scan_codes[dest++] = 88;
+  
+  ram[1] = (ram[2] & 0xBF) | (caps ? 0 : 0x40);
 }
 
 byte C128Memory::read(ushort addr)
