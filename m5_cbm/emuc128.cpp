@@ -440,7 +440,7 @@ void C128Memory::ReadKeyboard()
     {
       if (scan & 128)
         caps = true;
-      if (scan > 88)
+      if (scan == 64 || scan > 88)
         scan = (scan & 0xFF80) | 88;
       scan_codes[dest++] = scan;
       scan = 0;
