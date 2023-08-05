@@ -29,6 +29,7 @@ Notes:
 * LOAD/SAVE/VERIFY/LOAD"$" commands are intercepted by emulator.  There are some bugs in C128 for LOAD, so user beware.  There is no DOS for status, rename, delete, etc.  SAVE always ovewrites without warning in this emulator.
 * GO 128 command added for switching to Commodore 128 mode (how? intercepted by the emulator)
 * Keyboard is a serial attached helper that sends scan codes.  It can either be a web page -- see [browser-keyscan-helper](https://github.com/davervw/c-simple-emu6502-cbm/tree/m5/browser-keyscan-helper) with USB serial attachment, or a physical device attached to Port.A -- see project [c128_keyscan](https://github.com/davervw/c128_keyscan/tree/ninetyone_tx2_itsy_bitsy).  I use both standard USB or Bluetooth keyboards, and my original C128D external keyboard.
+* See more description at blog entry: [extremely-small-emulated-c64](https://techwithdave.davevw.com/2023/06/extremely-small-emulated-c64.html)
 
 Open browser-keyscan-helper/index.html to run an adapter with instructions how to use a keyboard via serial from a desktop web browser (e.g. Chrome).
 
