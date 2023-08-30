@@ -45,7 +45,11 @@ TODO: integrate web-serial-polyfill because Chrome mobile web browser doesn't su
 
 ![Early prototype with various M5 Core models](media/m5cores.jpg)
 
-* Basic Core (not supported without extra RAM)
+Supported/tested:
+* Fire IoT
 * Core2
 * CoreS3
-* Whoops, screen not big enough on StickC
+
+Not supported:
+* Whoops, screen not big enough on StickC, and not enough RAM
+* Basic Core not supported because implementation needs extra RAM
