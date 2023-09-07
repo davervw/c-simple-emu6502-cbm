@@ -6,7 +6,7 @@
 // scan codes are expected comma separated like 15,1 with newline at the end
 // 1024=RESTORE, 128=CAPS, 256 reserved for DISP40/80 but not supported, because no 80 column support
 
-// NOTE: basic BASIC won't work without extra memory, recommend FIRE IoT version that should work with these settings (not fully tested by author)
+// NOTE: basic BASIC won't work without extra memory (use FIRE instead).  But CORES3 is somewhat faster.
 
 #ifdef CORE2
 #include <M5Core2.h>
