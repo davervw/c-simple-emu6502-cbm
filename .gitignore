@@ -2,9 +2,7 @@
 Debug
 Release
 c-simple-emu6502-cbm.vcxproj.user
-kernal
-basic
-chargen
 *.exe
 obj/
 enc_temp_folder/
+roms/
