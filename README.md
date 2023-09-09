@@ -4,13 +4,22 @@ Here is a simple Commodore 64/128 and 6502 Emulator I wrote from scratch, ported
 
 ## C++ Version ##
 
-This is a mostly object-oriented version to more closely match the C# version with the intent to port features and fixes back and forth between the versions, starting with C128.  Yay!  C128 is working.   But goodbye plain old C; we will miss you.  Long live C++.  (The original port from C# to C is still available in the branches, and commit history.)
+This is a mostly object-oriented version to more closely match the C# version now including PET model 2001, Vic-20, Commodore 64, Commodore 128, Commodore 16, Commodore Plus/4.   But goodbye plain old C; we will miss you.  Long live C++.  (The original port from C# to C is still available in the branches, and commit history.)
 
 ## GO 128 ##
 
-Special feature is called GO 128.  Just like the counterpart GO 64 implemented in the C128 ROMs, GO 128 will reset the system from 64 to 128 mode.   And GO 64 and GO 128 both work in their respective environments to completely reset them, not retaining any memory or state (except disk state).  
+Special feature is called GO 128.  Just like the counterpart GO 64 implemented in the C128 ROMs, GO 128 will reset the system from 64 to 128 mode.   And GO 64 and GO 128 both work in their respective environments to completely reset them, not retaining any memory or state (except disk state).  Switching to other systems works too!  
 
 Note that unlike the real C128, in this emulator GO 64 will not retain any memory between the environments, nor does the C64 environment share any extras from the C128 system.
+
+````
+GO 2001
+GO 20
+GO 64
+GO 128
+GO 16
+GO 4
+````
 
 ## Cross platform ##
 
