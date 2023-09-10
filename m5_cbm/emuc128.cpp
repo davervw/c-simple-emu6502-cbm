@@ -78,7 +78,7 @@ extern char* StartupPRG;
 extern int main_go_num;
 
 // array allows multiple keys/modifiers pressed at one time
-static int scan_codes[16] = { 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64 } ;
+static int scan_codes[16] = { 88, 88, 88, 88, 88, 88, 88, 88, 88, 88, 88, 88, 88, 88, 88, 88 } ;
 
 EmuC128::EmuC128()
     : EmuCBM(new C128Memory())
