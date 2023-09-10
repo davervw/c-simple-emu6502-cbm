@@ -432,11 +432,39 @@ C128Memory::~C128Memory()
 
 void C128Memory::ReadKeyboard()
 {
+  const String upString = "15,7,88";
+  const String dnString = "7,88";
+  const String crString = "1,88";
+  const String runString = "15,63,88";
+  const String noString = "88";
+  static int lastUp = 1;
+  static int lastCr = 1;
+  static int lastDn = 1;
+  static int lastRun = 1;
+
   String s;
   if (Serial2.available())
     s = Serial2.readString();
   else if (M5Serial.available())
     s = M5Serial.readString();
+#ifdef FIRE
+  else if (lastRun==0 && (lastRun=(digitalRead(39) & digitalRead(38)))==1)
+    s = noString;
+  else if (lastUp==0 && (lastUp=digitalRead(39))==1)
+    s = noString;
+  else if (lastCr==0 && (lastCr=digitalRead(38))==1)
+    s = noString;
+  else if (lastDn==0 && (lastDn=digitalRead(37))==1)
+    s = noString;
+  else if ((lastRun=(digitalRead(39) & digitalRead(38)))==0)
+    s = runString;
+  else if ((lastUp=digitalRead(39))==0)
+    s = upString;
+  else if ((lastCr=digitalRead(38))==0)
+    s = crString;
+  else if ((lastDn=digitalRead(37))==0)
+    s = dnString;
+#endif  
   else
     return;
 

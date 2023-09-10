@@ -87,11 +87,39 @@ static void ReadKeyboard()
     64, 35, 44, 7, 7, 2, 2, 64
   };
 
+  const String upString = "15,7,64";
+  const String dnString = "7,64";
+  const String crString = "1,64";
+  const String runString = "15,63,88";
+  const String noString = "64";
+  static int lastUp = 1;
+  static int lastCr = 1;
+  static int lastDn = 1;
+  static int lastRun = 1;
+
   String s;
   if (Serial2.available())
     s = Serial2.readString();
   else if (M5Serial.available())
     s = M5Serial.readString();
+#ifdef FIRE
+  else if (lastRun==0 && (lastRun=(digitalRead(39) & digitalRead(38)))==1)
+    s = noString;
+  else if (lastUp==0 && (lastUp=digitalRead(39))==1)
+    s = noString;
+  else if (lastCr==0 && (lastCr=digitalRead(38))==1)
+    s = noString;
+  else if (lastDn==0 && (lastDn=digitalRead(37))==1)
+    s = noString;
+  else if ((lastRun=(digitalRead(39) & digitalRead(38)))==0)
+    s = runString;
+  else if ((lastUp=digitalRead(39))==0)
+    s = upString;
+  else if ((lastCr=digitalRead(38))==0)
+    s = crString;
+  else if ((lastDn=digitalRead(37))==0)
+    s = dnString;
+#endif    
   else
     return;
   {
@@ -392,6 +420,11 @@ EmuC64::C64Memory::C64Memory()
   File_ReadAllBytes(basic_rom, basic_size, "/roms/c64/basic");
   File_ReadAllBytes(chargen_rom, chargen_size, "/roms/c64/chargen");
   File_ReadAllBytes(kernal_rom, kernal_size, "/roms/c64/kernal");
+
+  // hack rom to load filename "*" instead of empty filename when SHIFT+RUN
+  kernal_rom[0xce8] = 207; // shift O
+  kernal_rom[0xce9] = 34;  // double quote
+  kernal_rom[0xcea] = 42;  // asterisk
 
 	for (unsigned i = 0; i < ram_size; ++i)
 		ram[i] = 0;
