@@ -456,7 +456,7 @@ void C128Memory::ReadKeyboard()
     s = noString;
   else if (lastDn==0 && (lastDn=digitalRead(37))==1)
     s = noString;
-  else if ((lastRun=(digitalRead(39) & digitalRead(38)))==0)
+  else if ((lastRun=(~(~digitalRead(39) & ~digitalRead(38))) & 1)==0)
     s = runString;
   else if ((lastUp=digitalRead(39))==0)
     s = upString;
