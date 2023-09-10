@@ -67,6 +67,12 @@ void setup() {
       M5.Lcd.println("Card Mount Failed");
       while(1); // cannot continue, so hang around
   }
+
+#ifdef FIRE
+  pinMode(39, INPUT_PULLUP);
+  pinMode(38, INPUT_PULLUP);
+  pinMode(37, INPUT_PULLUP);
+#endif
 }
 
 void loop() {

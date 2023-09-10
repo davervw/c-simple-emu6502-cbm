@@ -304,6 +304,20 @@ bool EmuC128::ExecutePatch()
         return true;
     }
 
+#ifdef FIRE
+    static ushort counter = 0;
+    if (counter++ == 0) // infrequently check
+    {
+      if (digitalRead(37) == 0 && digitalRead(39) == 0) 
+      {
+        while (digitalRead(37) == 0 || digitalRead(39) == 0); // wait until depress
+        main_go_num = 64;
+        quit = true;
+        return true;
+      }
+    }
+#endif
+
     return EmuCBM::ExecutePatch();
 }
 

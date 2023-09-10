@@ -59,6 +59,7 @@
 
 // externs (globals)
 extern char* StartupPRG;
+extern int main_go_num;
 
 // locals
 static int startup_state = 0;
@@ -314,13 +315,25 @@ bool EmuC64::ExecutePatch()
 		}
 		else if (go_state == 2)
 		{
-			extern int main_go_num;
-
 			main_go_num = (ushort)(Y + (A << 8));
 			quit = true;
 			return true;
 		}
 	}	
+
+#ifdef FIRE
+  static ushort counter = 0;
+  if (counter++ == 0) // infrequently check
+  {
+    if (digitalRead(37) == 0 && digitalRead(39) == 0) 
+    {
+      while (digitalRead(37) == 0 || digitalRead(39) == 0); // wait until depress
+      main_go_num = 128;
+      quit = true;
+      return true;
+    }
+  }
+#endif
 
 	return EmuCBM::ExecutePatch();
 }
