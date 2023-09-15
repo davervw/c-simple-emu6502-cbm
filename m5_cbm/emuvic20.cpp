@@ -319,7 +319,7 @@ EmuVic20::Vic20Memory::Vic20Memory(byte size)
 	EmuCBM::File_ReadAllBytes(basic_rom, basic_size, "/roms/vic20/basic");
 	EmuCBM::File_ReadAllBytes(kernal_rom, kernal_size, "/roms/vic20/kernal");
 
-  vic = new EmuVic(ram, io, &ram[0x9600], char_rom);
+  vic = new EmuVic(ram, io, &io[0x9600-io_addr], char_rom);
 }
 
 EmuVic20::Vic20Memory::~Vic20Memory()
