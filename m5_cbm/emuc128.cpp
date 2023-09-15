@@ -311,7 +311,7 @@ bool EmuC128::ExecutePatch()
       if (digitalRead(37) == 0 && digitalRead(39) == 0) 
       {
         while (digitalRead(37) == 0 || digitalRead(39) == 0); // wait until depress
-        main_go_num = 64;
+        main_go_num = 20;
         quit = true;
         return true;
       }

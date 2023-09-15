@@ -69,6 +69,7 @@
 
 // externs/globals
 extern const char* StartupPRG;
+extern int main_go_num;
 
 // array allows multiple keys/modifiers pressed at one time
 static int scan_codes[16] = { 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64 } ;
@@ -250,6 +251,21 @@ bool EmuVic20::ExecutePatch()
 			return true;
 		}
 	}
+
+#ifdef FIRE
+  static ushort counter = 0;
+  if (counter++ == 0) // infrequently check
+  {
+    if (digitalRead(37) == 0 && digitalRead(39) == 0) 
+    {
+      while (digitalRead(37) == 0 || digitalRead(39) == 0); // wait until depress
+      main_go_num = 64;
+      quit = true;
+      return true;
+    }
+  }
+#endif
+
 	return EmuCBM::ExecutePatch();
 }
 
@@ -330,11 +346,39 @@ static void ReadKeyboard()
     64, 35, 44, 7, 7, 2, 2, 64
   };
 
+  const String upString = "15,7,64";
+  const String dnString = "7,64";
+  const String crString = "1,64";
+  const String runString = "15,63,88";
+  const String noString = "64";
+  static int lastUp = 1;
+  static int lastCr = 1;
+  static int lastDn = 1;
+  static int lastRun = 1;
+  
   String s;
   if (Serial2.available())
     s = Serial2.readString();
   else if (M5Serial.available())
     s = M5Serial.readString();
+#ifdef FIRE
+  else if (lastRun==0 && (lastRun=(digitalRead(39) & digitalRead(38)))==1)
+    s = noString;
+  else if (lastUp==0 && (lastUp=digitalRead(39))==1)
+    s = noString;
+  else if (lastCr==0 && (lastCr=digitalRead(38))==1)
+    s = noString;
+  else if (lastDn==0 && (lastDn=digitalRead(37))==1)
+    s = noString;
+  else if ((lastRun=(~(~digitalRead(39) & ~digitalRead(38))) & 1)==0)
+    s = runString;
+  else if ((lastUp=digitalRead(39))==0)
+    s = upString;
+  else if ((lastCr=digitalRead(38))==0)
+    s = crString;
+  else if ((lastDn=digitalRead(37))==0)
+    s = dnString;
+#endif    
   else
     return;
   {
