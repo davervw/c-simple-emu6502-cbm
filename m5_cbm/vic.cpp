@@ -55,6 +55,7 @@ void EmuVic::DrawChar(byte c, int col, int row, int fg, int bg)
   if (postponeDrawChar)
     return;
 
+  M5.Lcd.startWrite();
   int offset = ((io[0x5] & 2) == 0) ? 0 : (8*256);
   const byte* shape = &chargen[c*8+offset];
   int x0 = 72 + col*8;
@@ -68,6 +69,7 @@ void EmuVic::DrawChar(byte c, int col, int row, int fg, int bg)
       mask = mask >> 1;
     }
   }
+  M5.Lcd.endWrite();
 }
 
 void EmuVic::DrawChar(int offset)
@@ -81,6 +83,7 @@ void EmuVic::DrawChar(int offset)
 
 void EmuVic::RedrawScreen()
 {
+  M5.Lcd.startWrite();
   int bg = EmuVic::Vic20ColorToLCDColor(io[0xf] >> 4);
   int offset = 0;
   for (int row = 0; row < 23; ++row)
@@ -92,10 +95,12 @@ void EmuVic::RedrawScreen()
       ++offset;
     }
   }
+  M5.Lcd.endWrite();
 }
 
 void EmuVic::RedrawScreenEfficientlyAfterPostponed()
 {
+  M5.Lcd.startWrite();
   int bg = EmuVic::Vic20ColorToLCDColor(io[0x0f] >> 4);
   int offset = 0;
   for (int row = 0; row < 23; ++row)
@@ -112,15 +117,18 @@ void EmuVic::RedrawScreenEfficientlyAfterPostponed()
       ++offset;
     }
   }
+  M5.Lcd.endWrite();
 }
 
 void EmuVic::DrawBorder(byte value)
 {
+    M5.Lcd.startWrite();
     int color = Vic20ColorToLCDColor(value & 7);
     M5.Lcd.fillRect(0, 0, 320, 28, color);
     M5.Lcd.fillRect(0, 28, 72, 184, color);
     M5.Lcd.fillRect(248, 28, 72, 184, color);
     M5.Lcd.fillRect(0, 212, 320, 28, color);
+    M5.Lcd.endWrite();
 }
 
 void EmuVic::SaveOldVideoAndColor()
