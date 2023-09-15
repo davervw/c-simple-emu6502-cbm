@@ -66,7 +66,7 @@ Emu6502::~Emu6502()
 
 void Emu6502::ResetRun()
 {
-	ushort addr = (ushort)((GetMemory(0xFFFC) | (GetMemory(0xFFFD) << 8))); // RESET vector
+	ushort addr = GetMemoryWord(0xFFFC); // RESET vector
 	Execute(addr);
 }
 
@@ -459,7 +459,7 @@ void Emu6502::JSR(ushort *p_addr, byte *p_bytes)
 {
 	*p_bytes = 3; // for next calculation
 	ushort addr2 = (ushort)(*p_addr + *p_bytes - 1);
-	ushort addr3 = (ushort)(GetMemory((ushort)(*p_addr + 1)) | (GetMemory((ushort)(*p_addr + 2)) << 8));
+	ushort addr3 = GetMemoryWord(*p_addr + 1);
 	Push(HI(addr2));
 	Push(LO(addr2));
 	*p_addr = addr3;
@@ -490,26 +490,26 @@ void Emu6502::BRK(byte *p_bytes)
 	Push(HI(PC));
 	Push(LO(PC));
 	PHP();
-	PC = (ushort)(GetMemory(0xFFFE) + (GetMemory(0xFFFF) << 8)); // JMP(IRQ)
+	PC = GetMemoryWord(0xFFFE); // JMP(IRQ)
 	*p_bytes = 0;
 }
 
 void Emu6502::JMP(ushort *p_addr, byte *p_bytes)
 {
 	*p_bytes = 0; // caller should not advance address
-	ushort addr2 = (ushort)(GetMemory((ushort)(*p_addr + 1)) | (GetMemory((ushort)(*p_addr + 2)) << 8));
+	ushort addr2 = GetMemoryWord(*p_addr + 1);
 	*p_addr = addr2;
 }
 
 void Emu6502::JMPIND(ushort *p_addr, byte *p_bytes)
 {
 	*p_bytes = 0; // caller should not advance address
-	ushort addr2 = (ushort)(GetMemory((ushort)(*p_addr + 1)) | (GetMemory((ushort)(*p_addr + 2)) << 8));
+	ushort addr2 = GetMemoryWord(*p_addr + 1);
 	ushort addr3;
 	if ((addr2 & 0xFF) == 0xFF) // JMP($XXFF) won't go over page boundary
 		addr3 = (ushort)(GetMemory(addr2) | (GetMemory((ushort)(addr2 - 0xFF)) << 8)); // 6502 "bug" - will use XXFF and XX00 as source of address
 	else
-		addr3 = (ushort)(GetMemory(addr2) | (GetMemory((ushort)(addr2 + 1)) << 8));
+		addr3 = GetMemoryWord(addr2);
 	*p_addr = addr3;
 }
 
@@ -535,14 +535,14 @@ byte Emu6502::GetIndX(ushort addr, byte *p_bytes)
 {
 	*p_bytes = 2;
 	ushort addr2 = (ushort)(GetMemory((ushort)(addr + 1)) + X);
-	return GetMemory((ushort)(GetMemory(addr2) | (GetMemory((ushort)(addr2 + 1)) << 8)));
+	return GetMemory(GetMemoryWord(addr2));
 }
 
 void Emu6502::SetIndX(byte value, ushort addr, byte *p_bytes)
 {
 	*p_bytes = 2;
 	ushort addr2 = (ushort)(GetMemory((ushort)(addr + 1)) + X);
-	ushort addr3 = (ushort)(GetMemory(addr2) | (GetMemory((ushort)(addr2 + 1)) << 8));
+	ushort addr3 = GetMemoryWord(addr2);
 	SetMemory(addr3, value);
 }
 
@@ -550,7 +550,7 @@ byte Emu6502::GetIndY(ushort addr, byte *p_bytes)
 {
 	*p_bytes = 2;
 	ushort addr2 = (ushort)(GetMemory((ushort)(addr + 1)));
-	ushort addr3 = (ushort)((GetMemory(addr2) | (GetMemory((ushort)(addr2 + 1)) << 8)) + Y);
+	ushort addr3 = (ushort)(GetMemoryWord(addr2) + Y);
 	return GetMemory(addr3);
 }
 
@@ -558,7 +558,7 @@ void Emu6502::SetIndY(byte value, ushort addr, byte *p_bytes)
 {
 	*p_bytes = 2;
 	ushort addr2 = (ushort)(GetMemory((ushort)(addr + 1)));
-	ushort addr3 = (ushort)((GetMemory(addr2) | (GetMemory((ushort)(addr2 + 1)) << 8)) + Y);
+	ushort addr3 = (ushort)(GetMemoryWord(addr2) + Y);
 	SetMemory(addr3, value);
 }
 
@@ -607,42 +607,42 @@ void Emu6502::SetZPY(byte value, ushort addr, byte *p_bytes)
 byte Emu6502::GetABS(ushort addr, byte *p_bytes)
 {
 	*p_bytes = 3;
-	ushort addr2 = (ushort)(GetMemory((ushort)(addr + 1)) | (GetMemory((ushort)(addr + 2)) << 8));
+	ushort addr2 = GetMemoryWord(addr + 1);
 	return GetMemory(addr2);
 }
 
 void Emu6502::SetABS(byte value, ushort addr, byte *p_bytes)
 {
 	*p_bytes = 3;
-	ushort addr2 = (ushort)(GetMemory((ushort)(addr + 1)) | (GetMemory((ushort)(addr + 2)) << 8));
+	ushort addr2 = GetMemoryWord(addr + 1);
 	SetMemory(addr2, value);
 }
 
 byte Emu6502::GetABSX(ushort addr, byte *p_bytes)
 {
 	*p_bytes = 3;
-	ushort addr2 = (ushort)(GetMemory((ushort)(addr + 1)) | (GetMemory((ushort)(addr + 2)) << 8));
+	ushort addr2 = GetMemoryWord(addr + 1);
 	return GetMemory((ushort)(addr2 + X));
 }
 
 void Emu6502::SetABSX(byte value, ushort addr, byte *p_bytes)
 {
 	*p_bytes = 3;
-	ushort addr2 = (ushort)((GetMemory((ushort)(addr + 1)) | (GetMemory((ushort)(addr + 2)) << 8)) + X);
+	ushort addr2 = (ushort)(GetMemoryWord(addr + 1) + X);
 	SetMemory(addr2, value);
 }
 
 byte Emu6502::GetABSY(ushort addr, byte *p_bytes)
 {
 	*p_bytes = 3;
-	ushort addr2 = (ushort)(GetMemory((ushort)(addr + 1)) | (GetMemory((ushort)(addr + 2)) << 8));
+	ushort addr2 = GetMemoryWord(addr + 1);
 	return GetMemory((ushort)(addr2 + Y));
 }
 
 void Emu6502::SetABSY(byte value, ushort addr, byte *p_bytes)
 {
 	*p_bytes = 3;
-	ushort addr2 = (ushort)((GetMemory((ushort)(addr + 1)) | (GetMemory((ushort)(addr + 2)) << 8)) + Y);
+	ushort addr2 = (ushort)(GetMemoryWord(addr + 1) + Y);
 	SetMemory(addr2, value);
 }
 
@@ -679,7 +679,7 @@ void Emu6502::Execute(ushort addr)
         PHP();
 		B = true; // return to normal state expected when user does PHP
         I = true;
-        PC = (GetMemory(0xfffe) | (GetMemory(0xffff) << 8));
+        PC = GetMemoryWord(0xFFFE); // JMP(IRQ)
       } 
 			else if (trace || breakpoint || step)
 			{
@@ -898,7 +898,7 @@ void Emu6502::DisassembleLong(ushort addr, bool *p_conditional, byte *p_bytes, u
 	for (int i = 0; i < 3; ++i)
 	{
 		if (i < *p_bytes)
-			snprintf(line+strlen(line), line_size-strlen(line), "%02X ", GetMemory((ushort)(addr + i)));
+			snprintf(line + strlen(line), line_size - strlen(line), "%02X ", GetMemory((ushort)(addr + i)));
 		else
 			strcat_s(line, line_size, "   ");
 	}

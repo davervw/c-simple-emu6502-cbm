@@ -63,6 +63,10 @@ protected:
   {
     return memory->read(addr);
   }
+  ushort GetMemoryWord(ushort addr)
+  {
+    return memory->read(addr) | (memory->read(addr+1) << 8);
+  }
   void SetMemory(ushort addr, byte value)
   {
     memory->write(addr, value);
