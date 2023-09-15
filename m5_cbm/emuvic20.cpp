@@ -110,7 +110,30 @@ static int startup_state = 0;
 
 bool EmuVic20::ExecutePatch()
 {
-	if (PC == 0xC474 || PC == LOAD_TRAP) // READY
+  static bool NMI = false;
+  
+  int found_NMI = 0;
+  for (int i=0; !found_NMI && i<16; ++i)
+    if (scan_codes[i] & 1024)
+      found_NMI = 1;
+  
+  if (NMI)
+  {
+    if (!found_NMI)
+      NMI = false; // reset when not pressed
+  }
+  else if (found_NMI) // newly pressed, detected edge
+  {
+    NMI = true; // set so won't trigger again until cleared
+    Push(HI(PC));
+    Push(LO(PC));
+    B = false; // only false on stack for NMI and IRQ
+    PHP();
+    B = true; // return to normal state
+    PC = (ushort)(GetMemory(0xFFFA) + (GetMemory(0xFFFB) << 8)); // JMP(NMI)
+    return true; // overriden, and PC changed, so caller should reloop before execution to allow breakpoint/trace/ExecutePatch/etc.
+  }
+	else if (PC == 0xC474 || PC == LOAD_TRAP) // READY
 	{
 		go_state = 0;
 
@@ -295,19 +318,16 @@ EmuVic20::Vic20Memory::~Vic20Memory()
 
 static void ReadKeyboard()
 {
-  static byte map64to20[89] = {
-    7, 15, 23, 63, 39, 47, 55, 31,
-    1, 9, 17, 57, 33, 41, 49, 25,
-    2, 10, 18, 58, 34, 42, 50, 26,
-    3, 11, 19, 59, 35, 43, 51, 27,
-    4, 12, 20, 60, 36, 44, 52, 28,
-    5, 13, 21, 61, 37, 45, 53, 29,
-    6, 14, 22, 62, 38, 46, 54, 30,
-    0, 8, 16, 56, 32, 40, 48, 24,
-    64, 64, 64, 64, 64, 64, 64, 64,
-    64, 64, 64, 64, 64, 64, 64, 64,
-    64, 64, 64, 64, 64, 64, 64, 64,
-    64
+  // Vic-20, C64/128 share the same keyboard matrix
+  // but wiring on Vic-20 mixes up the lines, and the row/col to scan code math is different
+  // this code includes translation from a C64/128 scan code to a Vic-20 scan code
+  int toVic20Row[8] = {0, 1, 2, 7, 4, 5, 6, 3};
+  int toVic20Col[8] = {7, 1, 2, 3, 4, 5, 6, 0};
+  
+  static const byte extras[24] = { // Commodore 128 extra keys to 64 mappings
+    64, 27, 16, 64, 59, 11, 24, 56,
+    64, 40, 43, 64, 1, 19, 32, 8,
+    64, 35, 44, 7, 7, 2, 2, 64
   };
 
   String s;
@@ -318,7 +338,6 @@ static void ReadKeyboard()
   else
     return;
   {
-    //M5Serial.print(s);
     int src = 0;
     int dest = 0;
     int scan = 0;
@@ -330,14 +349,19 @@ static void ReadKeyboard()
         ++len;
       } else if (len > 0)
       {
-        if (scan < 89) {
-          M5Serial.print("was ");
-          M5Serial.print(scan);
-          scan = map64to20[scan];
-          M5Serial.print(" now ");
-          M5Serial.println(scan);
+        int lobits = scan & 127;
+        if (lobits >= 64 && lobits < 88)
+        {
+          scan = extras[lobits - 64];
+          for (int i=0; i<dest; ++i)
+            if (scan_codes[i] == 25 || scan_codes[i] == 38)
+              scan_codes[i] = 64; // remove shift keys temporarily
+          if (lobits == 83 || lobits == 85)
+              scan_codes[dest++] = 38; // add shift for up or left
         }
-        else
+        if (scan < 64)
+          scan = (toVic20Row[scan & 7] << 3) | toVic20Col[scan >> 3];
+        if (scan > 64)
           scan = (scan & 0xFF80) | 0x40;
         scan_codes[dest++] = scan;
         scan = 0;
@@ -375,29 +399,21 @@ byte EmuVic20::Vic20Memory::read(ushort addr)
 			return 0x7E;
     else if (addr == 0x9121)
     {
-      int value = 0;
-      
+      ReadKeyboard();
+      byte value = 0xFF;
       for (int i=0; i<16; ++i)
       {
         int scan_code = scan_codes[i] & 127; // remove any modifiers
         if (scan_code < 64)
         {     
-          int col = scan_code / 8;
-          int row = scan_code % 8;
-          
-          if ((io[0x120] & (1 << col)) == 0)
-            value |= (1 << row);
+          int row = scan_code >> 3;
+          int col = scan_code & 7;
+
+          if ((io[0x9120 - io_addr] & (1 << row)) == 0)
+            value &= ~(1 << col);
         }
       }
-      
-      if (value != 0 && io[0x120] != 0)
-      {
-        M5Serial.print("scan ");
-        M5Serial.print(io[0x120], HEX);
-        M5Serial.print(" ");
-        M5Serial.println((byte)~value, HEX);
-      }
-      return ~value;
+      return value;
     }
 		return io[addr - io_addr];
   }
@@ -439,9 +455,7 @@ void EmuVic20::Vic20Memory::write(ushort addr, byte value)
 		ram[addr] = value;
 	else if (addr >= io_addr && addr < io_addr + io_size)
 	{
-    if (addr == 0x9120)
-      ReadKeyboard();
-		io[addr - io_addr] = value;
+    io[addr - io_addr] = value;
 		if (addr == 0x900F) // background/border/inverse
     {
       vic->DrawBorder(value);
