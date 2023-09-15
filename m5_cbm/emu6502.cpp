@@ -737,7 +737,7 @@ void Emu6502::Execute(ushort addr)
 		case 0x2A: SetA(ROL(A)); break;
 		case 0x2C: BITOP(GetABS(PC, &bytes)); break;
 		case 0x2D: AND(GetABS(PC, &bytes)); break;
-		case 0x2E: SetABS(ROL(GetABSX(PC, &bytes)), PC, &bytes); break;
+		case 0x2E: SetABS(ROL(GetABS(PC, &bytes)), PC, &bytes); break;
 
 		case 0x30: BMI(&PC, &conditional, &bytes); break;
 		case 0x31: AND(GetIndY(PC, &bytes)); break;
