@@ -172,6 +172,23 @@ private:
   byte GetIM(ushort addr, byte *p_bytes);
   void Execute(ushort addr);
 
+  void GetDisplayState(char *state, int state_size);
+  void DisassembleShort(ushort addr, bool *p_conditional, byte *p_bytes, ushort *p_addr2, char *dis, int dis_size);
+  void DisassembleLong(ushort addr, bool *p_conditional, byte *p_bytes, ushort *p_addr2, char *dis, int dis_size, char *line, int line_size);
+
+  void Ind(char *dis, int dis_size, const char* opcode, ushort addr, ushort *p_addr2, byte *p_bytes);
+  void IndX(char *dis, int dis_size, const char* opcode, ushort addr, byte *p_bytes);
+  void IndY(char *dis, int dis_size, const char* opcode, ushort addr, byte *p_bytes);
+  void ZP(char *dis, int dis_size, const char* opcode, ushort addr, byte *p_bytes);
+  void ZPX(char *dis, int dis_size, const char* opcode, ushort addr, byte *p_bytes);
+  void ZPY(char *dis, int dis_size, const char* opcode, ushort addr, byte *p_bytes);
+  void ABS(char *dis, int dis_size, const char* opcode, ushort addr, byte *p_bytes);
+  void ABSAddr(char *dis, int dis_size, const char* opcode, ushort addr, ushort *p_addr2, byte *p_bytes);
+  void ABSX(char *dis, int dis_size, const char* opcode, ushort addr, byte *p_bytes);
+  void ABSY(char *dis, int dis_size, const char* opcode, ushort addr, byte *p_bytes);
+  void IM(char *dis, int dis_size, const char* opcode, ushort addr, byte *p_bytes);
+  void BRX(char *dis, int dis_size, const char* opcode, ushort addr, bool *p_conditional, ushort *p_addr2, byte *p_bytes);
+
 private:
   Emu6502(const Emu6502& other); // disabled
   bool operator==(const Emu6502& other) const; // disabled
