@@ -1,6 +1,19 @@
 #include "Vic.h"
 #include "M5Core.h"
 
+//#define VIC1TO1 // 1 to 1 pixels horizontally and vertically
+#define VIC3TO2 //3 pixels for every 2 pixels horizontally, 1 to 1 pixels vertically
+
+#ifdef VIC1TO1
+const int X0 = 72;
+const int Y0 = 28;
+#endif
+
+#ifdef VIC3TO2
+const int X0 = 28;
+const int Y0 = 28;
+#endif
+
 EmuVic::EmuVic(byte* vram, byte* vio, byte* vcolor_nybles, byte* vchargen)
 {
   ram = vram;
@@ -58,15 +71,46 @@ void EmuVic::DrawChar(byte c, int col, int row, int fg, int bg)
   M5.Lcd.startWrite();
   int offset = ((io[0x5] & 2) == 0) ? 0 : (8*256);
   const byte* shape = &chargen[c*8+offset];
-  int x0 = 72 + col*8;
-  int y0 = 28 + row*8;
+  int y0 = Y0 + row*8;
+#ifdef VIC1TO1  
+  int x0 = X0 + col*8;
+  int maxcol = 8;
+#endif
+#ifdef VIC3TO2
+  int x0 = X0 + col*12;
+  int midcolor = bg;
+  int maxcol = 12;
+  int last_color;
+#endif
   for (int row_i=0; row_i<8; ++row_i)
   {
     int mask = 128;
-    for (int col_i=0; col_i<8; ++col_i)
+    for (int col_i=0; col_i<maxcol; ++col_i)
     {
-      M5.Lcd.drawPixel(x0+col_i, y0+row_i, ((shape[row_i] & mask) == 0) ? bg : fg);
+      int color = ((shape[row_i] & mask) == 0) ? bg : fg;
+  #ifdef VIC1TO1
       mask = mask >> 1;
+  #endif
+  #ifdef VIC3TO2
+      int frac = col_i % 3;
+      if (frac == 1)
+      {
+        if (color != last_color)
+        {
+          // extract 565 color from 16-bit values, average them, and combine back the same way
+          int red = ((color >> 11) + (last_color >> 11)) / 2;
+          int green = (((color >> 5) & 0x3F) + (((last_color >> 5) & 0x3F))) / 2;
+          int blue = ((color & 0x1F) + (last_color & 0x1F)) / 2;
+          color = ((red & 0x1f) << 11) | ((green & 0x3f) << 5) | (blue & 0x1F);
+        }
+      }
+      else
+      {
+        mask = mask >> 1;
+        last_color = color;
+      }
+  #endif
+      M5.Lcd.drawPixel(x0+col_i, y0+row_i, color);
     }
   }
   M5.Lcd.endWrite();
@@ -124,10 +168,10 @@ void EmuVic::DrawBorder(byte value)
 {
     M5.Lcd.startWrite();
     int color = Vic20ColorToLCDColor(value & 7);
-    M5.Lcd.fillRect(0, 0, 320, 28, color);
-    M5.Lcd.fillRect(0, 28, 72, 184, color);
-    M5.Lcd.fillRect(248, 28, 72, 184, color);
-    M5.Lcd.fillRect(0, 212, 320, 28, color);
+    M5.Lcd.fillRect(0, 0, 320, Y0, color);
+    M5.Lcd.fillRect(0, Y0, X0, 23*8, color);
+    M5.Lcd.fillRect(320-X0, Y0, X0, 23*8, color);
+    M5.Lcd.fillRect(0, 240-Y0, 320, Y0, color);
     M5.Lcd.endWrite();
 }
 
