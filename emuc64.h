@@ -7,7 +7,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2021 by David R. Van Wagner
+// Copyright (c) 2023 by David R. Van Wagner
 // davevw.com
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -32,5 +32,55 @@
 
 #pragma once
 
-extern void C64_Init(int ram_size);
-extern char* StartupPRG;
+#include "emucbm.h"
+
+class EmuC64 : public EmuCBM
+{
+public:
+	EmuC64(int ram_size);
+	virtual ~EmuC64();
+
+protected:
+	bool ExecutePatch();
+
+private:
+	byte GetMemory(ushort addr);
+	void SetMemory(ushort addr, byte value);
+	void CheckBypassSETNAM();
+	void CheckBypassSETLFS();
+
+private:
+	int go_state = 0;
+
+private:
+	EmuC64(const EmuC64& other); // disabled
+	bool operator==(const EmuC64& other) const; // disabled
+};
+
+class C64Memory : public Emu6502::Memory
+{
+public:
+	C64Memory(int ram_size);
+	virtual ~C64Memory();
+	virtual byte read(ushort addr);
+	virtual void write(ushort addr, byte value);
+
+public:
+	byte* basic_rom;
+	byte* char_rom;
+	byte* kernal_rom;
+
+	static const int basic_rom_size = 8 * 1024;
+	static const int char_rom_size = 4 * 1024;
+	static const int kernal_rom_size = 8 * 1024;
+
+private:
+	int ram_size;
+	byte* ram;
+	//byte* io;
+	byte* color_nybles;
+
+private:
+	C64Memory(const C64Memory& other); // disabled
+	bool operator==(const C64Memory& other) const; // disabled
+};

@@ -5,7 +5,7 @@
 //
 // MIT License
 //
-// Copyright (c) 2021 by David R. Van Wagner
+// Copyright (c) 2023 by David R. Van Wagner
 // davevw.com
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -146,13 +146,13 @@ int EmuD64::GetSectorOffset(int track, int sector)
 {
     if (track < 1 || track > n_tracks)
     {
-        char exception[80];
+        char exception[128];
         snprintf(exception, sizeof(exception), "track %d out of range, should be 1 to %d", track, n_tracks);
         throw exception;
     }
     if (sector < 0 || sector >= sectors_per_track[track])
     {
-        char exception[80];
+        char exception[128];
         snprintf(exception, sizeof(exception), "sector %d out of range, should be 0 to %d for track %d", sector, sectors_per_track[track], track);
         throw exception;
     }
@@ -184,7 +184,7 @@ void EmuD64::DirStruct::Read(EmuD64* d64, int track, int sector, int n)
 {
     if (n < 0 || n >= d64->dir_entries_per_sector)
     {
-        char exception[80];
+        char exception[128];
         snprintf(exception, sizeof(exception), "directory index %d out of range, expected 0 to %d", n, d64->dir_entries_per_sector - 1);
         throw exception;
     }
@@ -212,7 +212,7 @@ void EmuD64::DirStruct::ReadData(EmuD64* d64, unsigned char* data, int offset)
     n_sectors = (lo + (hi << 8));
     if (offset != save_offset + d64->dir_entry_size)
     {
-        char exception[80];
+        char exception[128];
         snprintf(exception, sizeof(exception), "internal error, expected to read %d  bytes for directory entry, but read %d bytes", d64->dir_entry_size, offset - save_offset);
         throw exception;
     }
@@ -765,7 +765,7 @@ void EmuD64::StoreFileByStruct(DirStruct* dir, unsigned char* data, int data_len
     int free = BlocksFree();
     if (free < n_sectors)
     {
-        char exception[80];
+        char exception[128];
         unsigned char filename[DirStruct::dir_name_size];
         dir->getName(filename, sizeof(filename));
         snprintf(exception, sizeof(exception), "cannot store file %s (%d blocks) as disk has only %d blocks", filename, n_sectors, free);
@@ -810,7 +810,7 @@ void EmuD64::StoreFileByName(char* filename, unsigned char* data, int data_len)
 {
     if (GetDirectoryCount()-GetDeletedCount() >= dir_entries_max)
     {
-        char exception[80];
+        char exception[128];
         snprintf(exception, sizeof(exception), "directory is full, cannot store file %s", filename);
         throw exception;
     }

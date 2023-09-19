@@ -1,4 +1,4 @@
-// cbmconsole.c - Commodore Console Emulation
+// cbmconsole.cpp - Commodore Console Emulation
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -7,7 +7,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2021 by David R. Van Wagner
+// Copyright (c) 2023 by David R. Van Wagner
 // davevw.com
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -41,6 +41,7 @@
 #endif
 
 int supress_first_clear = 1;
+static bool supress_next_home = false;
 
 static unsigned char buffer[256];
 int buffer_head = 0;
@@ -180,6 +181,11 @@ static void Console_Cursor_Right()
 
 static void Console_Cursor_Home()
 {
+    if (supress_next_home)
+    {
+        supress_next_home = false;
+        return;
+    }
 #ifdef WIN32
    HANDLE hStdout;
    hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -210,8 +216,11 @@ static void Console_Reverse_Off()
    }
 }
 
-extern void CBM_Console_WriteChar(unsigned char c)
+extern void CBM_Console_WriteChar(unsigned char c, bool supress_next_home)
 {
+    if (supress_next_home)
+        ::supress_next_home = true;
+
    // we're emulating, so draw character on local console window
    if (c == 0x0D)
    {
@@ -250,10 +259,10 @@ extern unsigned char CBM_Console_ReadChar(void)
       //ApplyColor ? .Invoke();
       while (1)
       {
-         fgets(buffer, sizeof(buffer) - 1, stdin); // save room for carriage return and null
-         buffer[strlen(buffer)-1] = '\r'; // replace newline
+         fgets((char*)& buffer[0], sizeof(buffer) - 1, stdin); // save room for carriage return and null
+         buffer[strlen((char*)buffer)-1] = '\r'; // replace newline
          buffer_head = 0;
-         buffer_tail = buffer_count = (int)strlen(buffer);
+         buffer_tail = buffer_count = (int)strlen((char*)buffer);
          Console_Cursor_Up();
          break;
       }

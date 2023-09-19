@@ -15,22 +15,37 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="main.c">
+    <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="emu6502.c">
+    <ClCompile Include="emu6502.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="emuc64.c">
+    <ClCompile Include="emuc64.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="cbmconsole.c">
+    <ClCompile Include="cbmconsole.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="gettimeofday.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="emud64.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="emucbm.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="emuc128.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="emuted.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="emuvic20.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="emupet.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -45,6 +60,21 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="emud64.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="emucbm.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="emuc128.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="emuted.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="emuvic20.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="emupet.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
