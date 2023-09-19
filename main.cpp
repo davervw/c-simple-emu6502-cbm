@@ -53,7 +53,7 @@ int main(int argc, char* argv[])
 	while (true)
 	{
 		EmuCBM* cbm;
-#ifdef WIN32
+
 		if (main_go_num == 128)
 			cbm = new EmuC128();
 		else if (main_go_num == 4)
@@ -66,12 +66,7 @@ int main(int argc, char* argv[])
 			cbm = new EmuPET(32);
 		else
 			cbm = new EmuC64(64 * 1024);
-#else
-		if (main_go_num == 128)
-			cbm = new EmuC64(64 * 1024);
-		else
-			cbm = new EmuC64(64 * 1024);
-#endif
+
 		cbm->ResetRun();
 		delete cbm;
 	}
