@@ -87,7 +87,7 @@ extern "C" int gettimeofday(struct timeval* tp, struct timezone* tzp);
 #endif
 
 extern const char* StartupPRG;
-int startup_state = 0;
+static int startup_state = 0;
 
 #include "emuc64.h"
 

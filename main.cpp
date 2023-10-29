@@ -31,44 +31,67 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <stdio.h>
+#include <stdlib.h>
 #include "emuc64.h"
 #include "emuc128.h"
 #include "emuted.h"
 #include "emuvic20.h"
 #include "emupet.h"
+#include "emutest.h"
 
 int main_go_num = 0;
+
+int fileExists(const char* filename)
+{
+#ifdef WIN32
+	FILE* fp;
+	fopen_s(&fp, filename, "rb");
+#else
+	FILE* fp = fopen(filename, "rb");
+#endif
+	int exists = (fp != 0);
+	if (exists)
+		fclose(fp);
+	return exists;
+}
 
 int main(int argc, char* argv[])
 {
 	fprintf(stderr, "\n");
-	fprintf(stderr, "c-simple-emu-cbm version 1.5\n");
+	fprintf(stderr, "c-simple-emu-cbm version 1.6\n");
 	fprintf(stderr, "Copyright (c) 2023 by David R. Van Wagner\n");
 	fprintf(stderr, "MIT License\n");
 	fprintf(stderr, "github.com/davervw\n");
 	fprintf(stderr, "\n");
-	if (argc > 1)
-		EmuCBM::StartupPRG = argv[1];
+	for (int i = 1; i < argc; ++i)
+	{
+		if (fileExists(argv[i]))
+			EmuCBM::StartupPRG = argv[i];
+		else
+			main_go_num = atoi(argv[i]);
+	}
 
 	while (true)
 	{
-		EmuCBM* cbm;
+		Emu6502* emu;
 
 		if (main_go_num == 128)
-			cbm = new EmuC128();
+			emu = new EmuC128();
 		else if (main_go_num == 4)
-			cbm = new EmuTed(64);
+			emu = new EmuTed(64);
 		else if (main_go_num == 16)
-			cbm = new EmuTed(16);
+			emu = new EmuTed(16);
 		else if (main_go_num == 20)
-			cbm = new EmuVic20(5);
+			emu = new EmuVic20(5);
 		else if (main_go_num == 2001)
-			cbm = new EmuPET(32);
+			emu = new EmuPET(32);
+		else if (main_go_num == -1)
+			emu = new EmuTest(EmuCBM::StartupPRG);
 		else
-			cbm = new EmuC64(64 * 1024);
+			emu = new EmuC64(64 * 1024);
 
-		cbm->ResetRun();
-		delete cbm;
+		emu->ResetRun();
+		delete emu;
 	}
 
 	return 0;

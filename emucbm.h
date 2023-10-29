@@ -11,12 +11,12 @@ public:
 
 public:
 	static const char* StartupPRG;
+	static void File_ReadAllBytes(byte* bytes, unsigned int size, const char* filename);
 
 protected:
 	bool ExecutePatch();
 	bool ExecuteRTS();
 	bool ExecuteJSR(ushort addr);
-	static void File_ReadAllBytes(byte* bytes, unsigned int size, const char* filename);
 	bool FileLoad(byte* p_err);
 	bool FileSave(const char* filename, ushort addr1, ushort addr2);
 	bool LoadStartupPrg();

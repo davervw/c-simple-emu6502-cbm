@@ -48,6 +48,9 @@
     <ClCompile Include="emupet.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="emutest.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="emu6502.h">
@@ -75,6 +78,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="emupet.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="emutest.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

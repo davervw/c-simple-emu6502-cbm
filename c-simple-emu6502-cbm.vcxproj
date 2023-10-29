@@ -26,6 +26,7 @@
     <ClCompile Include="emucbm.cpp" />
     <ClCompile Include="emud64.cpp" />
     <ClCompile Include="emuted.cpp" />
+    <ClCompile Include="emutest.cpp" />
     <ClCompile Include="emuvic20.cpp" />
     <ClCompile Include="gettimeofday.c" />
     <ClCompile Include="main.cpp" />
@@ -39,6 +40,7 @@
     <ClInclude Include="emucbm.h" />
     <ClInclude Include="emud64.h" />
     <ClInclude Include="emuted.h" />
+    <ClInclude Include="emutest.h" />
     <ClInclude Include="emuvic20.h" />
     <ClInclude Include="emupet.h" />
   </ItemGroup>
