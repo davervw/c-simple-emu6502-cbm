@@ -98,7 +98,8 @@ void Emu6502::PHP()
 {
 	int flags = (N ? 0x80 : 0)
 		| (V ? 0x40 : 0)
-		| (B ? 0x10 : 0)
+		| 0x20 // reserved, always set
+		| 0x10 // break always set when push
 		| (D ? 0x08 : 0)
 		| (I ? 0x04 : 0)
 		| (Z ? 0x02 : 0)
@@ -183,7 +184,7 @@ void Emu6502::SBC(byte value)
 		int result_dec = A_dec - value_dec - (C ? 0 : 1);
 		C = (result_dec >= 0);
 		if (!C)
-			result_dec = -result_dec; // absolute value
+			result_dec += 100; // wrap negative value
 		int result = (result_dec % 10) | (((result_dec / 10) % 10) << 4);
 		SetA(result);
 		N = false; // undefined?
@@ -515,6 +516,7 @@ void Emu6502::BRK(byte *p_bytes)
 	Push(LO(PC));
 	B = true;
 	PHP();
+	I = true;
 	PC = (ushort)(GetMemory(0xFFFE) + (GetMemory(0xFFFF) << 8)); // JMP(IRQ)
 	*p_bytes = 0;
 }
@@ -559,15 +561,16 @@ void Emu6502::GetDisplayState(char *state, int state_size)
 byte Emu6502::GetIndX(ushort addr, byte *p_bytes)
 {
 	*p_bytes = 2;
-	ushort addr2 = (ushort)(GetMemory((ushort)(addr + 1)) + X);
-	return GetMemory((ushort)(GetMemory(addr2) | (GetMemory((ushort)(addr2 + 1)) << 8)));
+	byte zpaddr = (byte)(GetMemory((ushort)(addr + 1)) + X); // address must be within zero page
+	return GetMemory((ushort)(GetMemory(zpaddr) | (GetMemory((byte)(zpaddr+1)) << 8))); // must keep zpaddr+1 within zero page (byte address)
 }
 
 void Emu6502::SetIndX(byte value, ushort addr, byte *p_bytes)
 {
 	*p_bytes = 2;
-	ushort addr2 = (ushort)(GetMemory((ushort)(addr + 1)) + X);
-	ushort addr3 = (ushort)(GetMemory(addr2) | (GetMemory((ushort)(addr2 + 1)) << 8));
+	byte zpaddr = (byte)(GetMemory((ushort)(addr + 1)) + X); // address must be within zero page
+	ushort addr3 = (ushort)(GetMemory(zpaddr) | (GetMemory((byte)(zpaddr+1)) << 8)); // must keep zpaddr+1 within zero page (byte address)
+
 	SetMemory(addr3, value);
 }
 
@@ -749,7 +752,7 @@ void Emu6502::Execute(ushort addr)
 		case 0x2A: SetA(ROL(A)); break;
 		case 0x2C: BIT(GetABS(PC, &bytes)); break;
 		case 0x2D: AND(GetABS(PC, &bytes)); break;
-		case 0x2E: ROL(GetABS(PC, &bytes)); break;
+		case 0x2E: SetABS(ROL(GetABS(PC, &bytes)), PC, &bytes); break;
 
 		case 0x30: BMI(&PC, &conditional, &bytes); break;
 		case 0x31: AND(GetIndY(PC, &bytes)); break;
@@ -769,7 +772,7 @@ void Emu6502::Execute(ushort addr)
 		case 0x4A: SetA(LSR(A)); break;
 		case 0x4C: JMP(&PC, &bytes); break;
 		case 0x4D: EOR(GetABS(PC, &bytes)); break;
-		case 0x4E: LSR(GetABS(PC, &bytes)); break;
+		case 0x4E: SetABS(LSR(GetABS(PC, &bytes)), PC, &bytes); break;
 
 		case 0x50: BVC(&PC, &conditional, &bytes); break;
 		case 0x51: EOR(GetIndY(PC, &bytes)); break;
