@@ -35,9 +35,11 @@
 // expecting input testfile similar to 6502_functional_test.bin from https://github.com/Klaus2m5/6502_65C02_functional_tests
 // expected behavior is
 // 0) loads all memory starting at address 0x0000 through address 0xFFFF including NMI, RESET, IRQ vectors at end of memory
-// 1) active test number stored at 0x200
-// 2) failed test branches with BNE to same instruction to indicate cannot continue
-// 3) successful completion jumps to same instruction to indicate completion
+// 1) start address of tests is at 0x400 manually patched by ExecutePatch(), not RESET vector
+// 2) active test number stored at 0x200
+// 3) failed test branches with BNE to same instruction to indicate cannot continue
+// 4) IRQs must not be active or IRQ vector catch will fail tests
+// 5) successful completion jumps to same instruction to indicate completion
 
 #include "emu6502.h"
 #include "emucbm.h"
