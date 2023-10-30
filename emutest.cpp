@@ -79,11 +79,13 @@ bool EmuTest::ExecutePatch()
 	{
 		PC = 0x400;
 		start = false;
+        return true;
 	}
     if (GetMemory(PC) == 0xD0/*BNE*/ && !Z && GetMemory((ushort)(PC + 1)) == 0xFE)
     {
         printf("%04X Test FAIL\n", PC);
         quit = true;
+        return false;
     }
     if (GetMemory(PC) == 0x4C/*JMP*/
         && (GetMemory((ushort)(PC + 1)) == (PC & 0xFF) && GetMemory((ushort)(PC + 2)) == (PC >> 8)
@@ -92,11 +94,13 @@ bool EmuTest::ExecutePatch()
     {
         printf("%04X COMPLETED SUCCESS\n", PC);
         quit = true;
+        return false;
     }
     if (GetMemory(0x200) != last_test)
     {
-        printf("%04X Starting test %02X\n", PC, GetMemory(0x200));
         last_test = GetMemory(0x200);
+        printf("%04X Starting test %02X\n", PC, last_test);
+        return false;
     }
 	return false;
 }
