@@ -65,12 +65,14 @@
 
 #include "emu6502.h"
 #include "cbmconsole.h"
+#include "emuc64.h"
+
+#ifndef TEST6502 // should be defined or not in emuc64.h, see emutest.cpp
 
 // globals
 char* StartupPRG = 0;
 
 //#define TEST6502 // uncomment to run 6502 tests but see #else for details (requires rom not included)
-#ifndef TEST6502
 
 // locals
 static int startup_state = 0;
@@ -795,76 +797,4 @@ void SetMemory(ushort addr, byte value)
 	//    io[addr - io_addr] = value;
 }
 
-#else // TEST6502
-
-// plain 6502, no I/O, just memory to run test code
-// expecting rom testfile similar to 6502_functional_test.bin from https://github.com/Klaus2m5/6502_65C02_functional_tests
-// expected behavior is
-// 0) loads all memory starting at address 0x0000 through address 0xFFFF including NMI, RESET, IRQ vectors at end of memory
-// 1) active test number stored at 0x200
-// 2) starts execution at 0x400 (note: not RESET vector, tests started by setting program counter via ExecutePatch())
-// 3) failed test branches with BNE to same instruction to indicate cannot continue
-// 4) successful completion jumps to same instruction to indicate completion
-
-#include <arduino.h>
-
-// locals
-static int start = 1;
-static int last_test = -1;
-static byte ram[64 * 1024];
-static const byte rom[64 * 1024] = {
-// for 6502 tests MUST insert hex characters (bytes) from
-// https://github.com/Klaus2m5/6502_65C02_functional_tests/blob/master/bin_files/6502_functional_test.bin
-// otherwise will probably BRK from zeroed memory
-// rom not included here due to licensing differences
-};
-
-void C64_Init(void)
-{
-	for (int i = 0; i < 65536; ++i)
-		ram[i] = rom[i];
-}
-
-byte GetMemory(ushort addr)
-{
-  if (addr < 0x8000)
-    return ram[addr];
-  else
-    return rom[addr];
-}
-
-void SetMemory(ushort addr, byte value)
-{
-  if (addr < 0x8000)
-    ram[addr] = value;
-}
-
-bool ExecutePatch(void)
-{
-    if (start)
-    {
-        PC = 0x0400; // start address of tests are 0400
-        Serial.print("Start\n");
-        start = false;
-    }
-    if (GetMemory(PC) == 0xD0/*BNE*/ && !Z && GetMemory((ushort)(PC + 1)) == 0xFE/*-2*/)
-    {
-        printf("%04X Test %02X FAIL\n", PC, GetMemory(0x200));
-        while(1) {}
-    }
-    if (GetMemory(PC) == 0x4C/*JMP*/
-        && ((GetMemory((ushort)(PC + 1)) == (PC & 0xFF) && GetMemory((ushort)(PC + 2)) == (PC >> 8))
-        || (GetMemory((ushort)(PC + 1)) == 0x00 && GetMemory((ushort)(PC + 2)) == 0x04))
-        )
-    {
-        printf("%04X COMPLETED SUCCESS\n", PC);
-        while(1) {}
-    }
-    if (GetMemory(0x200) != last_test)
-    {
-        last_test = GetMemory(0x200);
-        printf("%04X Starting test %02X\n", PC, last_test);
-    }  
-    return false; // execute normally
-}
 #endif

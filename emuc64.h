@@ -36,3 +36,4 @@
 extern void C64_Init(void);
 extern char* StartupPRG;
 
+#define TEST6502 // IMPORTANT! see emutest.cpp for instructions how to load and configure 6502 test suite
