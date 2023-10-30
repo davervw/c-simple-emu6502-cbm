@@ -55,6 +55,10 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "emu6502.h"
+
+#ifndef TEST6502 // should be undefined in emu6502.h to run the normal C64 emulator, see emutest.cpp for more details
+
+#include "emuc64.h"
 #include "emud64.h"
 
 #include "SPI.h"
@@ -1429,3 +1433,5 @@ extern void SetMemory(ushort addr, byte value)
     io[addr - io_addr] = value;
   } 
 }
+
+#endif // !TEST6502

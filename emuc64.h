@@ -33,5 +33,4 @@
 #pragma once
 
 extern void C64_Init(void);
-extern char* StartupPRG;
-
+extern const char* StartupPRG;

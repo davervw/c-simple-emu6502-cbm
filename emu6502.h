@@ -32,6 +32,8 @@
 
 #pragma once
 
+//#define TEST6502 // uncomment for 6502 tests, see emutest.cpp for more details
+
 typedef signed char sbyte;
 typedef unsigned char byte;
 //typedef unsigned char bool;
