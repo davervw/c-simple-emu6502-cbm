@@ -44,9 +44,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#ifdef _WIN32
-#include <vcruntime_string.h>
-#endif
+#include <string.h>
 
 extern const char* StartupPRG;
 
@@ -58,7 +56,7 @@ static int last_test = -1;
 EmuTest::EmuTest(const char* filename)
 	: Emu6502(new TestMemory(filename))
 {
-    trace = true;
+    //trace = true;
 }
 
 EmuTest::~EmuTest()
@@ -86,7 +84,6 @@ bool EmuTest::ExecutePatch()
     {
         printf("%04X Test FAIL\n", PC);
         quit = true;
-        return false;
     }
     if (GetMemory(PC) == 0x4C/*JMP*/
         && (GetMemory((ushort)(PC + 1)) == (PC & 0xFF) && GetMemory((ushort)(PC + 2)) == (PC >> 8)
@@ -95,7 +92,6 @@ bool EmuTest::ExecutePatch()
     {
         printf("%04X COMPLETED SUCCESS\n", PC);
         quit = true;
-        return false;
     }
     if (GetMemory(0x200) != last_test)
     {

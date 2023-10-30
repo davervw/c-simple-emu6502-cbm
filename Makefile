@@ -1,8 +1,8 @@
 # Makefile
 # for cygwin, Linux, UNIX, etc.
 
-c-simple-emu6502-cbm.exe: obj/main.o obj/emuc64.o obj/emucbm.o obj/emuc128.o obj/emupet.o obj/emuvic20.o obj/emuted.o obj/emud64.o obj/cbmconsole.o obj/emu6502.o
-	$(CXX) -O9 -g -o c-simple-emu6502-cbm.exe obj/main.o obj/emucbm.o obj/emuc64.o obj/emuc128.o obj/emupet.o obj/emuvic20.o obj/emuted.o obj/emud64.o obj/cbmconsole.o obj/emu6502.o
+c-simple-emu6502-cbm.exe: obj/main.o obj/emuc64.o obj/emucbm.o obj/emuc128.o obj/emupet.o obj/emuvic20.o obj/emuted.o obj/emud64.o obj/cbmconsole.o obj/emu6502.o obj/emutest.o
+	$(CXX) -O9 -g -o c-simple-emu6502-cbm.exe obj/main.o obj/emucbm.o obj/emuc64.o obj/emuc128.o obj/emupet.o obj/emuvic20.o obj/emuted.o obj/emud64.o obj/cbmconsole.o obj/emu6502.o obj/emutest.o
 
 obj/main.o: main.cpp emuc64.h emu6502.h
 	mkdir -p obj
@@ -43,6 +43,10 @@ obj/cbmconsole.o: cbmconsole.cpp cbmconsole.h
 obj/emu6502.o: emu6502.cpp emu6502.h
 	mkdir -p obj
 	$(CXX) -O9 -g -o obj/emu6502.o -c emu6502.cpp
+
+obj/emutest.o: emutest.cpp emutest.h
+	mkdir -p obj
+	$(CXX) -O9 -g -o obj/emutest.o -c emutest.cpp
 
 clean:
 	rm -f c-simple-emu6502-cbm.exe obj/*

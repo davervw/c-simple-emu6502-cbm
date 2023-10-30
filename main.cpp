@@ -92,6 +92,9 @@ int main(int argc, char* argv[])
 
 		emu->ResetRun();
 		delete emu;
+
+		if (main_go_num == -1)
+			break;
 	}
 
 	return 0;
