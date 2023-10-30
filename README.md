@@ -6,7 +6,7 @@ The portable version has been tested with multiple platforms.
 
 This [Arduino](https://github.com/davervw/c-simple-emu6502-cbm/tree/arduino) version is branched from [master](https://github.com/davervw/c-simple-emu6502-cbm/tree/master) and tested specifically with:
 
-* [Arduino Due](https://store.arduino.cc/usa/due) (ARM ATSAM3X8E) - note: no longer manufactured
+* [Arduino Due](https://store-usa.arduino.cc/products/arduino-due) (ARM ATSAM3X8E)
 * [Teensy 3.5](https://www.pjrc.com/store/teensy35.html)
 * [Teensy 4.1](https://www.pjrc.com/store/teensy41.html)
 * Espressif [ESP32-WROOM-32](https://www.espressif.com/en/products/modules/esp-wroom-32/overview)
