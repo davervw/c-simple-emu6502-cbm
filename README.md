@@ -4,7 +4,7 @@ Here is a simple Commodore 64 and 6502 Emulator I wrote from scratch, ported to 
 
 * Development environment is Arduino IDE (1.8.5 or later)
 * Third party libraries used are Teensyduino, USBHost, and [ILI9341](https://github.com/KurtE/ILI9341_t3n.git) or [ILI9488](https://github.com/mjs513/ILI9488_t3.git)
-* Tested with Teensy 4.1, ILI9341 240x320 (and option for ILI9488 320x480) LCD screen, USB keyboard support, and SD card
+* Tested with Teensy 4.1, ILI9341 240x320 -and- ILI9488 320x480 LCD screens (choose one), USB keyboard support, and SD card
 * Displays C64 color text screen to LCD with PETSCII supporting graphic characters and lowercase characters
 * IRQ 1/60 second is working (e.g. TI and TI$)
 * Sorry emulation is limited.  No games!
@@ -12,6 +12,11 @@ Here is a simple Commodore 64 and 6502 Emulator I wrote from scratch, ported to 
 
 ````
 Built successfully with Arduino IDE 2.1.1 and Teensyduino 1.57.2 (note: compiler error with 1.58.1)
+
+and choose one LCD in emuc64.cpp
+#define ILI9341 // 240x320
+#define ILI9488 // 320x480
+
 ````
 
 ![](teensy41_lcd.jpg)
