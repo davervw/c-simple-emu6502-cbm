@@ -74,8 +74,8 @@ extern void PHP()
 {
 	int flags = (N ? 0x80 : 0)
 		| (V ? 0x40 : 0)
-		| 0x20
-		| (B ? 0x10 : 0)
+		| 0x20 // reserved, always pushed as set
+		| 0x10 // break always pushed as set
 		| (D ? 0x08 : 0)
 		| (I ? 0x04 : 0)
 		| (Z ? 0x02 : 0)
@@ -160,7 +160,7 @@ static void SBC(byte value)
 		int result_dec = A_dec - value_dec - (C ? 0 : 1);
 		C = (result_dec >= 0);
 		if (!C)
-			result_dec = -result_dec; // absolute value
+			result_dec += 100; // adjust negative result
 		int result = (result_dec % 10) | (((result_dec / 10) % 10) << 4);
 		SetA(result);
 		N = false; // undefined?
@@ -275,6 +275,7 @@ static void PLP()
 	int flags = Pop();
 	N = (flags & 0x80) != 0;
 	V = (flags & 0x40) != 0;
+  B = (flags & 0x10) != 0;
 	D = (flags & 0x08) != 0;
 	I = (flags & 0x04) != 0;
 	Z = (flags & 0x02) != 0;
@@ -490,6 +491,7 @@ static void BRK(byte *p_bytes)
 	Push(HI(PC));
 	Push(LO(PC));
 	PHP();
+  I = true;
 	PC = (ushort)(GetMemory(0xFFFE) + (GetMemory(0xFFFF) << 8)); // JMP(IRQ)
 	*p_bytes = 0;
 }
@@ -534,15 +536,15 @@ static void GetDisplayState(char *state, int state_size)
 static byte GetIndX(ushort addr, byte *p_bytes)
 {
 	*p_bytes = 2;
-	ushort addr2 = (ushort)(GetMemory((ushort)(addr + 1)) + X);
-	return GetMemory((ushort)(GetMemory(addr2) | (GetMemory((ushort)(addr2 + 1)) << 8)));
+	byte zp = (byte)(GetMemory((ushort)(addr + 1)) + X); // zero page address must be truncated to byte
+	return GetMemory((ushort)(GetMemory(zp) | (GetMemory((byte)(zp + 1)) << 8))); // zero page address must be truncated to byte, even if wraps
 }
 
 static void SetIndX(byte value, ushort addr, byte *p_bytes)
 {
 	*p_bytes = 2;
-	ushort addr2 = (ushort)(GetMemory((ushort)(addr + 1)) + X);
-	ushort addr3 = (ushort)(GetMemory(addr2) | (GetMemory((ushort)(addr2 + 1)) << 8));
+	byte zp = (byte)(GetMemory((ushort)(addr + 1)) + X); // zero page address must be truncated to byte
+	ushort addr3 = (ushort)(GetMemory(zp) | (GetMemory((byte)(zp + 1)) << 8)); // zero page address must be truncated to byte
 	SetMemory(addr3, value);
 }
 
@@ -674,9 +676,14 @@ extern void Execute(ushort addr, bool (*ExecutePatch)(void))
         timer_then = micros(); // reset timer
         Push(HI(PC));
         Push(LO(PC));
-		B = false; // differentiates IRQ from BRK
-        PHP();
-		B = true; // return to normal state expected when user does PHP
+        int flags = (N ? 0x80 : 0)
+          | (V ? 0x40 : 0)
+          | 0x20 // reserved, always pushed as set
+          | (D ? 0x08 : 0)
+          | (I ? 0x04 : 0)
+          | (Z ? 0x02 : 0)
+          | (C ? 0x01 : 0);
+        Push(flags);
         I = true;
         PC = (GetMemory(0xfffe) | (GetMemory(0xffff) << 8));
       } 
@@ -695,7 +702,7 @@ extern void Execute(ushort addr, bool (*ExecutePatch)(void))
 #ifdef WIN32
 				OutputDebugStringA(full_line);
 #else				
-				//Serial.print(full_line);
+				Serial.print(full_line);
 #endif				
 				if (step)
 					step = step; // user can put debug breakpoint here to allow stepping
@@ -737,7 +744,7 @@ extern void Execute(ushort addr, bool (*ExecutePatch)(void))
 		case 0x2A: SetA(ROL(A)); break;
 		case 0x2C: BITOP(GetABS(PC, &bytes)); break;
 		case 0x2D: AND(GetABS(PC, &bytes)); break;
-		case 0x2E: ROL(GetABS(PC, &bytes)); break;
+		case 0x2E: SetABS(ROL(GetABS(PC, &bytes)), PC, &bytes); break;
 
 		case 0x30: BMI(&PC, &conditional, &bytes); break;
 		case 0x31: AND(GetIndY(PC, &bytes)); break;
@@ -757,7 +764,7 @@ extern void Execute(ushort addr, bool (*ExecutePatch)(void))
 		case 0x4A: SetA(LSR(A)); break;
 		case 0x4C: JMP(&PC, &bytes); break;
 		case 0x4D: EOR(GetABS(PC, &bytes)); break;
-		case 0x4E: LSR(GetABS(PC, &bytes)); break;
+		case 0x4E: SetABS(LSR(GetABS(PC, &bytes)), PC, &bytes); break;
 
 		case 0x50: BVC(&PC, &conditional, &bytes); break;
 		case 0x51: EOR(GetIndY(PC, &bytes)); break;
