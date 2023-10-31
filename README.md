@@ -10,6 +10,10 @@ Here is a simple Commodore 64 and 6502 Emulator I wrote from scratch, ported to 
 * Sorry emulation is limited.  No games!
 * Yes, there is D64 support.  Disks are automatically attached with drive8.d64 and drive9.d64 from SD card
 
+````
+Built successfully with Arduino IDE 2.1.1 and Teensyduino 1.57.2 (note: compiler error with 1.58.1)
+````
+
 ![](teensy41_lcd.jpg)
 
 Wiring
