@@ -32,6 +32,8 @@
 
 #pragma once
 
+// #define TEST6502 // uncomment to use 6502 test suite instead of C64 emulation, see emutest.cpp including necessary rom to include
+
 typedef signed char sbyte;
 typedef unsigned char byte;
 //typedef unsigned char bool;

@@ -54,10 +54,13 @@
 // ROMs copyright Commodore or their assignees
 ////////////////////////////////////////////////////////////////////////////////
 
+#include "emu6502.h"
+
+#ifndef TEST6502
+
 //#define ILI9341
 #define ILI9488
 
-#include "emu6502.h"
 #include "emud64.h"
 
 #include "SPI.h"
@@ -1693,3 +1696,5 @@ extern void SetMemory(ushort addr, byte value)
     io[addr - io_addr] = value;
   } 
 }
+
+#endif // !TEST6502

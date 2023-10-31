@@ -668,6 +668,7 @@ extern void Execute(ushort addr, bool (*ExecutePatch)(void))
 		{
 			bytes = 1;
 			bool breakpoint = false;
+#ifndef TEST6502      
       if (!I && (micros()-timer_then) >= interrupt_time) // IRQ
       {
         timer_then = micros(); // reset timer
@@ -679,7 +680,9 @@ extern void Execute(ushort addr, bool (*ExecutePatch)(void))
         I = true;
         PC = (GetMemory(0xfffe) | (GetMemory(0xffff) << 8));
       } 
-			else if (trace || breakpoint || step)
+			else 
+#endif      
+      if (trace || breakpoint || step)
 			{
 				ushort addr2;
 				char line[27];
