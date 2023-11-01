@@ -32,6 +32,8 @@
 
 #pragma once
 
+//#define TEST6502 // set for 6502 tests instead of Commodore emulation, see emutest.cpp
+
 typedef signed char sbyte;
 typedef unsigned char byte;
 typedef unsigned short ushort;

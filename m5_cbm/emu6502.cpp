@@ -74,8 +74,8 @@ void Emu6502::PHP()
 {
 	int flags = (N ? 0x80 : 0)
 		| (V ? 0x40 : 0)
-		| 0x20
-		| (B ? 0x10 : 0)
+		| 0x20 // reserved, always set when pushed
+		| 0x10 // B(RK) always set when pushed
 		| (D ? 0x08 : 0)
 		| (I ? 0x04 : 0)
 		| (Z ? 0x02 : 0)
@@ -160,7 +160,7 @@ void Emu6502::SBC(byte value)
 		int result_dec = A_dec - value_dec - (C ? 0 : 1);
 		C = (result_dec >= 0);
 		if (!C)
-			result_dec = -result_dec; // absolute value
+			result_dec += 100; // adjust negative result
 		int result = (result_dec % 10) | (((result_dec / 10) % 10) << 4);
 		SetA(result);
 		N = false; // undefined?
@@ -275,6 +275,7 @@ void Emu6502::PLP()
 	int flags = Pop();
 	N = (flags & 0x80) != 0;
 	V = (flags & 0x40) != 0;
+  B = (flags & 0x10) != 0;
 	D = (flags & 0x08) != 0;
 	I = (flags & 0x04) != 0;
 	Z = (flags & 0x02) != 0;
@@ -490,6 +491,7 @@ void Emu6502::BRK(byte *p_bytes)
 	Push(HI(PC));
 	Push(LO(PC));
 	PHP();
+  I = true;
 	PC = GetMemoryWord(0xFFFE); // JMP(IRQ)
 	*p_bytes = 0;
 }
@@ -534,15 +536,16 @@ void Emu6502::GetDisplayState(char *state, int state_size)
 byte Emu6502::GetIndX(ushort addr, byte *p_bytes)
 {
 	*p_bytes = 2;
-	ushort addr2 = (ushort)(GetMemory((ushort)(addr + 1)) + X);
-	return GetMemory(GetMemoryWord(addr2));
+	byte zp = (byte)(GetMemory((ushort)(addr + 1)) + X); // zero page address is byte sized
+	ushort addr2 = (GetMemory(zp) | (GetMemory((byte)(zp+1)) << 8)); // zero page address must be truncated to byte, even if wraps
+  return GetMemory(addr2);
 }
 
 void Emu6502::SetIndX(byte value, ushort addr, byte *p_bytes)
 {
 	*p_bytes = 2;
-	ushort addr2 = (ushort)(GetMemory((ushort)(addr + 1)) + X);
-	ushort addr3 = GetMemoryWord(addr2);
+	byte zp = (byte)(GetMemory((ushort)(addr + 1)) + X); // zero page address is byte sized
+	ushort addr3 = GetMemory(zp) | (GetMemory((byte)(zp+1)) << 8); // zero page address must be truncated to byte, even if wraps
 	SetMemory(addr3, value);
 }
 
@@ -670,18 +673,26 @@ void Emu6502::Execute(ushort addr)
         return;
 			bytes = 1;
 			bool breakpoint = false;
+#ifndef TEST6502
       if (!I && (micros()-timer_then) >= interrupt_time) // IRQ
       {
         timer_then = micros(); // reset timer
         Push(HI(PC));
         Push(LO(PC));
-		B = false; // differentiates IRQ from BRK
-        PHP();
-		B = true; // return to normal state expected when user does PHP
+        int flags = (N ? 0x80 : 0)
+          | (V ? 0x40 : 0)
+          | 0x20 // reserved, always set when pushed
+          | (D ? 0x08 : 0)
+          | (I ? 0x04 : 0)
+          | (Z ? 0x02 : 0)
+          | (C ? 0x01 : 0);
+        Push(flags);
         I = true;
         PC = GetMemoryWord(0xFFFE); // JMP(IRQ)
       } 
-			else if (trace || breakpoint || step)
+			else 
+#endif      
+      if (trace || breakpoint || step)
 			{
 				ushort addr2;
 				char line[27];
@@ -757,7 +768,7 @@ void Emu6502::Execute(ushort addr)
 		case 0x4A: SetA(LSR(A)); break;
 		case 0x4C: JMP(&PC, &bytes); break;
 		case 0x4D: EOR(GetABS(PC, &bytes)); break;
-		case 0x4E: LSR(GetABS(PC, &bytes)); break;
+		case 0x4E: SetABS(LSR(GetABS(PC, &bytes)), PC, &bytes); break;
 
 		case 0x50: BVC(&PC, &conditional, &bytes); break;
 		case 0x51: EOR(GetIndY(PC, &bytes)); break;

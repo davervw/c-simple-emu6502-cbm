@@ -44,6 +44,8 @@
 #include "emud64.h"
 #include "emuvic20.h"
 #include "emupet.h"
+#include "emutest.h"
+#include "emu6502.h"
 
 #include <SD.h>
 #include <SPI.h>
@@ -51,7 +53,12 @@
 
 // globals
 const char* StartupPRG = 0;
-int main_go_num = 64;
+
+#ifdef TEST6502 // see emutest.cpp
+int main_go_num = -1;
+#else
+int main_go_num = 0;
+#endif
 
 void setup() {
   M5.begin();
@@ -76,20 +83,22 @@ void setup() {
 }
 
 void loop() {
-  EmuCBM* cbm;
+  Emu6502* emu;
   if (main_go_num == 128)
-    cbm = new EmuC128();
+    emu = new EmuC128();
   else if (main_go_num == 4)
-    cbm = new EmuTed(64);
+    emu = new EmuTed(64);
   else if (main_go_num == 16)
-    cbm = new EmuTed(16);
+    emu = new EmuTed(16);
   else if (main_go_num == 20)
-    cbm = new EmuVic20(5);
+    emu = new EmuVic20(5);
   else if (main_go_num == 2001)
-    cbm = new EmuPET(32);
+    emu = new EmuPET(32);
+  else if (main_go_num == -1)
+    emu = new EmuTest();
   else
-    cbm = new EmuC64();
-  cbm->ResetRun();
-  delete cbm;
+    emu = new EmuC64();
+  emu->ResetRun();
+  delete emu;
   delay(1000);
 }
