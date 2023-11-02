@@ -8,7 +8,7 @@ Here is a simple Commodore 64 and 6502 Emulator I wrote from scratch, ported to 
 * Displays C64 color text screen to LCD with PETSCII supporting graphic characters and lowercase characters
 * IRQ 1/60 second is working (e.g. TI and TI$)
 * Sorry emulation is limited.  No games!
-* Yes, there is D64 support.  Disks are automatically attached with drive8.d64 and drive9.d64 from SD card
+* Yes, there is D64 support.  Disks are automatically attached with disks/drive8.d64 and disks/drive9.d64 from SD card
 
 ````
 Built successfully with Arduino IDE 2.1.1 and Teensyduino 1.57.2 (note: compiler error with 1.58.1)
@@ -18,7 +18,7 @@ and choose one LCD in emuc64.cpp
 #define ILI9488 // 320x480
 
 ````
-
+load
 ![](teensy41_lcd.jpg)
 
 Wiring

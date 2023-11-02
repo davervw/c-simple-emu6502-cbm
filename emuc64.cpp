@@ -1354,8 +1354,8 @@ void C64_Init(void)
   //File_ReadAllBytes(chargen_rom, sizeof(chargen_rom), chargen_file);
 	//File_ReadAllBytes(kernal_rom, sizeof(kernal_rom), kernal_file);
 
-  disks[0] = new EmuD64("drive8.d64");
-  disks[1] = new EmuD64("drive9.d64");
+  disks[0] = new EmuD64("disks/drive8.d64");
+  disks[1] = new EmuD64("disks/drive9.d64");
 
 	for (unsigned i = 0; i < sizeof(ram); ++i)
 		ram[i] = 0;
