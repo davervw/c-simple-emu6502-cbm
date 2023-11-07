@@ -59,13 +59,14 @@
 #ifndef TEST6502 // should be undefined in emu6502.h to run the normal C64 emulator, see emutest.cpp for more details
 
 #include "emuc64.h"
-#include "emud64.h"
+#include <arduino.h>
+#include <TFT_eSPI.h>
 
-#include "SPI.h"
-#include "M5Core.h"
+//TFT_eSprite sprite = TFT_eSprite(&tft);
 
 // globals
 const char* StartupPRG = 0;
+extern TFT_eSPI Lcd;
 
 // locals
 static int startup_state = 0;
@@ -92,14 +93,14 @@ static int scan_codes[16] = { 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64
 static void ReadKeyboard()
 {
   String s;
-  if (Serial2.available())
+  /*if (Serial2.available())
     s = Serial2.readString();
-  else if (M5Serial.available())
-    s = M5Serial.readString();
+  else*/ if (Serial.available())
+    s = Serial.readString();
   else
     return;
   {
-    M5Serial.print(s);
+    Serial.print(s);
     int src = 0;
     int dest = 0;
     int scan = 0;
@@ -1217,7 +1218,7 @@ void C64_Init(void)
   ram[1] = 0x07;
 
   // initialize LCD screen
-  M5.Lcd.fillScreen(0x0000); // BLACK
+  Lcd.fillScreen(TFT_BLACK);
 
   // myusb.begin();
   // keyboard1.attachRawPress(onKbdRawPress);
@@ -1265,21 +1266,35 @@ int get_color(int row, int col)
 }
 #endif
 
+int Average565Colors(int color1, int color2)
+{ // extract 565 color from 16-bit values, average them, and combine back the same way
+  int red = ((color1 >> 11) + (color2 >> 11)) / 2;
+  int green = (((color1 >> 5) & 0x3F) + (((color2 >> 5) & 0x3F))) / 2;
+  int blue = ((color1 & 0x1F) + (color2 & 0x1F)) / 2;
+  return ((red & 0x1f) << 11) | ((green & 0x3f) << 5) | (blue & 0x1F);
+}
+
 void DrawChar(byte c, int col, int row, int fg, int bg)
 {
   if (postponeDrawChar)
     return;
-  
+
+  int mid = Average565Colors(fg, bg);  
   int offset = ((io[0x18] & 2) == 0) ? 0 : (8*256);
   const byte* shape = &chargen_rom[c*8+offset];
   int x0 = 0 + col*8;
-  int y0 = 20 + row*8;
-  for (int row_i=0; row_i<8; ++row_i)
+  int y0 = 10 + row*6;
+  for (int row_i=0; row_i<=5; ++row_i)
   {
     int mask = 128;
     for (int col_i=0; col_i<8; ++col_i)
     {
-      M5.Lcd.drawPixel(x0+col_i, y0+row_i, ((shape[row_i] & mask) == 0) ? bg : fg);
+      if (row_i == 0) // color average the top two rows of character
+        Lcd.drawPixel(x0+col_i, y0+row_i, (((shape[0] | shape[1]) & mask) == 0) ? bg : (((shape[0] & mask) == (shape[1] & mask)) ? fg : mid));
+      else if (row_i == 5) // color average the bottom two rows of character
+        Lcd.drawPixel(x0+col_i, y0+row_i, (((shape[6] | shape[7]) & mask) == 0) ? bg : (((shape[6] & mask) == (shape[7] & mask)) ? fg : mid));
+      else // keep detail of four center rows of character
+        Lcd.drawPixel(x0+col_i, y0+row_i, ((shape[row_i+1] & mask) == 0) ? bg : fg);
       mask = mask >> 1;
     }
   }
@@ -1405,8 +1420,8 @@ extern void SetMemory(ushort addr, byte value)
   else if (addr == 0xD020) // border
   {
     int border = C64ColorToLCDColor(value);
-    M5.Lcd.fillRect(0, 0, 320, 20, border);
-    M5.Lcd.fillRect(0, 220, 320, 20, border);
+    Lcd.fillRect(0, 0, 320, 10, border);
+    Lcd.fillRect(0, 160, 320, 10, border);
     io[addr - io_addr] = value & 0xF;
   } 
   else if (addr == 0xD021) // background

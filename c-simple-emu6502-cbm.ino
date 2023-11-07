@@ -40,22 +40,19 @@
 
 #include "emuc64.h"
 #include "emu6502.h"
+#include <TFT_eSPI.h>
 
-#include <SD.h>
-#include <SPI.h>
-#include "emud64.h"
-#include "M5Core.h"
+TFT_eSPI Lcd;
 
 void setup() {
-  M5.begin();
+  Lcd.init();
+  Lcd.setRotation(1);
+  Lcd.fillScreen(TFT_BLACK);
 
   //Initialize serial (but don't wait for it to be connected, until there is an exception
   Serial.begin(115200);
+  //Serial2.begin(115200, SERIAL_8N1, 1, 2);
   Serial.setTimeout(0); // so we don't wait for reads
-  Serial2.begin(115200, SERIAL_8N1, G21, G22);
-  Serial2.setTimeout(0); // so we don't wait for reads
-
-  //SD.begin(BUILTIN_SDCARD);
 
   C64_Init();
 }
@@ -64,4 +61,3 @@ void loop() {
   // put your main code here, to run repeatedly:
   ResetRun(ExecutePatch); 
 }
-

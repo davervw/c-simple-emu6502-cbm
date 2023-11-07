@@ -31,7 +31,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "emu6502.h"
-#include "M5Core.h"
+#include <arduino.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
