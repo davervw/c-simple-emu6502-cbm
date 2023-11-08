@@ -59,9 +59,6 @@
 #ifndef TEST6502 // should be undefined in emu6502.h to run the normal C64 emulator, see emutest.cpp for more details
 
 #include "emuc64.h"
-#include "emud64.h"
-
-#include "SPI.h"
 #include "M5Core.h"
 
 // globals
@@ -92,9 +89,9 @@ static int scan_codes[16] = { 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64
 static void ReadKeyboard()
 {
   String s;
-  if (Serial2.available())
+  /*if (Serial2.available())
     s = Serial2.readString();
-  else if (M5Serial.available())
+  else*/ if (M5Serial.available())
     s = M5Serial.readString();
   else
     return;
@@ -1272,8 +1269,8 @@ void DrawChar(byte c, int col, int row, int fg, int bg)
   
   int offset = ((io[0x18] & 2) == 0) ? 0 : (8*256);
   const byte* shape = &chargen_rom[c*8+offset];
-  int x0 = 0 + col*8;
-  int y0 = 20 + row*8;
+  int x0 = 4 + col*8;
+  int y0 = 4 + row*8;
   for (int row_i=0; row_i<8; ++row_i)
   {
     int mask = 128;
@@ -1405,8 +1402,8 @@ extern void SetMemory(ushort addr, byte value)
   else if (addr == 0xD020) // border
   {
     int border = C64ColorToLCDColor(value);
-    M5.Lcd.fillRect(0, 0, 320, 20, border);
-    M5.Lcd.fillRect(0, 220, 320, 20, border);
+    M5.Lcd.fillRect(0, 0, 128, 4, border);
+    M5.Lcd.fillRect(0, 0, 4, 128, border);
     io[addr - io_addr] = value & 0xF;
   } 
   else if (addr == 0xD021) // background

@@ -40,22 +40,16 @@
 
 #include "emuc64.h"
 #include "emu6502.h"
-
-#include <SD.h>
-#include <SPI.h>
-#include "emud64.h"
 #include "M5Core.h"
 
 void setup() {
-  M5.begin();
+  M5.begin(true, true, false, false);  // Init M5AtomS3.  初始化 M5AtomS3
 
   //Initialize serial (but don't wait for it to be connected, until there is an exception
   Serial.begin(115200);
   Serial.setTimeout(0); // so we don't wait for reads
-  Serial2.begin(115200, SERIAL_8N1, G21, G22);
-  Serial2.setTimeout(0); // so we don't wait for reads
-
-  //SD.begin(BUILTIN_SDCARD);
+  // Serial2.begin(115200, SERIAL_8N1, G21, G22);
+  // Serial2.setTimeout(0); // so we don't wait for reads
 
   C64_Init();
 }
