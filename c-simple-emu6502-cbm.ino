@@ -46,8 +46,8 @@ void setup() {
   M5.begin(true, true, false, false);  // Init M5AtomS3.  初始化 M5AtomS3
 
   //Initialize serial (but don't wait for it to be connected, until there is an exception
-  Serial.begin(115200);
-  Serial.setTimeout(0); // so we don't wait for reads
+  M5Serial.begin(115200);
+  M5Serial.setTimeout(0); // so we don't wait for reads
   // Serial2.begin(115200, SERIAL_8N1, G21, G22);
   // Serial2.setTimeout(0); // so we don't wait for reads
 
