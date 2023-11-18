@@ -89,9 +89,9 @@ static int scan_codes[16] = { 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64
 static void ReadKeyboard()
 {
   String s;
-  /*if (Serial2.available())
-    s = Serial2.readString();
-  else*/ if (M5Serial.available())
+  if (Serial.available())
+    s = Serial.readString();
+  else if (M5Serial.available())
     s = M5Serial.readString();
   else
     return;
