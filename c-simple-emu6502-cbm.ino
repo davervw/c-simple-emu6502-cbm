@@ -43,7 +43,7 @@
 #include "M5Core.h"
 
 void setup() {
-  M5.begin(true, true, false, false);  // Init M5AtomS3.  初始化 M5AtomS3
+  M5.begin(/*lcd*/true, /*usbserial*/true, /*i2c*/true, /*led*/false);  // Init M5AtomS3.  初始化 M5AtomS3
   M5Serial.setTimeout(0); // so we don't wait for reads
 
   //Initialize serial (but don't wait for it to be connected, until there is an exception
@@ -51,6 +51,8 @@ void setup() {
   Serial.setTimeout(0); // so we don't wait for reads
   // Serial2.begin(115200, SERIAL_8N1, G21, G22);
   // Serial2.setTimeout(0); // so we don't wait for reads
+
+  M5.IMU.begin();
 
   C64_Init();
 }
