@@ -41,6 +41,7 @@
 #include "emuc64.h"
 #include "emu6502.h"
 #include "M5Core.h"
+#include "FFat.h"
 
 void setup() {
   M5.begin(/*lcd*/true, /*usbserial*/true, /*i2c*/true, /*led*/false);  // Init M5AtomS3.  初始化 M5AtomS3
@@ -53,6 +54,9 @@ void setup() {
   // Serial2.setTimeout(0); // so we don't wait for reads
 
   M5.IMU.begin();
+
+  if (!FFat.begin())
+    Serial.println("WARNING: did not mount FFAT");
 
   C64_Init();
 }

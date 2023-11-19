@@ -60,6 +60,7 @@
 
 #include "emuc64.h"
 #include "M5Core.h"
+#include "FFat.h"
 
 // globals
 const char* StartupPRG = 0;
@@ -74,8 +75,6 @@ static bool FileVerify = false;
 static ushort FileAddr = 0;
 static int LOAD_TRAP = -1;
 static int DRAW_TRAP = -1;
-static byte* attach = NULL;
-//static EmuD64* disks[4] = {NULL,NULL,NULL,NULL};
 static bool postponeDrawChar = false;
 static byte old_video[1000];
 static byte old_color[1000];
@@ -181,128 +180,90 @@ static bool ExecuteJSR(ushort addr)
 	return true; // return value for ExecutePatch so will reloop execution to allow berakpoint/trace/ExecutePatch/etc.
 }
 
-//EmuD64* 
-void* GetDisk()
-{
-  // if (FileDev == 0 || FileDev == 1)
-  //   return disks[0];
-  // else if (FileDev >=8 && FileDev <= 11)
-  //   return disks[FileDev-8];
-  // else
-    return 0;
-}
-
-static byte* OpenRead(const char* filename, int* p_ret_file_len)
-{
-	// static unsigned char buffer[65536]; // TODO: get actual file size
-  // EmuD64* disk = GetDisk();
-  // if (disk == 0)
-  // {
-      *p_ret_file_len = 0;
-      return (byte*)NULL;
-  // }
-
-	// if (filename != NULL && filename[0] == '$' && filename[1] == '\0')
-	// {
-	// 	*p_ret_file_len = sizeof(buffer);
-	// 	if (disk->GetDirectoryProgram(buffer, *p_ret_file_len))
-	// 		return &buffer[0];
-	// 	else
-	// 	{
-  //     *p_ret_file_len = 0;
-	// 		return (byte*)NULL;
-	// 	}
-	// }
-	// else
-	// {
-	// 	*p_ret_file_len = sizeof(buffer);
-	// 	disk->ReadFileByName(filename, buffer, *p_ret_file_len);
-  //   if (*p_ret_file_len == 0)
-  //      return (byte*)NULL;
-  //   else
-	// 	   return buffer;
-	// }
-}
-
 // returns success
 bool FileLoad(byte* p_err)
 {
-	// bool startup = (StartupPRG != NULL);
-	// ushort addr = FileAddr;
-	// bool success = true;
-	// const char* filename = (StartupPRG != NULL) ? StartupPRG : FileName;
-	// int file_len;
-	// byte* bytes = OpenRead(filename, &file_len);
-	// ushort si = 0;
-	// if (file_len == 0) {
+	bool startup = (StartupPRG != NULL);
+	ushort addr = FileAddr;
+	bool success = true;
+	const char* filename = (StartupPRG != NULL) ? StartupPRG : FileName;
+  char* fullpath = (char*)malloc(strlen(filename)+2);
+  sprintf(fullpath, "/%s", filename);
+  File file = FFat.open(fullpath);
+  free(fullpath);
+	if (!file) {
 		*p_err = 4; // FILE NOT FOUND
-  //	FileAddr = addr;
+  	FileAddr = addr;
 		return false;
-	// }
-
-	// byte lo = bytes[si++];
-	// byte hi = bytes[si++];
-	// if (startup) {
-	// 	if (lo == 1)
-	// 		FileSec = 0;
-	// 	else
-	// 		FileSec = 1;
-	// }
-	// if (FileSec == 1) // use address in file? yes-use, no-ignore
-	// 	addr = lo | (hi << 8); // use address specified in file
-	// while (success) {
-	// 	if (si < file_len) {
-	// 		byte i = bytes[si++];
-	// 		if (FileVerify) {
-	// 			if (GetMemory(addr) != i) {
-	// 				*p_err = 28; // VERIFY
-	// 				success = false;
-	// 			}
-	// 		}
-	// 		else
-	// 			SetMemory(addr, i);
-	// 		++addr;
-	// 	}
-	// 	else
-	// 		break; // end of file
-	// }
-	// FileAddr = addr;
-	// return success;
+	}
+  char start[2];
+  int read = file.readBytes(&start[0], sizeof(start));
+  if (read != 2) {
+    FileAddr = addr;
+    file.close();
+    return false;
+  }
+	byte lo = start[0];
+	byte hi = start[1];
+	if (startup) {
+		if (lo == 1)
+			FileSec = 0;
+		else
+			FileSec = 1;
+	}
+	if (FileSec == 1) // use address in file? yes-use, no-ignore
+		addr = lo | (hi << 8); // use address specified in file
+	while (success) {
+    int i = file.read();
+    if (i < 0)
+      break;
+    if (FileVerify) {
+      if (GetMemory(addr) != i) {
+        *p_err = 28; // VERIFY
+        success = false;
+      }
+    }
+    else
+      SetMemory(addr, (byte)i);
+    ++addr;
+	}
+	FileAddr = addr;
+  file.close();
+	return success;
 }
 
 bool FileSave(const char* filename, ushort addr1, ushort addr2)
 {
-  // EmuD64* disk = GetDisk();
-	// if (filename == NULL || *filename == 0)
-	// 	filename = "FILENAME";
-	// if (disk == 0)
+	if (filename == NULL || *filename == 0)
 		return false;
-	// int len = addr2 - addr1 + 2;
-	// unsigned char* bytes = (unsigned char*)malloc(len);
-	// if (bytes == 0 || len < 2)
-	// 	return false;
-	// bytes[0] = LO(addr1);
-	// bytes[1] = HI(addr1);
-	// for (int i = 0; i < len-2; ++i)
-	// 	bytes[i+2] = GetMemory(addr1+i);
-	// disk->StoreFileByName(filename, bytes, len);
-	// free(bytes);
-	// return true;
+  char* fullpath = (char*)malloc(strlen(filename)+2);
+  sprintf(fullpath, "/%s", filename);
+  File file = FFat.open(fullpath, FILE_WRITE);
+  free(fullpath);
+  if (!file)
+    return false;
+  file.write(LO(addr1));
+  file.write(HI(addr1));
+  ushort len = addr2 - addr1;
+	for (int i = 0; i < len; ++i)
+    file.write(GetMemory(addr1+i));
+  file.close();
+  return true;
 }
 
 static bool LoadStartupPrg()
 {
-	bool result;
-	byte err;
-  //EmuD64* 
-  void* disk = GetDisk();
-  if (disk == 0)
-    return false;
-	result = FileLoad(&err);
-	if (!result)
+	// bool result;
+	// byte err;
+  // //EmuD64* 
+  // void* disk = GetDisk();
+  // if (disk == 0)
+  //   return false;
+	// result = FileLoad(&err);
+	// if (!result)
 		return false;
-	else
-		return FileSec == 0 ? true : false; // relative is BASIC, absolute is ML
+	// else
+	// 	return FileSec == 0 ? true : false; // relative is BASIC, absolute is ML
 }
 
 // forward declaration
@@ -365,7 +326,6 @@ bool ExecutePatch(void)
 					// so doesn't repeat
 					StartupPRG = "";
 					LOAD_TRAP = -1;
-					attach = NULL;
 
 					return true; // overriden, and PC changed, so caller should reloop before execution to allow breakpoint/trace/ExecutePatch/etc.
 				}
@@ -377,8 +337,7 @@ bool ExecutePatch(void)
 			}
 
 			StartupPRG = 0;
-			attach = NULL;
-
+			
 			if (is_basic) {
 				// UNNEW that I used in late 1980s, should work well for loading a program too, probably gleaned from BASIC ROM
 				// listed here as reference, adapted to use in this state machine, ExecutePatch()
@@ -1257,10 +1216,6 @@ void C64_Init(void)
 
   // initialize LCD screen
   M5.Lcd.fillScreen(0x0000); // BLACK
-
-  // myusb.begin();
-  // keyboard1.attachRawPress(onKbdRawPress);
-  // keyboard1.attachRawRelease(onKbdRawRelease);
 }
 
 // RGB565 colors picked with http://www.barth-dev.de/online/rgb565-color-picker/
