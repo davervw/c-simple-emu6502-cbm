@@ -33,7 +33,8 @@ This portable version (master branch unless otherwise specified) has been tested
 * STM32F429 LCD (ARM MBED, note must rename ADC() method) [forked](https://os.mbed.com/users/davervw/code/C64-stm429_discovery/)
 * [Arduino branch](https://github.com/davervw/c-simple-emu6502-cbm/tree/arduino) from master
 * [Teensy_LCD branch](https://github.com/davervw/c-simple-emu6502-cbm/tree/teensy_lcd) from Arduino, keyboard mapping from STM32
-* [M5 branch](https://github.com/davervw/c-simple-emu6502-cbm/tree/m5) branched from Teensy_LCD for M5FireIoT, M5Core2, M5CoreS3
+* [M5 branch](https://github.com/davervw/c-simple-emu6502-cbm/tree/m5) branched from Teensy_LCD for M5FireIoT, M5Core2, M5CoreS3, with merges from cpp branch for maximum features
+* [M5_core branch](https://github.com/davervw/c-simple-emu6502-cbm/tree/m5_core) original M5 Core support (no SIPPS RAM)
 * [m5-atom-s3 branch](https://github.com/davervw/c-simple-emu6502-cbm/tree/m5_atom_s3) for M5 Atom S3 
 * [lilygo-t-display-s3 branch](https://github.com/davervw/c-simple-emu6502-cbm/tree/lilygo-t-display-s3) for LilyGo T-Display-S3
 
