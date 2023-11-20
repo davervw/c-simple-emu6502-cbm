@@ -41,6 +41,7 @@
 #include "emuc64.h"
 #include "emu6502.h"
 #include <TFT_eSPI.h>
+#include <FFat.h>
 
 TFT_eSPI Lcd;
 
@@ -53,6 +54,9 @@ void setup() {
   Serial.begin(115200);
   //Serial2.begin(115200, SERIAL_8N1, 1, 2);
   Serial.setTimeout(0); // so we don't wait for reads
+
+  if (!FFat.begin())
+    Serial.println("WARNING: did not mount FFAT");
 
   C64_Init();
 }
