@@ -1,6 +1,27 @@
 # c-simple-emu-cbm #
 
-Here is a simple Commodore 64/128 and 6502 Emulator I wrote from scratch, ported to C++ from my C# [simple-emu-c64](https://github.com/davervw/simple-emu-c64) project.  Runs in a text console window.  Optionally can specify a binary Commodore program to load, BASIC programs will auto-run.   Requires Commodore 64 ROMs (not included) present in the current directory (chargen, kernal and basic).   More details may be relevant from the [simple-emu-c64](https://github.com/davervw/simple-emu-c64) project.
+Here is a simple Commodore 64/128 and 6502 Emulator I wrote from scratch, ported to C++ from my C# [simple-emu-c64](https://github.com/davervw/simple-emu-c64) project.  Runs in a text console window.  Optionally can specify a binary Commodore program to load, BASIC programs will auto-run.   Requires Commodore ROMs (not included) present in the roms folder.   More details may be relevant from the [simple-emu-c64](https://github.com/davervw/simple-emu-c64) project.
+
+```
+roms/c128/basichi
+roms/c128/basiclo
+roms/c128/chargen
+roms/c128/kernal
+roms/c64/basic
+roms/c64/chargen
+roms/c64/kernal
+roms/pet/basic1
+roms/pet/characters.bin
+roms/pet/characters2.bin
+roms/pet/edit1g
+roms/pet/kernal1
+roms/ted/basic
+roms/ted/kernal
+roms/test/6502test.bin
+roms/vic20/basic
+roms/vic20/chargen
+roms/vic20/kernal
+```
 
 ## C++ Version ##
 
