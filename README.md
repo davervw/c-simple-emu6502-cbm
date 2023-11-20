@@ -37,6 +37,7 @@ ESC+PgUp is STOP+RESTORE for NMI reset of system
 SHIFT+HOME is Commodore Clear Screen
 CTRL+SHIFT or ALT+SHIFT to toggle Uppercase/Graphics and Lowercase/Uppercase fonts
 ```
+## Example statements ##
 ```
 10 PRINT "HELLO ESP! ";
 20 GOTO 10
