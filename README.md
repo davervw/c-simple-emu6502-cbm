@@ -25,7 +25,7 @@ GO 4
 
 This portable version (master branch unless otherwise specified) has been tested with:
 
-* Microsoft Windows 10 (Visual Studio 2017) x64
+* Microsoft Windows 11 (Visual Studio 2022) x64
 * cygwin (gcc) x64
 * Ubuntu Linux (gcc) x64
 * Raspberry Pi 4 (gcc, Linux ARM)
@@ -34,6 +34,8 @@ This portable version (master branch unless otherwise specified) has been tested
 * [Arduino branch](https://github.com/davervw/c-simple-emu6502-cbm/tree/arduino) from master
 * [Teensy_LCD branch](https://github.com/davervw/c-simple-emu6502-cbm/tree/teensy_lcd) from Arduino, keyboard mapping from STM32
 * [M5 branch](https://github.com/davervw/c-simple-emu6502-cbm/tree/m5) branched from Teensy_LCD for M5FireIoT, M5Core2, M5CoreS3
+* [m5-atom-s3 branch](https://github.com/davervw/c-simple-emu6502-cbm/tree/m5_atom_s3) for M5 Atom S3 
+* [lilygo-t-display-s3 branch](https://github.com/davervw/c-simple-emu6502-cbm/tree/lilygo-t-display-s3) for LilyGo T-Display-S3
 
 Only CHRIN/CHROUT/READY(for startup program)/SETLFS/SETNAM/LOAD/SAVE are hooked for terminal version, so no, it won't run your favorite games, only maybe simple ASCII text adventures or such.  Sorry no PETSCII either (except LCD versions).   Some versions (Windows, Linux, Teensy, M5) with lots of RAM available also have D64 support for simple emulation of 1541 disk images so you can have a persistant collection of files that should be compatible with other emulators.
 
