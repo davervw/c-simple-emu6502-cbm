@@ -72,6 +72,7 @@
 
 #include "emuc128.h"
 #include "M5Core.h"
+#include "cardkbdscan.h"
 
 // externs (globals)
 extern char* StartupPRG;
@@ -443,7 +444,12 @@ void C128Memory::ReadKeyboard()
   static int lastRun = 1;
 
   String s;
-  if (Serial2.available())
+  if (CardKbd) {
+    s = CardKbdScanRead();
+    if (s.length() == 0)
+      return;
+  }
+  else if (Serial2.available())
     s = Serial2.readString();
   else if (M5Serial.available())
     s = M5Serial.readString();

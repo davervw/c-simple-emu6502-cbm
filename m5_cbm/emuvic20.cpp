@@ -66,6 +66,7 @@
 #include "emuvic20.h"
 #include "vic.h"
 #include "M5Core.h"
+#include "cardkbdscan.h"
 
 // externs/globals
 extern const char* StartupPRG;
@@ -357,7 +358,12 @@ static void ReadKeyboard()
   static int lastRun = 1;
   
   String s;
-  if (Serial2.available())
+  if (CardKbd) {
+    s = CardKbdScanRead();
+    if (s.length() == 0)
+      return;
+  }
+  else if (Serial2.available())
     s = Serial2.readString();
   else if (M5Serial.available())
     s = M5Serial.readString();

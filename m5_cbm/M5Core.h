@@ -12,6 +12,8 @@
 #include <M5Core2.h>
 #define M5Serial Serial
 #define SW_RX G32
+#define SDA G32
+#define SCL G33
 #define SD_CS_OVERRIDE
 #endif
 
@@ -19,6 +21,8 @@
 #include <M5Unified.h>
 #define M5Serial USBSerial
 #define SW_RX G2
+#define SDA G2
+#define SCL G1
 #define SD_CS_OVERRIDE GPIO_NUM_4
 #endif
 
@@ -26,5 +30,7 @@
 #include <M5Unified.h>
 #define M5Serial Serial
 #define SW_RX G21
+#define SDA G21
+#define SCL G22
 #define SD_CS_OVERRIDE GPIO_NUM_4
 #endif

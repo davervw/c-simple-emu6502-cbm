@@ -49,7 +49,9 @@
 
 #include <SD.h>
 #include <SPI.h>
+#include <Wire.h>
 #include "M5Core.h"
+#include "cardkbdscan.h"
 
 // globals
 const char* StartupPRG = 0;
@@ -66,8 +68,24 @@ void setup() {
   //Initialize serial (but don't wait for it to be connected, until there is an exception
   M5Serial.begin(115200);
   M5Serial.setTimeout(0); // so we don't wait for reads
-  Serial2.begin(115200, SERIAL_8N1, SW_RX, -1);
-  Serial2.setTimeout(0); // so we don't wait for reads
+
+  //Serial or I2C
+  Wire.begin(SDA, SCL, 100000UL);
+  for (int i=1; i<=2; ++i)
+  {
+    if (Wire.requestFrom(0x5F, 1, true) == 1)
+    {
+      CardKbd = true;
+      break;
+    }
+  }
+  if (!CardKbd)
+  {
+    Wire.end();
+    //Initialize serial (but don't wait for it to be connected, until there is an exception
+    Serial2.begin(115200, SERIAL_8N1, SW_RX, -1);
+    Serial2.setTimeout(0); // so we don't wait for reads
+  }
 
   if(!SD.begin(SD_CS_OVERRIDE)){
       M5Serial.println("Card Mount Failed");
