@@ -61,6 +61,7 @@ void setup() {
   //Initialize serial (but don't wait for it to be connected, until there is an exception
   if (!CardKbd)
   {
+    Wire.end();
     Serial.begin(115200, SERIAL_8N1, G2, G1);
     Serial.setTimeout(0); // so we don't wait for reads
   }
