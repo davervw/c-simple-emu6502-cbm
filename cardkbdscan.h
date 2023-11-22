@@ -1,4 +1,4 @@
-// c-simple-emu6502-cbm.ino - Commodore Console Emulation
+// cardkbdscan.h
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -29,54 +29,7 @@
 // SOFTWARE.
 //
 ////////////////////////////////////////////////////////////////////////////////
-// IMPORTANT!
-//
-// This port is for M5Stack with IPS LCD, USB keyboard, and D64 disk (SD)
-// Note: other ports are available for other hardware platforms
-// Tested with Arduino 2.1.0
-// Requires M5 Basic Core (or Core2, or CoreS3)
-// Note: Serial diagnostics commented out so can start immediately without terminal
-////////////////////////////////////////////////////////////////////////////////
 
-#include "emuc64.h"
-#include "emu6502.h"
 #include "M5Core.h"
-#include "FFat.h"
-#include "cardkbdscan.h"
-
-void setup() {
-  M5.begin(/*lcd*/true, /*usbserial*/true, /*i2c*/true, /*led*/false);  // Init M5AtomS3.  初始化 M5AtomS3
-  M5Serial.setTimeout(0); // so we don't wait for reads
-
-  Wire.begin(G2, G1, 100000UL);
-  for (int i=1; i<=2; ++i)
-  {
-    if (Wire.requestFrom(0x5F, 1, true) == 1)
-    {
-      CardKbd = true;
-      break;
-    }
-  }
-
-  //Initialize serial (but don't wait for it to be connected, until there is an exception
-  if (!CardKbd)
-  {
-    Serial.begin(115200, SERIAL_8N1, G2, G1);
-    Serial.setTimeout(0); // so we don't wait for reads
-  }
-  // Serial2.begin(115200, SERIAL_8N1, G21, G22);
-  // Serial2.setTimeout(0); // so we don't wait for reads
-
-  M5.IMU.begin();
-
-  if (!FFat.begin())
-    Serial.println("WARNING: did not mount FFAT");
-
-  C64_Init();
-}
-
-void loop() {
-  // put your main code here, to run repeatedly:
-  ResetRun(ExecutePatch); 
-}
-
+extern bool CardKbd;
+String CardKbdScanRead();

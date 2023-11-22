@@ -61,6 +61,7 @@
 #include "emuc64.h"
 #include "M5Core.h"
 #include "FFat.h"
+#include "cardkbdscan.h"
 
 // globals
 const char* StartupPRG = 0;
@@ -133,7 +134,13 @@ static void ReadKeyboard()
   }
 
   String s;
-  if (Serial.available())
+  if (CardKbd)
+  {
+    s = CardKbdScanRead();
+    if (s.length() == 0)
+      return;
+  }
+  else if (Serial.available())
     s = Serial.readString();
   else if (M5Serial.available())
     s = M5Serial.readString();
