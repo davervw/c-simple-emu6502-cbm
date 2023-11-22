@@ -73,7 +73,7 @@ void setup() {
   Wire.begin(SDA, SCL, 100000UL);
   for (int i=1; i<=2; ++i)
   {
-    if (Wire.requestFrom(0x5F, 1, true) == 1)
+    if (Wire.requestFrom(0x5F, 1) == 1)
     {
       CardKbd = true;
       break;
