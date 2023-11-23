@@ -56,7 +56,8 @@ This portable version (master branch unless otherwise specified) has been tested
 * [Teensy_LCD branch](https://github.com/davervw/c-simple-emu6502-cbm/tree/teensy_lcd) from Arduino, keyboard mapping from STM32
 * [M5 branch](https://github.com/davervw/c-simple-emu6502-cbm/tree/m5) branched from Teensy_LCD for M5FireIoT, M5Core2, M5CoreS3, with merges from cpp branch for maximum features
 * [M5_core branch](https://github.com/davervw/c-simple-emu6502-cbm/tree/m5_core) original M5 Core support (no SIPPS RAM)
-* [m5-atom-s3 branch](https://github.com/davervw/c-simple-emu6502-cbm/tree/m5_atom_s3) for M5 Atom S3 
+* [m5-atom-s3 branch](https://github.com/davervw/c-simple-emu6502-cbm/tree/m5_atom_s3) for M5 Atom S3
+* [m5stick-c branch](https://github.com/davervw/c-simple-emu6502-cbm/tree/m5stickc) for M5Stick-C
 * [lilygo-t-display-s3 branch](https://github.com/davervw/c-simple-emu6502-cbm/tree/lilygo-t-display-s3) for LilyGo T-Display-S3
 
 Only CHRIN/CHROUT/READY(for startup program)/SETLFS/SETNAM/LOAD/SAVE are hooked for terminal version, so no, it won't run your favorite games, only maybe simple ASCII text adventures or such.  Sorry no PETSCII either (except LCD versions).   Some versions (Windows, Linux, Teensy, M5) with lots of RAM available also have D64 support for simple emulation of 1541 disk images so you can have a persistant collection of files that should be compatible with other emulators.
