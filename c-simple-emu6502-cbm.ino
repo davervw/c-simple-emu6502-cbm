@@ -43,12 +43,13 @@
 #include "M5Core.h"
 #include "FFat.h"
 #include "cardkbdscan.h"
+#include <Wire.h>
 
 void setup() {
-  M5.begin(/*lcd*/true, /*usbserial*/true, /*i2c*/true, /*led*/false);  // Init M5AtomS3.  初始化 M5AtomS3
+  M5.begin(true, true, true);
   M5Serial.setTimeout(0); // so we don't wait for reads
 
-  Wire.begin(G2, G1, 100000UL);
+  Wire.begin(32, 33, 100000UL);
   for (int i=1; i<=2; ++i)
   {
     if (Wire.requestFrom(0x5F, 1, true) == 1)
@@ -63,13 +64,13 @@ void setup() {
   {
     Wire.end();
     Serial.end();
-    Serial.begin(115200, SERIAL_8N1, G2, G1);
+    Serial.begin(115200, SERIAL_8N1, 32, 33);
     Serial.setTimeout(0); // so we don't wait for reads
   }
   // Serial2.begin(115200, SERIAL_8N1, G21, G22);
   // Serial2.setTimeout(0); // so we don't wait for reads
 
-  M5.IMU.begin();
+  M5.Imu.Init();
 
   if (!FFat.begin())
     Serial.println("WARNING: did not mount FFAT");

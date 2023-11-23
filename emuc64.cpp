@@ -89,7 +89,7 @@ static int scan_codes[16] = { 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64
 static const int io_size = 0x1000;
 static byte io[io_size];
 
-static int viewX = -8;
+static int viewX = 0;
 static int viewY = -8;
 static int zoomOut = 1;
 
@@ -101,32 +101,31 @@ static void ReadKeyboard()
   static int accelCount = 0;
   if (!zoomOut && ++accelCount >= 12)
   {
-    float ax, ay, az;
-    M5.IMU.getAccel(&ax, &ay, &az);
+    int16_t ax, ay, az;
+    M5.Imu.getAccelAdc(&ax, &ay, &az);
     accelCount = 0;
     int x, y;
-    if (ay > 0.1)
-      x = 200;
-    else if (ay > -0.1)
-      x = 104;
+    if (ay > 256)
+      x = 160;
     else
-      x = -8;
-    if (ax > 0.1)
-      y = 80;
-    else
+      x = -0;
+    if (ax > 256)
+      y = 128;
+    else if (ax < -256)
       y = -8;
+    else
+      y = 64;
     if (viewX != x || viewY != y)
     {
       viewX = x;
       viewY = y;
-      //M5Serial.printf("%f %f %d %d\n", ax, ay, x, y);
       DrawBorder(io[0x20]);
       RedrawScreen();
     }
   }
 
-  M5.Btn.read();
-  if (M5.Btn.wasReleased())
+  M5.BtnA.read();
+  if (M5.BtnA.wasReleased())
   {
     zoomOut = 1-zoomOut;
     DrawBorder(io[0x20]);
@@ -1290,30 +1289,44 @@ void DrawChar(byte c, int col, int row, int fg, int bg)
   const byte* shape = &chargen_rom[c*8+offset];
   if (zoomOut)
   {
-    // reduce 8x8 character into 3x4 pixels to fit on screen as 120x100 pixels total, using color averaging to reduce image
-    int x0 = 4 + col*3;
-    int y0 = 14 + row*4;
-    for (int row_i=0; row_i<4; ++row_i)
-    {
-      int mask = 128;
-      int col_i = 0;
-      int i = 0;
-      while (col_i < 8)
-      {
-        int count = 0;
-        int width = (col_i == 3) ? 2 : 3;
-        int total = width*2;
-        for (int x=0; x<width; ++x)
-        {
-          for (int y=0; y<2; ++y)
-            if ((shape[row_i*2+y] & mask) != 0) 
-              ++count;
-          mask = mask >> 1;
-        }
-        M5.Lcd.drawPixel(x0+i, y0+row_i, AverageColor(fg, bg, count, total-count));
-        col_i += width;
-        ++i;
+    // reduce 8x8 character into 4x3 pixels to fit on screen as 160x75 pixels total, using color averaging to reduce image
+    int x0 = col*4;
+    int y0 = 3 + row*3;
+    int row_i = 0;
+    int col_i = 0;
+    // count pixels 2 across, 3/2/3 down, advance horizontally then vertically
+    int rows = 3;
+    int col_draw = col_i + 1;
+    int count = 0;
+    int total = 6;
+    while (row_i < 8) {
+      while (col_i <= col_draw) {
+        if ((shape[row_i] & (1 << (7-col_i))) != 0)
+          ++count;
+        if ((shape[row_i+1] & (1 << (7-col_i))) != 0)
+          ++count;
+        if (rows == 3 && (shape[row_i+1] & (1 << (7-col_i))) != 0)
+          ++count;
+        ++col_i;
       }
+      M5.Lcd.drawPixel(80-y0, x0++, AverageColor(fg, bg, count, total-count));
+      count = 0;
+      if (col_i == 8) {
+        ++y0;
+        x0-=4;
+        if (row_i == 2) {
+          rows = 2;
+          total = 4;
+        } else {
+          rows = 3;
+          total = 6;
+        }
+      }
+      if (col_i == 8) {
+        col_i = 0;
+        row_i += rows;
+      }
+      col_draw = col_i + 1;
     }
   }
   else
@@ -1325,7 +1338,7 @@ void DrawChar(byte c, int col, int row, int fg, int bg)
       int mask = 128;
       for (int col_i=0; col_i<8; ++col_i)
       {
-        M5.Lcd.drawPixel(x0+col_i, y0+row_i, ((shape[row_i] & mask) == 0) ? bg : fg);
+        M5.Lcd.drawPixel(80-(y0+row_i), x0+col_i, ((shape[row_i] & mask) == 0) ? bg : fg);
         mask = mask >> 1;
       }
     }
@@ -1336,21 +1349,17 @@ static void DrawBorder(int colorIndex)
 {
   colorIndex &= 0xF;
   int border = C64ColorToLCDColor(colorIndex);
-  // M5.Lcd.fillRect(0, 0, 128, 4, border);
-  // M5.Lcd.fillRect(0, 0, 4, 128, border);
   if (zoomOut)
   {
-    M5.Lcd.fillRect(0, 0, 128, 14, border);
-    M5.Lcd.fillRect(0, 114, 128, 14, border);
-    M5.Lcd.fillRect(0, 14, 4, 100, border);
-    M5.Lcd.fillRect(124, 14, 4, 100, border);
+    M5.Lcd.fillRect(0, 0, 2, 160, border);
+    M5.Lcd.fillRect(77, 0, 3, 160, border);
   }
   else
   {
-    M5.Lcd.fillRect(-8-viewX, -8-viewY, 336, 8, border);
-    M5.Lcd.fillRect(-8-viewX, 200-viewY, 336, 8, border);
-    M5.Lcd.fillRect(-8-viewX, 0-viewY, 8, 200, border);
-    M5.Lcd.fillRect(320-viewX, 0-viewY, 8, 200, border);
+    if (viewY == -8)    
+      M5.Lcd.fillRect(72, 0, 8, 160, border);
+    else if (viewY == 128)
+      M5.Lcd.fillRect(0, 0, 8, 160, border);
   }
   io[0x20] = colorIndex;
 }

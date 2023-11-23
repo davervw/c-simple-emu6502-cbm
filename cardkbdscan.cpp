@@ -32,6 +32,7 @@
 
 #include "M5Core.h"
 #include "cardkbdscan.h"
+#include <Wire.h>
 
 static int xlat[256] = {
   64, 64, 64, 64, 64, 64, 64, 64, 0, 64, 64, 64, 64, 1, 64, 64, // 0x00-0x0f
