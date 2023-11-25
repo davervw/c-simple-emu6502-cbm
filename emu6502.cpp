@@ -59,6 +59,278 @@ Emu6502::Emu6502(Memory* mem)
 	trace = false;
 	step = false;
 	quit = false;
+
+	ExecuteOp[0x00] = &Emu6502::ExecuteOp00;
+	ExecuteOp[0x01] = &Emu6502::ExecuteOp01;
+	ExecuteOp[0x02] = &Emu6502::ExecuteOp02;
+	ExecuteOp[0x03] = &Emu6502::ExecuteOp03;
+	ExecuteOp[0x04] = &Emu6502::ExecuteOp04;
+	ExecuteOp[0x05] = &Emu6502::ExecuteOp05;
+	ExecuteOp[0x06] = &Emu6502::ExecuteOp06;
+	ExecuteOp[0x07] = &Emu6502::ExecuteOp07;
+	ExecuteOp[0x08] = &Emu6502::ExecuteOp08;
+	ExecuteOp[0x09] = &Emu6502::ExecuteOp09;
+	ExecuteOp[0x0A] = &Emu6502::ExecuteOp0A;
+	ExecuteOp[0x0B] = &Emu6502::ExecuteOp0B;
+	ExecuteOp[0x0C] = &Emu6502::ExecuteOp0C;
+	ExecuteOp[0x0D] = &Emu6502::ExecuteOp0D;
+	ExecuteOp[0x0E] = &Emu6502::ExecuteOp0E;
+	ExecuteOp[0x0F] = &Emu6502::ExecuteOp0F;
+
+	ExecuteOp[0x10] = &Emu6502::ExecuteOp10;
+	ExecuteOp[0x11] = &Emu6502::ExecuteOp11;
+	ExecuteOp[0x12] = &Emu6502::ExecuteOp12;
+	ExecuteOp[0x13] = &Emu6502::ExecuteOp13;
+	ExecuteOp[0x14] = &Emu6502::ExecuteOp14;
+	ExecuteOp[0x15] = &Emu6502::ExecuteOp15;
+	ExecuteOp[0x16] = &Emu6502::ExecuteOp16;
+	ExecuteOp[0x17] = &Emu6502::ExecuteOp17;
+	ExecuteOp[0x18] = &Emu6502::ExecuteOp18;
+	ExecuteOp[0x19] = &Emu6502::ExecuteOp19;
+	ExecuteOp[0x1A] = &Emu6502::ExecuteOp1A;
+	ExecuteOp[0x1B] = &Emu6502::ExecuteOp1B;
+	ExecuteOp[0x1C] = &Emu6502::ExecuteOp1C;
+	ExecuteOp[0x1D] = &Emu6502::ExecuteOp1D;
+	ExecuteOp[0x1E] = &Emu6502::ExecuteOp1E;
+	ExecuteOp[0x1F] = &Emu6502::ExecuteOp1F;
+
+	ExecuteOp[0x20] = &Emu6502::ExecuteOp20;
+	ExecuteOp[0x21] = &Emu6502::ExecuteOp21;
+	ExecuteOp[0x22] = &Emu6502::ExecuteOp22;
+	ExecuteOp[0x23] = &Emu6502::ExecuteOp23;
+	ExecuteOp[0x24] = &Emu6502::ExecuteOp24;
+	ExecuteOp[0x25] = &Emu6502::ExecuteOp25;
+	ExecuteOp[0x26] = &Emu6502::ExecuteOp26;
+	ExecuteOp[0x27] = &Emu6502::ExecuteOp27;
+	ExecuteOp[0x28] = &Emu6502::ExecuteOp28;
+	ExecuteOp[0x29] = &Emu6502::ExecuteOp29;
+	ExecuteOp[0x2A] = &Emu6502::ExecuteOp2A;
+	ExecuteOp[0x2B] = &Emu6502::ExecuteOp2B;
+	ExecuteOp[0x2C] = &Emu6502::ExecuteOp2C;
+	ExecuteOp[0x2D] = &Emu6502::ExecuteOp2D;
+	ExecuteOp[0x2E] = &Emu6502::ExecuteOp2E;
+	ExecuteOp[0x2F] = &Emu6502::ExecuteOp2F;
+
+	ExecuteOp[0x30] = &Emu6502::ExecuteOp30;
+	ExecuteOp[0x31] = &Emu6502::ExecuteOp31;
+	ExecuteOp[0x32] = &Emu6502::ExecuteOp32;
+	ExecuteOp[0x33] = &Emu6502::ExecuteOp33;
+	ExecuteOp[0x34] = &Emu6502::ExecuteOp34;
+	ExecuteOp[0x35] = &Emu6502::ExecuteOp35;
+	ExecuteOp[0x36] = &Emu6502::ExecuteOp36;
+	ExecuteOp[0x37] = &Emu6502::ExecuteOp37;
+	ExecuteOp[0x38] = &Emu6502::ExecuteOp38;
+	ExecuteOp[0x39] = &Emu6502::ExecuteOp39;
+	ExecuteOp[0x3A] = &Emu6502::ExecuteOp3A;
+	ExecuteOp[0x3B] = &Emu6502::ExecuteOp3B;
+	ExecuteOp[0x3C] = &Emu6502::ExecuteOp3C;
+	ExecuteOp[0x3D] = &Emu6502::ExecuteOp3D;
+	ExecuteOp[0x3E] = &Emu6502::ExecuteOp3E;
+	ExecuteOp[0x3F] = &Emu6502::ExecuteOp3F;
+
+	ExecuteOp[0x40] = &Emu6502::ExecuteOp40;
+	ExecuteOp[0x41] = &Emu6502::ExecuteOp41;
+	ExecuteOp[0x42] = &Emu6502::ExecuteOp42;
+	ExecuteOp[0x43] = &Emu6502::ExecuteOp43;
+	ExecuteOp[0x44] = &Emu6502::ExecuteOp44;
+	ExecuteOp[0x45] = &Emu6502::ExecuteOp45;
+	ExecuteOp[0x46] = &Emu6502::ExecuteOp46;
+	ExecuteOp[0x47] = &Emu6502::ExecuteOp47;
+	ExecuteOp[0x48] = &Emu6502::ExecuteOp48;
+	ExecuteOp[0x49] = &Emu6502::ExecuteOp49;
+	ExecuteOp[0x4A] = &Emu6502::ExecuteOp4A;
+	ExecuteOp[0x4B] = &Emu6502::ExecuteOp4B;
+	ExecuteOp[0x4C] = &Emu6502::ExecuteOp4C;
+	ExecuteOp[0x4D] = &Emu6502::ExecuteOp4D;
+	ExecuteOp[0x4E] = &Emu6502::ExecuteOp4E;
+	ExecuteOp[0x4F] = &Emu6502::ExecuteOp4F;
+
+	ExecuteOp[0x50] = &Emu6502::ExecuteOp50;
+	ExecuteOp[0x51] = &Emu6502::ExecuteOp51;
+	ExecuteOp[0x52] = &Emu6502::ExecuteOp52;
+	ExecuteOp[0x53] = &Emu6502::ExecuteOp53;
+	ExecuteOp[0x54] = &Emu6502::ExecuteOp54;
+	ExecuteOp[0x55] = &Emu6502::ExecuteOp55;
+	ExecuteOp[0x56] = &Emu6502::ExecuteOp56;
+	ExecuteOp[0x57] = &Emu6502::ExecuteOp57;
+	ExecuteOp[0x58] = &Emu6502::ExecuteOp58;
+	ExecuteOp[0x59] = &Emu6502::ExecuteOp59;
+	ExecuteOp[0x5A] = &Emu6502::ExecuteOp5A;
+	ExecuteOp[0x5B] = &Emu6502::ExecuteOp5B;
+	ExecuteOp[0x5C] = &Emu6502::ExecuteOp5C;
+	ExecuteOp[0x5D] = &Emu6502::ExecuteOp5D;
+	ExecuteOp[0x5E] = &Emu6502::ExecuteOp5E;
+	ExecuteOp[0x5F] = &Emu6502::ExecuteOp5F;
+
+	ExecuteOp[0x60] = &Emu6502::ExecuteOp60;
+	ExecuteOp[0x61] = &Emu6502::ExecuteOp61;
+	ExecuteOp[0x62] = &Emu6502::ExecuteOp62;
+	ExecuteOp[0x63] = &Emu6502::ExecuteOp63;
+	ExecuteOp[0x64] = &Emu6502::ExecuteOp64;
+	ExecuteOp[0x65] = &Emu6502::ExecuteOp65;
+	ExecuteOp[0x66] = &Emu6502::ExecuteOp66;
+	ExecuteOp[0x67] = &Emu6502::ExecuteOp67;
+	ExecuteOp[0x68] = &Emu6502::ExecuteOp68;
+	ExecuteOp[0x69] = &Emu6502::ExecuteOp69;
+	ExecuteOp[0x6A] = &Emu6502::ExecuteOp6A;
+	ExecuteOp[0x6B] = &Emu6502::ExecuteOp6B;
+	ExecuteOp[0x6C] = &Emu6502::ExecuteOp6C;
+	ExecuteOp[0x6D] = &Emu6502::ExecuteOp6D;
+	ExecuteOp[0x6E] = &Emu6502::ExecuteOp6E;
+	ExecuteOp[0x6F] = &Emu6502::ExecuteOp6F;
+
+	ExecuteOp[0x70] = &Emu6502::ExecuteOp70;
+	ExecuteOp[0x71] = &Emu6502::ExecuteOp71;
+	ExecuteOp[0x72] = &Emu6502::ExecuteOp72;
+	ExecuteOp[0x73] = &Emu6502::ExecuteOp73;
+	ExecuteOp[0x74] = &Emu6502::ExecuteOp74;
+	ExecuteOp[0x75] = &Emu6502::ExecuteOp75;
+	ExecuteOp[0x76] = &Emu6502::ExecuteOp76;
+	ExecuteOp[0x77] = &Emu6502::ExecuteOp77;
+	ExecuteOp[0x78] = &Emu6502::ExecuteOp78;
+	ExecuteOp[0x79] = &Emu6502::ExecuteOp79;
+	ExecuteOp[0x7A] = &Emu6502::ExecuteOp7A;
+	ExecuteOp[0x7B] = &Emu6502::ExecuteOp7B;
+	ExecuteOp[0x7C] = &Emu6502::ExecuteOp7C;
+	ExecuteOp[0x7D] = &Emu6502::ExecuteOp7D;
+	ExecuteOp[0x7E] = &Emu6502::ExecuteOp7E;
+	ExecuteOp[0x7F] = &Emu6502::ExecuteOp7F;
+
+	ExecuteOp[0x80] = &Emu6502::ExecuteOp80;
+	ExecuteOp[0x81] = &Emu6502::ExecuteOp81;
+	ExecuteOp[0x82] = &Emu6502::ExecuteOp82;
+	ExecuteOp[0x83] = &Emu6502::ExecuteOp83;
+	ExecuteOp[0x84] = &Emu6502::ExecuteOp84;
+	ExecuteOp[0x85] = &Emu6502::ExecuteOp85;
+	ExecuteOp[0x86] = &Emu6502::ExecuteOp86;
+	ExecuteOp[0x87] = &Emu6502::ExecuteOp87;
+	ExecuteOp[0x88] = &Emu6502::ExecuteOp88;
+	ExecuteOp[0x89] = &Emu6502::ExecuteOp89;
+	ExecuteOp[0x8A] = &Emu6502::ExecuteOp8A;
+	ExecuteOp[0x8B] = &Emu6502::ExecuteOp8B;
+	ExecuteOp[0x8C] = &Emu6502::ExecuteOp8C;
+	ExecuteOp[0x8D] = &Emu6502::ExecuteOp8D;
+	ExecuteOp[0x8E] = &Emu6502::ExecuteOp8E;
+	ExecuteOp[0x8F] = &Emu6502::ExecuteOp8F;
+
+	ExecuteOp[0x90] = &Emu6502::ExecuteOp90;
+	ExecuteOp[0x91] = &Emu6502::ExecuteOp91;
+	ExecuteOp[0x92] = &Emu6502::ExecuteOp92;
+	ExecuteOp[0x93] = &Emu6502::ExecuteOp93;
+	ExecuteOp[0x94] = &Emu6502::ExecuteOp94;
+	ExecuteOp[0x95] = &Emu6502::ExecuteOp95;
+	ExecuteOp[0x96] = &Emu6502::ExecuteOp96;
+	ExecuteOp[0x97] = &Emu6502::ExecuteOp97;
+	ExecuteOp[0x98] = &Emu6502::ExecuteOp98;
+	ExecuteOp[0x99] = &Emu6502::ExecuteOp99;
+	ExecuteOp[0x9A] = &Emu6502::ExecuteOp9A;
+	ExecuteOp[0x9B] = &Emu6502::ExecuteOp9B;
+	ExecuteOp[0x9C] = &Emu6502::ExecuteOp9C;
+	ExecuteOp[0x9D] = &Emu6502::ExecuteOp9D;
+	ExecuteOp[0x9E] = &Emu6502::ExecuteOp9E;
+	ExecuteOp[0x9F] = &Emu6502::ExecuteOp9F;
+
+	ExecuteOp[0xA0] = &Emu6502::ExecuteOpA0;
+	ExecuteOp[0xA1] = &Emu6502::ExecuteOpA1;
+	ExecuteOp[0xA2] = &Emu6502::ExecuteOpA2;
+	ExecuteOp[0xA3] = &Emu6502::ExecuteOpA3;
+	ExecuteOp[0xA4] = &Emu6502::ExecuteOpA4;
+	ExecuteOp[0xA5] = &Emu6502::ExecuteOpA5;
+	ExecuteOp[0xA6] = &Emu6502::ExecuteOpA6;
+	ExecuteOp[0xA7] = &Emu6502::ExecuteOpA7;
+	ExecuteOp[0xA8] = &Emu6502::ExecuteOpA8;
+	ExecuteOp[0xA9] = &Emu6502::ExecuteOpA9;
+	ExecuteOp[0xAA] = &Emu6502::ExecuteOpAA;
+	ExecuteOp[0xAB] = &Emu6502::ExecuteOpAB;
+	ExecuteOp[0xAC] = &Emu6502::ExecuteOpAC;
+	ExecuteOp[0xAD] = &Emu6502::ExecuteOpAD;
+	ExecuteOp[0xAE] = &Emu6502::ExecuteOpAE;
+	ExecuteOp[0xAF] = &Emu6502::ExecuteOpAF;
+
+	ExecuteOp[0xB0] = &Emu6502::ExecuteOpB0;
+	ExecuteOp[0xB1] = &Emu6502::ExecuteOpB1;
+	ExecuteOp[0xB2] = &Emu6502::ExecuteOpB2;
+	ExecuteOp[0xB3] = &Emu6502::ExecuteOpB3;
+	ExecuteOp[0xB4] = &Emu6502::ExecuteOpB4;
+	ExecuteOp[0xB5] = &Emu6502::ExecuteOpB5;
+	ExecuteOp[0xB6] = &Emu6502::ExecuteOpB6;
+	ExecuteOp[0xB7] = &Emu6502::ExecuteOpB7;
+	ExecuteOp[0xB8] = &Emu6502::ExecuteOpB8;
+	ExecuteOp[0xB9] = &Emu6502::ExecuteOpB9;
+	ExecuteOp[0xBA] = &Emu6502::ExecuteOpBA;
+	ExecuteOp[0xBB] = &Emu6502::ExecuteOpBB;
+	ExecuteOp[0xBC] = &Emu6502::ExecuteOpBC;
+	ExecuteOp[0xBD] = &Emu6502::ExecuteOpBD;
+	ExecuteOp[0xBE] = &Emu6502::ExecuteOpBE;
+	ExecuteOp[0xBF] = &Emu6502::ExecuteOpBF;
+
+	ExecuteOp[0xC0] = &Emu6502::ExecuteOpC0;
+	ExecuteOp[0xC1] = &Emu6502::ExecuteOpC1;
+	ExecuteOp[0xC2] = &Emu6502::ExecuteOpC2;
+	ExecuteOp[0xC3] = &Emu6502::ExecuteOpC3;
+	ExecuteOp[0xC4] = &Emu6502::ExecuteOpC4;
+	ExecuteOp[0xC5] = &Emu6502::ExecuteOpC5;
+	ExecuteOp[0xC6] = &Emu6502::ExecuteOpC6;
+	ExecuteOp[0xC7] = &Emu6502::ExecuteOpC7;
+	ExecuteOp[0xC8] = &Emu6502::ExecuteOpC8;
+	ExecuteOp[0xC9] = &Emu6502::ExecuteOpC9;
+	ExecuteOp[0xCA] = &Emu6502::ExecuteOpCA;
+	ExecuteOp[0xCB] = &Emu6502::ExecuteOpCB;
+	ExecuteOp[0xCC] = &Emu6502::ExecuteOpCC;
+	ExecuteOp[0xCD] = &Emu6502::ExecuteOpCD;
+	ExecuteOp[0xCE] = &Emu6502::ExecuteOpCE;
+	ExecuteOp[0xCF] = &Emu6502::ExecuteOpCF;
+
+	ExecuteOp[0xD0] = &Emu6502::ExecuteOpD0;
+	ExecuteOp[0xD1] = &Emu6502::ExecuteOpD1;
+	ExecuteOp[0xD2] = &Emu6502::ExecuteOpD2;
+	ExecuteOp[0xD3] = &Emu6502::ExecuteOpD3;
+	ExecuteOp[0xD4] = &Emu6502::ExecuteOpD4;
+	ExecuteOp[0xD5] = &Emu6502::ExecuteOpD5;
+	ExecuteOp[0xD6] = &Emu6502::ExecuteOpD6;
+	ExecuteOp[0xD7] = &Emu6502::ExecuteOpD7;
+	ExecuteOp[0xD8] = &Emu6502::ExecuteOpD8;
+	ExecuteOp[0xD9] = &Emu6502::ExecuteOpD9;
+	ExecuteOp[0xDA] = &Emu6502::ExecuteOpDA;
+	ExecuteOp[0xDB] = &Emu6502::ExecuteOpDB;
+	ExecuteOp[0xDC] = &Emu6502::ExecuteOpDC;
+	ExecuteOp[0xDD] = &Emu6502::ExecuteOpDD;
+	ExecuteOp[0xDE] = &Emu6502::ExecuteOpDE;
+	ExecuteOp[0xDF] = &Emu6502::ExecuteOpDF;
+
+	ExecuteOp[0xE0] = &Emu6502::ExecuteOpE0;
+	ExecuteOp[0xE1] = &Emu6502::ExecuteOpE1;
+	ExecuteOp[0xE2] = &Emu6502::ExecuteOpE2;
+	ExecuteOp[0xE3] = &Emu6502::ExecuteOpE3;
+	ExecuteOp[0xE4] = &Emu6502::ExecuteOpE4;
+	ExecuteOp[0xE5] = &Emu6502::ExecuteOpE5;
+	ExecuteOp[0xE6] = &Emu6502::ExecuteOpE6;
+	ExecuteOp[0xE7] = &Emu6502::ExecuteOpE7;
+	ExecuteOp[0xE8] = &Emu6502::ExecuteOpE8;
+	ExecuteOp[0xE9] = &Emu6502::ExecuteOpE9;
+	ExecuteOp[0xEA] = &Emu6502::ExecuteOpEA;
+	ExecuteOp[0xEB] = &Emu6502::ExecuteOpEB;
+	ExecuteOp[0xEC] = &Emu6502::ExecuteOpEC;
+	ExecuteOp[0xED] = &Emu6502::ExecuteOpED;
+	ExecuteOp[0xEE] = &Emu6502::ExecuteOpEE;
+	ExecuteOp[0xEF] = &Emu6502::ExecuteOpEF;
+
+	ExecuteOp[0xF0] = &Emu6502::ExecuteOpF0;
+	ExecuteOp[0xF1] = &Emu6502::ExecuteOpF1;
+	ExecuteOp[0xF2] = &Emu6502::ExecuteOpF2;
+	ExecuteOp[0xF3] = &Emu6502::ExecuteOpF3;
+	ExecuteOp[0xF4] = &Emu6502::ExecuteOpF4;
+	ExecuteOp[0xF5] = &Emu6502::ExecuteOpF5;
+	ExecuteOp[0xF6] = &Emu6502::ExecuteOpF6;
+	ExecuteOp[0xF7] = &Emu6502::ExecuteOpF7;
+	ExecuteOp[0xF8] = &Emu6502::ExecuteOpF8;
+	ExecuteOp[0xF9] = &Emu6502::ExecuteOpF9;
+	ExecuteOp[0xFA] = &Emu6502::ExecuteOpFA;
+	ExecuteOp[0xFB] = &Emu6502::ExecuteOpFB;
+	ExecuteOp[0xFC] = &Emu6502::ExecuteOpFC;
+	ExecuteOp[0xFD] = &Emu6502::ExecuteOpFD;
+	ExecuteOp[0xFE] = &Emu6502::ExecuteOpFE;
+	ExecuteOp[0xFF] = &Emu6502::ExecuteOpFF;
 }
 
 Emu6502::~Emu6502()
@@ -421,18 +693,17 @@ void Emu6502::TSX()
 	SetReg(&X, S);
 }
 
-ushort Emu6502::GetBR(ushort addr, bool *p_conditional, byte *p_bytes)
+ushort Emu6502::GetBR(ushort addr, byte *p_bytes)
 {
-	*p_conditional = true;
 	*p_bytes = 2;
 	sbyte offset = (sbyte)GetMemory((ushort)(addr + 1));
 	ushort addr2 = (ushort)(addr + 2 + offset);
 	return addr2;
 }
 
-void Emu6502::BR(bool branch, ushort *p_addr, bool *p_conditional, byte *p_bytes)
+void Emu6502::BR(bool branch, ushort *p_addr, byte *p_bytes)
 {
-	ushort addr2 = GetBR(*p_addr, p_conditional, p_bytes);
+	ushort addr2 = GetBR(*p_addr, p_bytes);
 	if (branch)
 	{
 		*p_addr = addr2;
@@ -440,44 +711,44 @@ void Emu6502::BR(bool branch, ushort *p_addr, bool *p_conditional, byte *p_bytes
 	}
 }
 
-void Emu6502::BPL(ushort *p_addr, bool *p_conditional, byte *p_bytes)
+void Emu6502::BPL(ushort *p_addr, byte *p_bytes)
 {
-	BR(!N, p_addr, p_conditional, p_bytes);
+	BR(!N, p_addr, p_bytes);
 }
 
-void Emu6502::BMI(ushort *p_addr, bool *p_conditional, byte *p_bytes)
+void Emu6502::BMI(ushort *p_addr, byte *p_bytes)
 {
-	BR(N, p_addr, p_conditional, p_bytes);
+	BR(N, p_addr, p_bytes);
 }
 
-void Emu6502::BCC(ushort *p_addr, bool *p_conditional, byte *p_bytes)
+void Emu6502::BCC(ushort *p_addr, byte *p_bytes)
 {
-	BR(!C, p_addr, p_conditional, p_bytes);
+	BR(!C, p_addr, p_bytes);
 }
 
-void Emu6502::BCS(ushort *p_addr, bool *p_conditional, byte *p_bytes)
+void Emu6502::BCS(ushort *p_addr, byte *p_bytes)
 {
-	BR(C, p_addr, p_conditional, p_bytes);
+	BR(C, p_addr, p_bytes);
 }
 
-void Emu6502::BVC(ushort *p_addr, bool *p_conditional, byte *p_bytes)
+void Emu6502::BVC(ushort *p_addr, byte *p_bytes)
 {
-	BR(!V, p_addr, p_conditional, p_bytes);
+	BR(!V, p_addr, p_bytes);
 }
 
-void Emu6502::BVS(ushort *p_addr, bool *p_conditional, byte *p_bytes)
+void Emu6502::BVS(ushort *p_addr, byte *p_bytes)
 {
-	BR(V, p_addr, p_conditional, p_bytes);
+	BR(V, p_addr, p_bytes);
 }
 
-void Emu6502::BNE(ushort *p_addr, bool *p_conditional, byte *p_bytes)
+void Emu6502::BNE(ushort *p_addr, byte *p_bytes)
 {
-	BR(!Z, p_addr, p_conditional, p_bytes);
+	BR(!Z, p_addr, p_bytes);
 }
 
-void Emu6502::BEQ(ushort *p_addr, bool *p_conditional, byte *p_bytes)
+void Emu6502::BEQ(ushort *p_addr, byte *p_bytes)
 {
-	BR(Z, p_addr, p_conditional, p_bytes);
+	BR(Z, p_addr, p_bytes);
 }
 
 void Emu6502::JSR(ushort *p_addr, byte *p_bytes)
@@ -721,184 +992,288 @@ void Emu6502::Execute(ushort addr)
 				break;
 		}
 
-		switch (GetMemory(PC))
-		{
-		case 0x00: BRK(&bytes); break;
-		case 0x01: ORA(GetIndX(PC, &bytes)); break;
-		case 0x05: ORA(GetZP(PC, &bytes)); break;
-		case 0x06: SetZP(ASL(GetZP(PC, &bytes)), PC, &bytes); break;
-		case 0x08: PHP(); break;
-		case 0x09: ORA(GetIM(PC, &bytes)); break;
-		case 0x0A: SetA(ASL(A)); break;
-		case 0x0D: ORA(GetABS(PC, &bytes)); break;
-		case 0x0E: SetABS(ASL(GetABS(PC, &bytes)), PC, &bytes); break;
-
-		case 0x10: BPL(&PC, &conditional, &bytes); break;
-		case 0x11: ORA(GetIndY(PC, &bytes)); break;
-		case 0x15: ORA(GetZPX(PC, &bytes)); break;
-		case 0x16: SetZPX(ASL(GetZPX(PC, &bytes)), PC, &bytes); break;
-		case 0x18: CLC(); break;
-		case 0x19: ORA(GetABSY(PC, &bytes)); break;
-		case 0x1D: ORA(GetABSX(PC, &bytes)); break;
-		case 0x1E: SetABSX(ASL(GetABSX(PC, &bytes)), PC, &bytes); break;
-
-		case 0x20: JSR(&PC, &bytes); break;
-		case 0x21: AND(GetIndX(PC, &bytes)); break;
-		case 0x24: BIT(GetZP(PC, &bytes)); break;
-		case 0x25: AND(GetZP(PC, &bytes)); break;
-		case 0x26: SetZP(ROL(GetZP(PC, &bytes)), PC, &bytes); break;
-		case 0x28: PLP(); break;
-		case 0x29: AND(GetIM(PC, &bytes)); break;
-		case 0x2A: SetA(ROL(A)); break;
-		case 0x2C: BIT(GetABS(PC, &bytes)); break;
-		case 0x2D: AND(GetABS(PC, &bytes)); break;
-		case 0x2E: SetABS(ROL(GetABS(PC, &bytes)), PC, &bytes); break;
-
-		case 0x30: BMI(&PC, &conditional, &bytes); break;
-		case 0x31: AND(GetIndY(PC, &bytes)); break;
-		case 0x35: AND(GetZPX(PC, &bytes)); break;
-		case 0x36: SetZPX(ROL(GetZPX(PC, &bytes)), PC, &bytes); break;
-		case 0x38: SEC(); break;
-		case 0x39: AND(GetABSY(PC, &bytes)); break;
-		case 0x3D: AND(GetABSX(PC, &bytes)); break;
-		case 0x3E: SetABSX(ROL(GetABSX(PC, &bytes)), PC, &bytes); break;
-
-		case 0x40: RTI(&PC, &bytes); break;
-		case 0x41: EOR(GetIndX(PC, &bytes)); break;
-		case 0x45: EOR(GetZP(PC, &bytes)); break;
-		case 0x46: SetZP(LSR(GetZP(PC, &bytes)), PC, &bytes); break;
-		case 0x48: PHA(); break;
-		case 0x49: EOR(GetIM(PC, &bytes)); break;
-		case 0x4A: SetA(LSR(A)); break;
-		case 0x4C: JMP(&PC, &bytes); break;
-		case 0x4D: EOR(GetABS(PC, &bytes)); break;
-		case 0x4E: SetABS(LSR(GetABS(PC, &bytes)), PC, &bytes); break;
-
-		case 0x50: BVC(&PC, &conditional, &bytes); break;
-		case 0x51: EOR(GetIndY(PC, &bytes)); break;
-		case 0x55: EOR(GetZPX(PC, &bytes)); break;
-		case 0x56: SetZPX(LSR(GetZPX(PC, &bytes)), PC, &bytes); break;
-		case 0x58: CLI(); break;
-		case 0x59: EOR(GetABSY(PC, &bytes)); break;
-		case 0x5D: EOR(GetABSX(PC, &bytes)); break;
-		case 0x5E: SetABSX(LSR(GetABSX(PC, &bytes)), PC, &bytes); break;
-
-		case 0x60: RTS(&PC, &bytes); break;
-		case 0x61: ADC(GetIndX(PC, &bytes)); break;
-		case 0x65: ADC(GetZP(PC, &bytes)); break;
-		case 0x66: SetZP(ROR(GetZP(PC, &bytes)), PC, &bytes); break;
-		case 0x68: PLA(); break;
-		case 0x69: ADC(GetIM(PC, &bytes)); break;
-		case 0x6A: SetA(ROR(A)); break;
-		case 0x6C: JMPIND(&PC, &bytes); break;
-		case 0x6D: ADC(GetABS(PC, &bytes)); break;
-		case 0x6E: SetABS(ROR(GetABS(PC, &bytes)), PC, &bytes); break;
-
-		case 0x70: BVS(&PC, &conditional, &bytes); break;
-		case 0x71: ADC(GetIndY(PC, &bytes)); break;
-		case 0x75: ADC(GetZPX(PC, &bytes)); break;
-		case 0x76: SetZPX(ROR(GetZPX(PC, &bytes)), PC, &bytes); break;
-		case 0x78: SEI(); break;
-		case 0x79: ADC(GetABSY(PC, &bytes)); break;
-		case 0x7D: ADC(GetABSX(PC, &bytes)); break;
-		case 0x7E: SetABSX(ROR(GetABSX(PC, &bytes)), PC, &bytes); break;
-
-		case 0x81: SetIndX(A, PC, &bytes); break;
-		case 0x84: SetZP(Y, PC, &bytes); break;
-		case 0x85: SetZP(A, PC, &bytes); break;
-		case 0x86: SetZP(X, PC, &bytes); break;
-		case 0x88: DEY(); break;
-		case 0x8A: TXA(); break;
-		case 0x8C: SetABS(Y, PC, &bytes); break;
-		case 0x8D: SetABS(A, PC, &bytes); break;
-		case 0x8E: SetABS(X, PC, &bytes); break;
-
-		case 0x90: BCC(&PC, &conditional, &bytes); break;
-		case 0x91: SetIndY(A, PC, &bytes); break;
-		case 0x94: SetZPX(Y, PC, &bytes); break;
-		case 0x95: SetZPX(A, PC, &bytes); break;
-		case 0x96: SetZPY(X, PC, &bytes); break;
-		case 0x98: TYA(); break;
-		case 0x99: SetABSY(A, PC, &bytes); break;
-		case 0x9A: TXS(); break;
-		case 0x9D: SetABSX(A, PC, &bytes); break;
-
-		case 0xA0: SetY(GetIM(PC, &bytes)); break;
-		case 0xA1: SetA(GetIndX(PC, &bytes)); break;
-		case 0xA2: SetX(GetIM(PC, &bytes)); break;
-		case 0xA4: SetY(GetZP(PC, &bytes)); break;
-		case 0xA5: SetA(GetZP(PC, &bytes)); break;
-		case 0xA6: SetX(GetZP(PC, &bytes)); break;
-		case 0xA8: TAY(); break;
-		case 0xA9: SetA(GetIM(PC, &bytes)); break;
-		case 0xAA: TAX(); break;
-		case 0xAC: SetY(GetABS(PC, &bytes)); break;
-		case 0xAD: SetA(GetABS(PC, &bytes)); break;
-		case 0xAE: SetX(GetABS(PC, &bytes)); break;
-
-		case 0xB0: BCS(&PC, &conditional, &bytes); break;
-		case 0xB1: SetA(GetIndY(PC, &bytes)); break;
-		case 0xB4: SetY(GetZPX(PC, &bytes)); break;
-		case 0xB5: SetA(GetZPX(PC, &bytes)); break;
-		case 0xB6: SetX(GetZPY(PC, &bytes)); break;
-		case 0xB8: CLV(); break;
-		case 0xB9: SetA(GetABSY(PC, &bytes)); break;
-		case 0xBA: TSX(); break;
-		case 0xBC: SetY(GetABSX(PC, &bytes)); break;
-		case 0xBD: SetA(GetABSX(PC, &bytes)); break;
-		case 0xBE: SetX(GetABSY(PC, &bytes)); break;
-
-		case 0xC0: CPY(GetIM(PC, &bytes)); break;
-		case 0xC1: CMP(GetIndX(PC, &bytes)); break;
-		case 0xC4: CPY(GetZP(PC, &bytes)); break;
-		case 0xC5: CMP(GetZP(PC, &bytes)); break;
-		case 0xC6: SetZP(DEC(GetZP(PC, &bytes)), PC, &bytes); break;
-		case 0xC8: INY(); break;
-		case 0xC9: CMP(GetIM(PC, &bytes)); break;
-		case 0xCA: DEX(); break;
-		case 0xCC: CPY(GetABS(PC, &bytes)); break;
-		case 0xCD: CMP(GetABS(PC, &bytes)); break;
-		case 0xCE: SetABS(DEC(GetABS(PC, &bytes)), PC, &bytes); break;
-
-		case 0xD0: BNE(&PC, &conditional, &bytes); break;
-		case 0xD1: CMP(GetIndY(PC, &bytes)); break;
-		case 0xD5: CMP(GetZPX(PC, &bytes)); break;
-		case 0xD6: SetZPX(DEC(GetZPX(PC, &bytes)), PC, &bytes); break;
-		case 0xD8: CLD(); break;
-		case 0xD9: CMP(GetABSY(PC, &bytes)); break;
-		case 0xDD: CMP(GetABSX(PC, &bytes)); break;
-		case 0xDE: SetABSX(DEC(GetABSX(PC, &bytes)), PC, &bytes); break;
-
-		case 0xE0: CPX(GetIM(PC, &bytes)); break;
-		case 0xE1: SBC(GetIndX(PC, &bytes)); break;
-		case 0xE4: CPX(GetZP(PC, &bytes)); break;
-		case 0xE5: SBC(GetZP(PC, &bytes)); break;
-		case 0xE6: SetZP(INC(GetZP(PC, &bytes)), PC, &bytes); break;
-		case 0xE8: INX(); break;
-		case 0xE9: SBC(GetIM(PC, &bytes)); break;
-		case 0xEA: NOP(); break;
-		case 0xEC: CPX(GetABS(PC, &bytes)); break;
-		case 0xED: SBC(GetABS(PC, &bytes)); break;
-		case 0xEE: SetABS(INC(GetABS(PC, &bytes)), PC, &bytes); break;
-
-		case 0xF0: BEQ(&PC, &conditional, &bytes); break;
-		case 0xF1: SBC(GetIndY(PC, &bytes)); break;
-		case 0xF5: SBC(GetZPX(PC, &bytes)); break;
-		case 0xF6: SetZPX(INC(GetZPX(PC, &bytes)), PC, &bytes); break;
-		case 0xF8: SED(); break;
-		case 0xF9: SBC(GetABSY(PC, &bytes)); break;
-		case 0xFD: SBC(GetABSX(PC, &bytes)); break;
-		case 0xFE: SetABSX(INC(GetABSX(PC, &bytes)), PC, &bytes); break;
-
-		default:
-			{
-				printf("Invalid opcode %02X at %04X", GetMemory(PC), PC);
-				exit(1);
-			}
-		}
-
+		void (Emu6502::*pMethod)(byte * p_bytes) = ExecuteOp[GetMemory(PC)];
+		((*this).*pMethod)(&bytes);
 		PC += bytes;
 	}
+}
+
+void Emu6502::ExecuteOp00(byte* p_bytes) { BRK(p_bytes); }
+void Emu6502::ExecuteOp01(byte* p_bytes) { ORA(GetIndX(PC, p_bytes)); }
+void Emu6502::ExecuteOp02(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOp03(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOp04(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOp05(byte* p_bytes) { ORA(GetZP(PC, p_bytes)); }
+void Emu6502::ExecuteOp06(byte* p_bytes) { SetZP(ASL(GetZP(PC, p_bytes)), PC, p_bytes); }
+void Emu6502::ExecuteOp07(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOp08(byte* p_bytes) { PHP(); }
+void Emu6502::ExecuteOp09(byte* p_bytes) { ORA(GetIM(PC, p_bytes)); }
+void Emu6502::ExecuteOp0A(byte* p_bytes) { SetA(ASL(A)); }
+void Emu6502::ExecuteOp0B(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOp0C(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOp0D(byte* p_bytes) { ORA(GetABS(PC, p_bytes)); }
+void Emu6502::ExecuteOp0E(byte* p_bytes) { SetABS(ASL(GetABS(PC, p_bytes)), PC, p_bytes); }
+void Emu6502::ExecuteOp0F(byte* p_bytes) { InvalidOpcode(); }
+
+void Emu6502::ExecuteOp10(byte* p_bytes) { BPL(&PC, p_bytes); }
+void Emu6502::ExecuteOp11(byte* p_bytes) { ORA(GetIndY(PC, p_bytes)); }
+void Emu6502::ExecuteOp12(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOp13(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOp14(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOp15(byte* p_bytes) { ORA(GetZPX(PC, p_bytes)); }
+void Emu6502::ExecuteOp16(byte* p_bytes) { SetZPX(ASL(GetZPX(PC, p_bytes)), PC, p_bytes); }
+void Emu6502::ExecuteOp17(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOp18(byte* p_bytes) { CLC(); }
+void Emu6502::ExecuteOp19(byte* p_bytes) { ORA(GetABSY(PC, p_bytes)); }
+void Emu6502::ExecuteOp1A(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOp1B(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOp1C(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOp1D(byte* p_bytes) { ORA(GetABSX(PC, p_bytes)); }
+void Emu6502::ExecuteOp1E(byte* p_bytes) { SetABSX(ASL(GetABSX(PC, p_bytes)), PC, p_bytes); }
+void Emu6502::ExecuteOp1F(byte* p_bytes) { InvalidOpcode(); }
+
+void Emu6502::ExecuteOp20(byte* p_bytes) { JSR(&PC, p_bytes); }
+void Emu6502::ExecuteOp21(byte* p_bytes) { AND(GetIndX(PC, p_bytes)); }
+void Emu6502::ExecuteOp22(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOp23(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOp24(byte* p_bytes) { BIT(GetZP(PC, p_bytes)); }
+void Emu6502::ExecuteOp25(byte* p_bytes) { AND(GetZP(PC, p_bytes)); }
+void Emu6502::ExecuteOp26(byte* p_bytes) { SetZP(ROL(GetZP(PC, p_bytes)), PC, p_bytes); }
+void Emu6502::ExecuteOp27(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOp28(byte* p_bytes) { PLP(); }
+void Emu6502::ExecuteOp29(byte* p_bytes) { AND(GetIM(PC, p_bytes)); }
+void Emu6502::ExecuteOp2A(byte* p_bytes) { SetA(ROL(A)); }
+void Emu6502::ExecuteOp2B(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOp2C(byte* p_bytes) { BIT(GetABS(PC, p_bytes)); }
+void Emu6502::ExecuteOp2D(byte* p_bytes) { AND(GetABS(PC, p_bytes)); }
+void Emu6502::ExecuteOp2E(byte* p_bytes) { SetABS(ROL(GetABS(PC, p_bytes)), PC, p_bytes); }
+void Emu6502::ExecuteOp2F(byte* p_bytes) { InvalidOpcode(); }
+
+void Emu6502::ExecuteOp30(byte* p_bytes) { BMI(&PC, p_bytes); }
+void Emu6502::ExecuteOp31(byte* p_bytes) { AND(GetIndY(PC, p_bytes)); }
+void Emu6502::ExecuteOp32(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOp33(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOp34(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOp35(byte* p_bytes) { AND(GetZPX(PC, p_bytes)); }
+void Emu6502::ExecuteOp36(byte* p_bytes) { SetZPX(ROL(GetZPX(PC, p_bytes)), PC, p_bytes); }
+void Emu6502::ExecuteOp37(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOp38(byte* p_bytes) { SEC(); }
+void Emu6502::ExecuteOp39(byte* p_bytes) { AND(GetABSY(PC, p_bytes)); }
+void Emu6502::ExecuteOp3A(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOp3B(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOp3C(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOp3D(byte* p_bytes) { AND(GetABSX(PC, p_bytes)); }
+void Emu6502::ExecuteOp3E(byte* p_bytes) { SetABSX(ROL(GetABSX(PC, p_bytes)), PC, p_bytes); }
+void Emu6502::ExecuteOp3F(byte* p_bytes) { InvalidOpcode(); }
+
+void Emu6502::ExecuteOp40(byte* p_bytes) { RTI(&PC, p_bytes); }
+void Emu6502::ExecuteOp41(byte* p_bytes) { EOR(GetIndX(PC, p_bytes)); }
+void Emu6502::ExecuteOp42(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOp43(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOp44(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOp45(byte* p_bytes) { EOR(GetZP(PC, p_bytes)); }
+void Emu6502::ExecuteOp46(byte* p_bytes) { SetZP(LSR(GetZP(PC, p_bytes)), PC, p_bytes); }
+void Emu6502::ExecuteOp47(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOp48(byte* p_bytes) { PHA(); }
+void Emu6502::ExecuteOp49(byte* p_bytes) { EOR(GetIM(PC, p_bytes)); }
+void Emu6502::ExecuteOp4A(byte* p_bytes) { SetA(LSR(A)); }
+void Emu6502::ExecuteOp4B(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOp4C(byte* p_bytes) { JMP(&PC, p_bytes); }
+void Emu6502::ExecuteOp4D(byte* p_bytes) { EOR(GetABS(PC, p_bytes)); }
+void Emu6502::ExecuteOp4E(byte* p_bytes) { SetABS(LSR(GetABS(PC, p_bytes)), PC, p_bytes); }
+void Emu6502::ExecuteOp4F(byte* p_bytes) { InvalidOpcode(); }
+
+void Emu6502::ExecuteOp50(byte* p_bytes) { BVC(&PC, p_bytes); }
+void Emu6502::ExecuteOp51(byte* p_bytes) { EOR(GetIndY(PC, p_bytes)); }
+void Emu6502::ExecuteOp52(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOp53(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOp54(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOp55(byte* p_bytes) { EOR(GetZPX(PC, p_bytes)); }
+void Emu6502::ExecuteOp56(byte* p_bytes) { SetZPX(LSR(GetZPX(PC, p_bytes)), PC, p_bytes); }
+void Emu6502::ExecuteOp57(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOp58(byte* p_bytes) { CLI(); }
+void Emu6502::ExecuteOp59(byte* p_bytes) { EOR(GetABSY(PC, p_bytes)); }
+void Emu6502::ExecuteOp5A(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOp5B(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOp5C(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOp5D(byte* p_bytes) { EOR(GetABSX(PC, p_bytes)); }
+void Emu6502::ExecuteOp5E(byte* p_bytes) { SetABSX(LSR(GetABSX(PC, p_bytes)), PC, p_bytes); }
+void Emu6502::ExecuteOp5F(byte* p_bytes) { InvalidOpcode(); }
+
+void Emu6502::ExecuteOp60(byte* p_bytes) { RTS(&PC, p_bytes); }
+void Emu6502::ExecuteOp61(byte* p_bytes) { ADC(GetIndX(PC, p_bytes)); }
+void Emu6502::ExecuteOp62(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOp63(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOp64(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOp65(byte* p_bytes) { ADC(GetZP(PC, p_bytes)); }
+void Emu6502::ExecuteOp66(byte* p_bytes) { SetZP(ROR(GetZP(PC, p_bytes)), PC, p_bytes); }
+void Emu6502::ExecuteOp67(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOp68(byte* p_bytes) { PLA(); }
+void Emu6502::ExecuteOp69(byte* p_bytes) { ADC(GetIM(PC, p_bytes)); }
+void Emu6502::ExecuteOp6A(byte* p_bytes) { SetA(ROR(A)); }
+void Emu6502::ExecuteOp6B(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOp6C(byte* p_bytes) { JMPIND(&PC, p_bytes); }
+void Emu6502::ExecuteOp6D(byte* p_bytes) { ADC(GetABS(PC, p_bytes)); }
+void Emu6502::ExecuteOp6E(byte* p_bytes) { SetABS(ROR(GetABS(PC, p_bytes)), PC, p_bytes); }
+void Emu6502::ExecuteOp6F(byte* p_bytes) { InvalidOpcode(); }
+
+void Emu6502::ExecuteOp70(byte* p_bytes) { BVS(&PC, p_bytes); }
+void Emu6502::ExecuteOp71(byte* p_bytes) { ADC(GetIndY(PC, p_bytes)); }
+void Emu6502::ExecuteOp72(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOp73(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOp74(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOp75(byte* p_bytes) { ADC(GetZPX(PC, p_bytes)); }
+void Emu6502::ExecuteOp76(byte* p_bytes) { SetZPX(ROR(GetZPX(PC, p_bytes)), PC, p_bytes); }
+void Emu6502::ExecuteOp77(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOp78(byte* p_bytes) { SEI(); }
+void Emu6502::ExecuteOp79(byte* p_bytes) { ADC(GetABSY(PC, p_bytes)); }
+void Emu6502::ExecuteOp7A(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOp7B(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOp7C(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOp7D(byte* p_bytes) { ADC(GetABSX(PC, p_bytes)); }
+void Emu6502::ExecuteOp7E(byte* p_bytes) { SetABSX(ROR(GetABSX(PC, p_bytes)), PC, p_bytes); }
+void Emu6502::ExecuteOp7F(byte* p_bytes) { InvalidOpcode(); }
+
+void Emu6502::ExecuteOp80(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOp81(byte* p_bytes) { SetIndX(A, PC, p_bytes); }
+void Emu6502::ExecuteOp82(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOp83(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOp84(byte* p_bytes) { SetZP(Y, PC, p_bytes); }
+void Emu6502::ExecuteOp85(byte* p_bytes) { SetZP(A, PC, p_bytes); }
+void Emu6502::ExecuteOp86(byte* p_bytes) { SetZP(X, PC, p_bytes); }
+void Emu6502::ExecuteOp87(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOp88(byte* p_bytes) { DEY(); }
+void Emu6502::ExecuteOp89(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOp8A(byte* p_bytes) { TXA(); }
+void Emu6502::ExecuteOp8B(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOp8C(byte* p_bytes) { SetABS(Y, PC, p_bytes); }
+void Emu6502::ExecuteOp8D(byte* p_bytes) { SetABS(A, PC, p_bytes); }
+void Emu6502::ExecuteOp8E(byte* p_bytes) { SetABS(X, PC, p_bytes); }
+void Emu6502::ExecuteOp8F(byte* p_bytes) { InvalidOpcode(); }
+
+void Emu6502::ExecuteOp90(byte* p_bytes) { BCC(&PC, p_bytes); }
+void Emu6502::ExecuteOp91(byte* p_bytes) { SetIndY(A, PC, p_bytes); }
+void Emu6502::ExecuteOp92(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOp93(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOp94(byte* p_bytes) { SetZPX(Y, PC, p_bytes); }
+void Emu6502::ExecuteOp95(byte* p_bytes) { SetZPX(A, PC, p_bytes); }
+void Emu6502::ExecuteOp96(byte* p_bytes) { SetZPY(X, PC, p_bytes); }
+void Emu6502::ExecuteOp97(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOp98(byte* p_bytes) { TYA(); }
+void Emu6502::ExecuteOp99(byte* p_bytes) { SetABSY(A, PC, p_bytes); }
+void Emu6502::ExecuteOp9A(byte* p_bytes) { TXS(); }
+void Emu6502::ExecuteOp9B(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOp9C(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOp9D(byte* p_bytes) { SetABSX(A, PC, p_bytes); }
+void Emu6502::ExecuteOp9E(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOp9F(byte* p_bytes) { InvalidOpcode(); }
+
+void Emu6502::ExecuteOpA0(byte* p_bytes) { SetY(GetIM(PC, p_bytes)); }
+void Emu6502::ExecuteOpA1(byte* p_bytes) { SetA(GetIndX(PC, p_bytes)); }
+void Emu6502::ExecuteOpA2(byte* p_bytes) { SetX(GetIM(PC, p_bytes)); }
+void Emu6502::ExecuteOpA3(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOpA4(byte* p_bytes) { SetY(GetZP(PC, p_bytes)); }
+void Emu6502::ExecuteOpA5(byte* p_bytes) { SetA(GetZP(PC, p_bytes)); }
+void Emu6502::ExecuteOpA6(byte* p_bytes) { SetX(GetZP(PC, p_bytes)); }
+void Emu6502::ExecuteOpA7(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOpA8(byte* p_bytes) { TAY(); }
+void Emu6502::ExecuteOpA9(byte* p_bytes) { SetA(GetIM(PC, p_bytes)); }
+void Emu6502::ExecuteOpAA(byte* p_bytes) { TAX(); }
+void Emu6502::ExecuteOpAB(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOpAC(byte* p_bytes) { SetY(GetABS(PC, p_bytes)); }
+void Emu6502::ExecuteOpAD(byte* p_bytes) { SetA(GetABS(PC, p_bytes)); }
+void Emu6502::ExecuteOpAE(byte* p_bytes) { SetX(GetABS(PC, p_bytes)); }
+void Emu6502::ExecuteOpAF(byte* p_bytes) { InvalidOpcode(); }
+
+void Emu6502::ExecuteOpB0(byte* p_bytes) { BCS(&PC, p_bytes); }
+void Emu6502::ExecuteOpB1(byte* p_bytes) { SetA(GetIndY(PC, p_bytes)); }
+void Emu6502::ExecuteOpB2(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOpB3(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOpB4(byte* p_bytes) { SetY(GetZPX(PC, p_bytes)); }
+void Emu6502::ExecuteOpB5(byte* p_bytes) { SetA(GetZPX(PC, p_bytes)); }
+void Emu6502::ExecuteOpB6(byte* p_bytes) { SetX(GetZPY(PC, p_bytes)); }
+void Emu6502::ExecuteOpB7(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOpB8(byte* p_bytes) { CLV(); }
+void Emu6502::ExecuteOpB9(byte* p_bytes) { SetA(GetABSY(PC, p_bytes)); }
+void Emu6502::ExecuteOpBA(byte* p_bytes) { TSX(); }
+void Emu6502::ExecuteOpBB(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOpBC(byte* p_bytes) { SetY(GetABSX(PC, p_bytes)); }
+void Emu6502::ExecuteOpBD(byte* p_bytes) { SetA(GetABSX(PC, p_bytes)); }
+void Emu6502::ExecuteOpBE(byte* p_bytes) { SetX(GetABSY(PC, p_bytes)); }
+void Emu6502::ExecuteOpBF(byte* p_bytes) { InvalidOpcode(); }
+
+void Emu6502::ExecuteOpC0(byte* p_bytes) { CPY(GetIM(PC, p_bytes)); }
+void Emu6502::ExecuteOpC1(byte* p_bytes) { CMP(GetIndX(PC, p_bytes)); }
+void Emu6502::ExecuteOpC2(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOpC3(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOpC4(byte* p_bytes) { CPY(GetZP(PC, p_bytes)); }
+void Emu6502::ExecuteOpC5(byte* p_bytes) { CMP(GetZP(PC, p_bytes)); }
+void Emu6502::ExecuteOpC6(byte* p_bytes) { SetZP(DEC(GetZP(PC, p_bytes)), PC, p_bytes); }
+void Emu6502::ExecuteOpC7(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOpC8(byte* p_bytes) { INY(); }
+void Emu6502::ExecuteOpC9(byte* p_bytes) { CMP(GetIM(PC, p_bytes)); }
+void Emu6502::ExecuteOpCA(byte* p_bytes) { DEX(); }
+void Emu6502::ExecuteOpCB(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOpCC(byte* p_bytes) { CPY(GetABS(PC, p_bytes)); }
+void Emu6502::ExecuteOpCD(byte* p_bytes) { CMP(GetABS(PC, p_bytes)); }
+void Emu6502::ExecuteOpCE(byte* p_bytes) { SetABS(DEC(GetABS(PC, p_bytes)), PC, p_bytes); }
+void Emu6502::ExecuteOpCF(byte* p_bytes) { InvalidOpcode(); }
+
+void Emu6502::ExecuteOpD0(byte* p_bytes) { BNE(&PC, p_bytes); }
+void Emu6502::ExecuteOpD1(byte* p_bytes) { CMP(GetIndY(PC, p_bytes)); }
+void Emu6502::ExecuteOpD2(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOpD3(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOpD4(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOpD5(byte* p_bytes) { CMP(GetZPX(PC, p_bytes)); }
+void Emu6502::ExecuteOpD6(byte* p_bytes) { SetZPX(DEC(GetZPX(PC, p_bytes)), PC, p_bytes); }
+void Emu6502::ExecuteOpD7(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOpD8(byte* p_bytes) { CLD(); }
+void Emu6502::ExecuteOpD9(byte* p_bytes) { CMP(GetABSY(PC, p_bytes)); }
+void Emu6502::ExecuteOpDA(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOpDB(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOpDC(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOpDD(byte* p_bytes) { CMP(GetABSX(PC, p_bytes)); }
+void Emu6502::ExecuteOpDE(byte* p_bytes) { SetABSX(DEC(GetABSX(PC, p_bytes)), PC, p_bytes); }
+void Emu6502::ExecuteOpDF(byte* p_bytes) { InvalidOpcode(); }
+
+void Emu6502::ExecuteOpE0(byte* p_bytes) { CPX(GetIM(PC, p_bytes)); }
+void Emu6502::ExecuteOpE1(byte* p_bytes) { SBC(GetIndX(PC, p_bytes)); }
+void Emu6502::ExecuteOpE2(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOpE3(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOpE4(byte* p_bytes) { CPX(GetZP(PC, p_bytes)); }
+void Emu6502::ExecuteOpE5(byte* p_bytes) { SBC(GetZP(PC, p_bytes)); }
+void Emu6502::ExecuteOpE6(byte* p_bytes) { SetZP(INC(GetZP(PC, p_bytes)), PC, p_bytes); }
+void Emu6502::ExecuteOpE7(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOpE8(byte* p_bytes) { INX(); }
+void Emu6502::ExecuteOpE9(byte* p_bytes) { SBC(GetIM(PC, p_bytes)); }
+void Emu6502::ExecuteOpEA(byte* p_bytes) { NOP(); }
+void Emu6502::ExecuteOpEB(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOpEC(byte* p_bytes) { CPX(GetABS(PC, p_bytes)); }
+void Emu6502::ExecuteOpED(byte* p_bytes) { SBC(GetABS(PC, p_bytes)); }
+void Emu6502::ExecuteOpEE(byte* p_bytes) { SetABS(INC(GetABS(PC, p_bytes)), PC, p_bytes); }
+void Emu6502::ExecuteOpEF(byte* p_bytes) { InvalidOpcode(); }
+
+void Emu6502::ExecuteOpF0(byte* p_bytes) { BEQ(&PC, p_bytes); }
+void Emu6502::ExecuteOpF1(byte* p_bytes) { SBC(GetIndY(PC, p_bytes)); }
+void Emu6502::ExecuteOpF2(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOpF3(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOpF4(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOpF5(byte* p_bytes) { SBC(GetZPX(PC, p_bytes)); }
+void Emu6502::ExecuteOpF6(byte* p_bytes) { SetZPX(INC(GetZPX(PC, p_bytes)), PC, p_bytes); }
+void Emu6502::ExecuteOpF7(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOpF8(byte* p_bytes) { SED(); }
+void Emu6502::ExecuteOpF9(byte* p_bytes) { SBC(GetABSY(PC, p_bytes)); }
+void Emu6502::ExecuteOpFA(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOpFB(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOpFC(byte* p_bytes) { InvalidOpcode(); }
+void Emu6502::ExecuteOpFD(byte* p_bytes) { SBC(GetABSX(PC, p_bytes)); }
+void Emu6502::ExecuteOpFE(byte* p_bytes) { SetABSX(INC(GetABSX(PC, p_bytes)), PC, p_bytes); }
+void Emu6502::ExecuteOpFF(byte* p_bytes) { InvalidOpcode(); }
+
+void Emu6502::InvalidOpcode()
+{
+	printf("Invalid opcode %02X at %04X", GetMemory(PC), PC);
+	exit(1);
 }
 
 // Examples:
