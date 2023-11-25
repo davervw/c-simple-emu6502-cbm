@@ -43,7 +43,7 @@ int main_go_num = 0;
 
 int fileExists(const char* filename)
 {
-#ifdef WIN32
+#ifdef WINDOWS
 	FILE* fp;
 	fopen_s(&fp, filename, "rb");
 #else

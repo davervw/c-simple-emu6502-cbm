@@ -7,7 +7,7 @@
 #include <sys/stat.h>
 #include <time.h>
 #include <string.h>
-#ifdef WIN32
+#ifdef WINDOWS
 #include <io.h>
 #include <share.h>
 #else
@@ -154,7 +154,7 @@ bool EmuCBM::ExecuteJSR(ushort addr)
 void EmuCBM::File_ReadAllBytes(byte* bytes, unsigned int size, const char* filename)
 {
 	int file;
-#ifdef WIN32	
+#ifdef WINDOWS	
 	_set_errno(0);
 	_sopen_s(&file, filename, _O_RDONLY | _O_BINARY, _SH_DENYNO, _S_IREAD);
 #else
@@ -163,7 +163,7 @@ void EmuCBM::File_ReadAllBytes(byte* bytes, unsigned int size, const char* filen
 	if (file < 0)
 	{
 		char buffer[40];
-#ifdef WIN32
+#ifdef WINDOWS
 		strerror_s(buffer, sizeof(buffer), errno);
 #else		
 		strerror_r(errno, buffer, sizeof(buffer));
@@ -171,7 +171,7 @@ void EmuCBM::File_ReadAllBytes(byte* bytes, unsigned int size, const char* filen
 		printf("file ""%""s, errno=%d, %s", filename, errno, buffer);
 		exit(1);
 	}
-#ifdef WIN32
+#ifdef WINDOWS
 	_read(file, bytes, size);
 	_close(file);
 #else

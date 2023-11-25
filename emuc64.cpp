@@ -75,7 +75,7 @@
 #include <sys/stat.h>
 #include <time.h>
 #include <string.h>
-#ifdef WIN32
+#ifdef WINDOWS
 #include <io.h>
 #include <share.h>
 #include <windows.h> // struct timeval
@@ -350,7 +350,7 @@ byte C64Memory::read(ushort addr)
 			struct tm       bd;
 			struct timeval  tv;
 
-#ifdef WIN32
+#ifdef WINDOWS
 			localtime_s(&bd, &now);
 #else
 			localtime_r(&now, &bd);

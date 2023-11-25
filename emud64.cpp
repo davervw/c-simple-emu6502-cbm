@@ -39,11 +39,11 @@
 #include <stdio.h>
 #include "emud64.h"
 
-#ifdef WIN32
+#ifdef WINDOWS
 #define snprintf sprintf_s
 #endif
 
-#ifndef WIN32
+#ifndef WINDOWS
 static void strcpy_s(char* dest, size_t size, const char* src)
 {
 	strncpy(dest, src, size);
@@ -1011,7 +1011,7 @@ void EmuD64::LoadFromFilenameOrCreate()
         filename_d64[filename_len - 1] = '4';
     }
 
-#ifdef WIN32
+#ifdef WINDOWS
     FILE* fp;
     fopen_s(&fp, filename_d64, "rb");
 #else
@@ -1050,7 +1050,7 @@ void EmuD64::LoadFromFilenameOrCreate()
 
     if (filename != 0)
     {
-#ifdef WIN32
+#ifdef WINDOWS
         FILE* fp;
         fopen_s(&fp, filename, "rb");
 #else
@@ -1094,7 +1094,7 @@ void EmuD64::FlushDisk()
 
     if (dirty)
     {
-#ifdef WIN32
+#ifdef WINDOWS
         FILE* fp;
         fopen_s(&fp, filename_d64, "rb+");
 #else
@@ -1102,7 +1102,7 @@ void EmuD64::FlushDisk()
 #endif
         if (fp == 0) // in case couldn't open file, create file
         {
-#ifdef WIN32
+#ifdef WINDOWS
             fopen_s(&fp, filename_d64, "wb+");
 #else
             fp = fopen(filename_d64, "wb+");

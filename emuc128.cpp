@@ -73,7 +73,7 @@
 #include "emuc128.h"
 
 #include <string.h>
-#ifdef WIN32
+#ifdef WINDOWS
 #else
 #include <unistd.h>
 #endif

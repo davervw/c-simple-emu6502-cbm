@@ -33,7 +33,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#ifdef WIN32
+#ifdef WINDOWS
 #include <windows.h> // OutputDebugStringA
 #define snprintf sprintf_s
 #endif
@@ -82,7 +82,7 @@ void Emu6502::ResetRun()
 	Execute(addr);
 }
 
-#ifndef WIN32
+#ifndef WINDOWS
 void strcpy_s(char* dest, size_t size, const char* src)
 {
 	strncpy(dest, src, size);
@@ -707,7 +707,7 @@ void Emu6502::Execute(ushort addr)
 				GetDisplayState(state, sizeof(state));
 				char full_line[80];
 				snprintf(full_line, sizeof(full_line), "%-30s%s\n", line, state);
-#ifdef WIN32
+#ifdef WINDOWS
 				OutputDebugStringA(full_line);
 #else				
 				fprintf(stderr, "%s", full_line);

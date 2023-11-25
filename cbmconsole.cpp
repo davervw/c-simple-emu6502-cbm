@@ -36,7 +36,7 @@
 
 #include <stdio.h>
 #include <string.h>
-#ifdef WIN32
+#ifdef WINDOWS
 #include <windows.h>
 #endif
 
@@ -48,7 +48,7 @@ int buffer_head = 0;
 int buffer_tail = 0;
 int buffer_count = 0;
 
-#ifdef WIN32
+#ifdef WINDOWS
 static void cls(HANDLE hConsole);
 
 // From https://support.microsoft.com/en-au/help/99261/how-to-performing-clear-screen-cls-in-a-console-application
@@ -64,7 +64,7 @@ static void Console_Clear()
       return;
    }
 
-#ifdef WIN32
+#ifdef WINDOWS
    // See https://docs.microsoft.com/en-us/windows/console/getstdhandle
    HANDLE hStdout;
    hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -75,7 +75,7 @@ static void Console_Clear()
 #endif
 }
 
-#ifdef WIN32
+#ifdef WINDOWS
 BOOL Console_GetCursor(HANDLE hStdout, COORD* coord)
 {
    CONSOLE_SCREEN_BUFFER_INFO csbi; /* to get buffer info */
@@ -95,7 +95,7 @@ void Console_SetCursor(HANDLE hStdout, COORD coord)
 
 static void Console_Cursor_Up()
 {
-#ifdef WIN32
+#ifdef WINDOWS
    HANDLE hStdout;
    hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
    COORD coord = { 0, 0 };
@@ -111,7 +111,7 @@ static void Console_Cursor_Up()
 
 static void Console_Cursor_Down()
 {
-#ifdef WIN32
+#ifdef WINDOWS
    HANDLE hStdout;
    hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
    COORD coord = { 0, 0 };
@@ -132,7 +132,7 @@ static void Console_Cursor_Down()
 
 static void Console_Cursor_Left()
 {
-#ifdef WIN32
+#ifdef WINDOWS
    HANDLE hStdout;
    hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
    COORD coord = { 0, 0 };
@@ -157,7 +157,7 @@ static void Console_Cursor_Left()
 
 static void Console_Cursor_Right()
 {
-#ifdef WIN32
+#ifdef WINDOWS
    HANDLE hStdout;
    hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
    CONSOLE_SCREEN_BUFFER_INFO csbi; /* to get buffer info */
@@ -186,7 +186,7 @@ static void Console_Cursor_Home()
         supress_next_home = false;
         return;
     }
-#ifdef WIN32
+#ifdef WINDOWS
    HANDLE hStdout;
    hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
    COORD coord = { 0, 0 };
@@ -285,7 +285,7 @@ extern void CBM_Console_Push(const char* s)
    }
 }
 
-#ifdef WIN32
+#ifdef WINDOWS
 // borrowed from https://support.microsoft.com/en-au/help/99261/how-to-performing-clear-screen-cls-in-a-console-application
 static void cls(HANDLE hConsole)
 {
