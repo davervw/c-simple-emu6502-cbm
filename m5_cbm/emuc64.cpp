@@ -57,6 +57,7 @@
 #include "emuc64.h"
 #include "M5Core.h"
 #include "cardkbdscan.h"
+#include "ble_keyboard.h"
 
 // externs (globals)
 extern char* StartupPRG;
@@ -99,12 +100,12 @@ static void ReadKeyboard()
   static int lastRun = 1;
 
   String s;
-  if (CardKbd)
-  {
+  ble_keyboard->ServiceConnection();
+  s = ble_keyboard->Read();
+  if (s.length() != 0)
+    ;
+  else if (CardKbd)
     s = CardKbdScanRead();
-    if (s == "")
-      return;
-  }
   else if (Serial2.available())
     s = Serial2.readString();
   else if (M5Serial.available())
@@ -127,40 +128,39 @@ static void ReadKeyboard()
   else if ((lastDn=digitalRead(37))==0)
     s = dnString;
 #endif    
-  else
+  if (s.length() == 0)
     return;
-  {
-    int src = 0;
-    int dest = 0;
-    int scan = 0;
-    int len = 0;
-    while (src < s.length() && dest < 16) {
-      char c = s.charAt(src++);
-      if (c >= '0' && c <= '9') {
-        scan = scan * 10 + (c - '0');
-        ++len;
-      } else if (len > 0)
+
+  int src = 0;
+  int dest = 0;
+  int scan = 0;
+  int len = 0;
+  while (src < s.length() && dest < 16) {
+    char c = s.charAt(src++);
+    if (c >= '0' && c <= '9') {
+      scan = scan * 10 + (c - '0');
+      ++len;
+    } else if (len > 0)
+    {
+      int lobits = scan & 127;
+      if (lobits >= 64 && lobits < 88)
       {
-        int lobits = scan & 127;
-        if (lobits >= 64 && lobits < 88)
-        {
-          scan = extras[lobits - 64];
-          for (int i=0; i<dest; ++i)
-            if (scan_codes[i] == 15 || scan_codes[i] == 52)
-              scan_codes[i] = 64;
-          if (lobits == 83 || lobits == 85)
-              scan_codes[dest++] = 15;
-        }
-        if (scan > 64)
-          scan = (scan & 0xFF80) | 0x40;
-        scan_codes[dest++] = scan;
-        scan = 0;
-        len = 0;
+        scan = extras[lobits - 64];
+        for (int i=0; i<dest; ++i)
+          if (scan_codes[i] == 15 || scan_codes[i] == 52)
+            scan_codes[i] = 64;
+        if (lobits == 83 || lobits == 85)
+            scan_codes[dest++] = 15;
       }
+      if (scan > 64)
+        scan = (scan & 0xFF80) | 0x40;
+      scan_codes[dest++] = scan;
+      scan = 0;
+      len = 0;
     }
-    while (dest < 16)
-      scan_codes[dest++] = 64;
   }
+  while (dest < 16)
+    scan_codes[dest++] = 64;
 }
 
 bool EmuC64::ExecutePatch()

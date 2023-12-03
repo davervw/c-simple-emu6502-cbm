@@ -52,9 +52,11 @@
 #include <Wire.h>
 #include "M5Core.h"
 #include "cardkbdscan.h"
+#include "ble_keyboard.h"
 
 // globals
 const char* StartupPRG = 0;
+BLE_Keyboard* ble_keyboard;
 
 #ifdef TEST6502 // see emutest.cpp
 int main_go_num = -1;
@@ -99,6 +101,8 @@ void setup() {
   pinMode(38, INPUT_PULLUP);
   pinMode(37, INPUT_PULLUP);
 #endif
+
+  ble_keyboard = new BLE_Keyboard();
 }
 
 void loop() {

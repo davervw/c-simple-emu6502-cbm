@@ -67,6 +67,7 @@
 #include "vic.h"
 #include "M5Core.h"
 #include "cardkbdscan.h"
+#include "ble_keyboard.h"
 
 // externs/globals
 extern const char* StartupPRG;
@@ -358,11 +359,12 @@ static void ReadKeyboard()
   static int lastRun = 1;
   
   String s;
-  if (CardKbd) {
+  ble_keyboard->ServiceConnection();
+  s = ble_keyboard->Read();
+  if (s.length() != 0)
+    ;
+  else if (CardKbd)
     s = CardKbdScanRead();
-    if (s.length() == 0)
-      return;
-  }
   else if (Serial2.available())
     s = Serial2.readString();
   else if (M5Serial.available())
@@ -385,7 +387,7 @@ static void ReadKeyboard()
   else if ((lastDn=digitalRead(37))==0)
     s = dnString;
 #endif    
-  else
+  if (s.length() == 0)
     return;
   {
     int src = 0;
