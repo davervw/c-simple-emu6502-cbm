@@ -62,6 +62,7 @@
 #include "emud64.h"
 #include <arduino.h>
 #include <TFT_eSPI.h>
+#include "ble_keyboard.h"
 
 //TFT_eSprite sprite = TFT_eSprite(&tft);
 
@@ -94,35 +95,40 @@ static int scan_codes[16] = { 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64
 static void ReadKeyboard()
 {
   String s;
+
+  ble_keyboard->ServiceConnection();
+  s = ble_keyboard->Read();
+  if (s.length() != 0)
+    ;
   /*if (Serial2.available())
     s = Serial2.readString();
-  else*/ if (Serial.available())
+  */
+  else if (Serial.available())
     s = Serial.readString();
-  else
+  if (s.length() == 0)
     return;
-  {
-    Serial.print(s);
-    int src = 0;
-    int dest = 0;
-    int scan = 0;
-    int len = 0;
-    while (src < s.length() && dest < 16) {
-      char c = s.charAt(src++);
-      if (c >= '0' && c <= '9') {
-        scan = scan * 10 + (c - '0');
-        ++len;
-      } else if (len > 0)
-      {
-        if (scan > 64)
-          scan = (scan & 0xFF80) | 0x40;
-        scan_codes[dest++] = scan;
-        scan = 0;
-        len = 0;
-      }
+
+  Serial.print(s);
+  int src = 0;
+  int dest = 0;
+  int scan = 0;
+  int len = 0;
+  while (src < s.length() && dest < 16) {
+    char c = s.charAt(src++);
+    if (c >= '0' && c <= '9') {
+      scan = scan * 10 + (c - '0');
+      ++len;
+    } else if (len > 0)
+    {
+      if (scan > 64)
+        scan = (scan & 0xFF80) | 0x40;
+      scan_codes[dest++] = scan;
+      scan = 0;
+      len = 0;
     }
-    while (dest < 16)
-      scan_codes[dest++] = 64;
   }
+  while (dest < 16)
+    scan_codes[dest++] = 64;
 }
 
 static bool ExecuteRTS()

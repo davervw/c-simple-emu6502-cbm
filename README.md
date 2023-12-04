@@ -4,6 +4,8 @@ Another simple C64 emulator port for [LilyGo T-Display-S3](https://www.lilygo.cc
 
 ![](t-display-s3.jpg)
 
+![BLE keyboard example](ble.jpg)
+
 Supports browser-keyscan-helper (see included folder) for connecting via USB Serial to PC, use Chrome browser for keyboard entry
 
 Here are the full steps to get the project going, including enabling typing from Chrome browser.
@@ -24,6 +26,7 @@ Here are the full steps to get the project going, including enabling typing from
 14. Keep focus on the keyboard helper web page, and keystrokes should be sent over USB
 15. If having trouble, check step #6 again
 16. (OPTIONAL) LOAD/SAVE are supported for drives 8 and 9 (and drive 8 is assumed if no number is specified).  [Format](https://github.com/davervw/filecmdproc-esp32) a FATFS partition in flash storage with /disk/drive8.d64 and drive9.d64 [uploaded](https://github.com/smford/esp32-asyncwebserver-fileupload-example).
+17. (OPTIONAL) Use M5Stack CardKb with M5Stick-C or similar to provide wireless BLE keyboard support (see BLE_commodore_keyboard_server project included as subfolder)
 
 ## Keyboard hints ##
 ```

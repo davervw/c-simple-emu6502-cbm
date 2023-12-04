@@ -1,4 +1,4 @@
-// c-simple-emu6502-cbm.ino - Commodore Console Emulation
+// cardkbdscan.h
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -29,43 +29,7 @@
 // SOFTWARE.
 //
 ////////////////////////////////////////////////////////////////////////////////
-// IMPORTANT!
-//
-// This port is for M5Stack with IPS LCD, USB keyboard, and D64 disk (SD)
-// Note: other ports are available for other hardware platforms
-// Tested with Arduino 2.1.0
-// Requires M5 Basic Core (or Core2, or CoreS3)
-// Note: Serial diagnostics commented out so can start immediately without terminal
-////////////////////////////////////////////////////////////////////////////////
 
-#include "emuc64.h"
-#include "emu6502.h"
-#include <TFT_eSPI.h>
-#include <FFat.h>
-#include "ble_keyboard.h"
-
-TFT_eSPI Lcd;
-BLE_Keyboard* ble_keyboard;
-
-void setup() {
-  Lcd.init();
-  Lcd.setRotation(1);
-  Lcd.fillScreen(TFT_BLACK);
-
-  //Initialize serial (but don't wait for it to be connected, until there is an exception
-  Serial.begin(115200);
-  //Serial2.begin(115200, SERIAL_8N1, 1, 2);
-  Serial.setTimeout(0); // so we don't wait for reads
-
-  if (!FFat.begin())
-    Serial.println("WARNING: did not mount FFAT");
-
-  ble_keyboard = new BLE_Keyboard();
-
-  C64_Init();
-}
-
-void loop() {
-  // put your main code here, to run repeatedly:
-  ResetRun(ExecutePatch); 
-}
+#include "Arduino.h"
+extern bool CardKbd;
+String CardKbdScanRead();
