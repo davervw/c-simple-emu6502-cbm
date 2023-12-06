@@ -61,14 +61,12 @@
 #include "emuc64.h"
 #include "emud64.h"
 #include <arduino.h>
-#include <TFT_eSPI.h>
+#include <Arduino_GFX_Library.h>
 #include "ble_keyboard.h"
-
-//TFT_eSprite sprite = TFT_eSprite(&tft);
 
 // globals
 const char* StartupPRG = 0;
-extern TFT_eSPI Lcd;
+extern Arduino_RPi_DPI_RGBPanel *gfx;
 
 // locals
 static int startup_state = 0;
@@ -1224,7 +1222,7 @@ void C64_Init(void)
   ram[1] = 0x07;
 
   // initialize LCD screen
-  Lcd.fillScreen(TFT_BLACK);
+  gfx->fillScreen(BLACK);
 
   // myusb.begin();
   // keyboard1.attachRawPress(onKbdRawPress);
@@ -1236,48 +1234,24 @@ int C64ColorToLCDColor(byte value)
 {
   switch (value & 0xF)
   {
-    case 0: return TFT_BLACK;
-    case 1: return TFT_WHITE;
-    case 2: return TFT_RED;
-    case 3: return TFT_CYAN;
+    case 0: return BLACK;
+    case 1: return WHITE;
+    case 2: return RED;
+    case 3: return CYAN;
     case 4: return 0x8118; // DARKMAGENTA OR PURPLE
     case 5: return 0x0400; // DARKGREEN
-    case 6: return TFT_BLUE;
-    case 7: return TFT_YELLOW;
-    case 8: return TFT_ORANGE;
+    case 6: return BLUE;
+    case 7: return YELLOW;
+    case 8: return ORANGE;
     case 9: return 0x8283; // BROWN;
     case 10: return 0xFC10; // PINK OR LT RED
-    case 11: return TFT_DARKGREY;
-    case 12: return TFT_DARKCYAN; // MED GRAY
+    case 11: return DARKGREY;
+    case 12: return DARKCYAN; // MED GRAY
     case 13: return 0x07E0; // LIGHTGREEN;
     case 14: return 0x841F; // LIGHTBLUE;
-    case 15: return TFT_LIGHTGREY;
+    case 15: return LIGHTGREY;
     default: return 0;
   }
-}
-
-#ifdef ILI9488  
-int colors[12][12];
-int scale_index(int i)
-{
-  return (i*3+1)/2;
-}
-void store_color(int row, int col, int color)
-{
-  colors[scale_index(row)][scale_index(col)]=color;
-}
-int get_color(int row, int col)
-{
-  return colors[scale_index(row)][scale_index(col)];
-}
-#endif
-
-int Average565Colors(int color1, int color2)
-{ // extract 565 color from 16-bit values, average them, and combine back the same way
-  int red = ((color1 >> 11) + (color2 >> 11)) / 2;
-  int green = (((color1 >> 5) & 0x3F) + (((color2 >> 5) & 0x3F))) / 2;
-  int blue = ((color1 & 0x1F) + (color2 & 0x1F)) / 2;
-  return ((red & 0x1f) << 11) | ((green & 0x3f) << 5) | (blue & 0x1F);
 }
 
 void DrawChar(byte c, int col, int row, int fg, int bg)
@@ -1285,22 +1259,20 @@ void DrawChar(byte c, int col, int row, int fg, int bg)
   if (postponeDrawChar)
     return;
 
-  int mid = Average565Colors(fg, bg);  
   int offset = ((io[0x18] & 2) == 0) ? 0 : (8*256);
   const byte* shape = &chargen_rom[c*8+offset];
-  int x0 = 0 + col*8;
-  int y0 = 10 + row*6;
-  for (int row_i=0; row_i<=5; ++row_i)
+  int x0 = 80 + col*16;
+  int y0 = 40 + row*16;
+  for (int row_i=0; row_i<8; ++row_i)
   {
     int mask = 128;
     for (int col_i=0; col_i<8; ++col_i)
     {
-      if (row_i == 0) // color average the top two rows of character
-        Lcd.drawPixel(x0+col_i, y0+row_i, (((shape[0] | shape[1]) & mask) == 0) ? bg : (((shape[0] & mask) == (shape[1] & mask)) ? fg : mid));
-      else if (row_i == 5) // color average the bottom two rows of character
-        Lcd.drawPixel(x0+col_i, y0+row_i, (((shape[6] | shape[7]) & mask) == 0) ? bg : (((shape[6] & mask) == (shape[7] & mask)) ? fg : mid));
-      else // keep detail of four center rows of character
-        Lcd.drawPixel(x0+col_i, y0+row_i, ((shape[row_i+1] & mask) == 0) ? bg : fg);
+      int color = ((shape[row_i] & mask) == 0) ? bg : fg;
+      gfx->drawPixel(x0+col_i*2, y0+row_i*2, color);
+      gfx->drawPixel(x0+col_i*2+1, y0+row_i*2, color);
+      gfx->drawPixel(x0+col_i*2, y0+row_i*2+1, color);
+      gfx->drawPixel(x0+col_i*2+1, y0+row_i*2+1, color);
       mask = mask >> 1;
     }
   }
@@ -1426,8 +1398,14 @@ extern void SetMemory(ushort addr, byte value)
   else if (addr == 0xD020) // border
   {
     int border = C64ColorToLCDColor(value);
-    Lcd.fillRect(0, 0, 320, 10, border);
-    Lcd.fillRect(0, 160, 320, 10, border);
+    // gfx->fillRect(0, 0, 400, 40, border);
+    // gfx->fillRect(0, 240, 400, 40, border);
+    // gfx->fillRect(0, 40, 40, 200, border);
+    // gfx->fillRect(360, 40, 40, 200, border);
+    gfx->fillRect(0, 0, 800, 40, border);
+    gfx->fillRect(0, 440, 800, 40, border);
+    gfx->fillRect(0, 40, 80, 400, border);
+    gfx->fillRect(720, 40, 80, 400, border);
     io[addr - io_addr] = value & 0xF;
   } 
   else if (addr == 0xD021) // background
