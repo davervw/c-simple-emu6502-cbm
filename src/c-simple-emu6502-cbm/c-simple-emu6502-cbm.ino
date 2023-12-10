@@ -50,7 +50,7 @@
 #include <SD.h>
 #include <SPI.h>
 #include <Wire.h>
-#include "M5Core.h"
+#include "config.h"
 #include "cardkbdscan.h"
 #include "ble_keyboard.h"
 
@@ -68,11 +68,11 @@ void setup() {
   M5.begin();
 
   //Initialize serial (but don't wait for it to be connected, until there is an exception
-  M5Serial.begin(115200);
-  M5Serial.setTimeout(0); // so we don't wait for reads
+  Serial0.begin(115200);
+  Serial0.setTimeout(0); // so we don't wait for reads
 
   if(!SD.begin(SD_CS_OVERRIDE)){
-      M5Serial.println("Card Mount Failed");
+      Serial0.println("Card Mount Failed");
       M5.Lcd.println("Card Mount Failed");
       while(1); // cannot continue, so hang around
   }
@@ -92,7 +92,7 @@ void setup() {
   {
     Wire.end();
     //Initialize serial (but don't wait for it to be connected, until there is an exception
-    Serial2.begin(115200, SERIAL_8N1, SW_RX, -1);
+    Serial2.begin(115200, SERIAL_8N1, RX2, -1);
     Serial2.setTimeout(0); // so we don't wait for reads
   }
 

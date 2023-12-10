@@ -34,7 +34,7 @@
 // ported from EmuD64 class at https://github.com/davervw/ts-emu-c64/blob/master/c64-6502.ts
 // and added write capability
 
-#include "M5Core.h"
+#include "config.h"
 #include <FS.h>
 #include <SD.h>
 #include <SPI.h>
@@ -143,8 +143,8 @@ void EmuD64::InitializeData(unsigned char* disk_name, unsigned char* id)
 
 static void show_exception(const char* message)
 {
-  while (!M5Serial); // wait for serial terminal connected
-  M5Serial.println(message);
+  while (!Serial0); // wait for serial terminal connected
+  Serial0.println(message);
   while(1);
 }
 

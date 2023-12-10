@@ -1,5 +1,5 @@
 #include "emutedvideo.h"
-#include "M5Core.h"
+#include "config.h"
 
 static const int color_addr = 0x0800;
 static const int chars_addr = 0x0C00;

@@ -33,7 +33,7 @@
 #include "emucbm.h"
 #include "emud64.h"
 
-#include "M5Core.h"
+#include "config.h"
 #include <FS.h>
 #include <SD.h>
 #include <SPI.h>

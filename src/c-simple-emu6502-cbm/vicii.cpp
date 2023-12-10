@@ -1,5 +1,5 @@
 #include "vicii.h"
-#include "M5Core.h"
+#include "config.h"
 
 EmuVicII::EmuVicII(byte* vram, byte* vio, byte* vcolor_nybles, byte* vchargen)
 {

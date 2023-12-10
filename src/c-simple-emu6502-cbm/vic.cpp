@@ -1,5 +1,5 @@
-#include "Vic.h"
-#include "M5Core.h"
+#include "vic.h"
+#include "config.h"
 
 //#define VIC1TO1 // 1 to 1 pixels horizontally and vertically
 #define VIC3TO2 //3 pixels for every 2 pixels horizontally, 1 to 1 pixels vertically

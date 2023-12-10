@@ -60,7 +60,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "emupet.h"
-#include "M5Core.h"
+#include "config.h"
 
 // externs/globals
 extern int main_go_num;

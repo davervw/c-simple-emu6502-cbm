@@ -31,7 +31,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "emu6502.h"
-#include "M5Core.h"
+#include "config.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -706,7 +706,7 @@ void Emu6502::Execute(ushort addr)
 				OutputDebugStringA(full_line);
 #else				
 				snprintf(full_line, sizeof(full_line), "%-30s%s\n", line, state);
-				M5Serial.print(full_line);
+				Serial0.print(full_line);
 #endif				
 				if (step)
 					step = step; // user can put debug breakpoint here to allow stepping

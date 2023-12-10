@@ -71,7 +71,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "emuc128.h"
-#include "M5Core.h"
+#include "config.h"
 #include "cardkbdscan.h"
 #include "ble_keyboard.h"
 
@@ -453,8 +453,8 @@ void C128Memory::ReadKeyboard()
     s = CardKbdScanRead();
   else if (Serial2.available())
     s = Serial2.readString();
-  else if (M5Serial.available())
-    s = M5Serial.readString();
+  else if (Serial0.available())
+    s = Serial0.readString();
 #ifdef FIRE
   else if (lastRun==0 && (lastRun=(digitalRead(39) & digitalRead(38)))==1)
     s = noString;
