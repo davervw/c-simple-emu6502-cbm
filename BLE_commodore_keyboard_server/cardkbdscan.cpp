@@ -55,7 +55,7 @@ static int xlat[256] = {
 
 static char keys[80];
 
-bool CardKbd = false;
+bool CardKB = false;
 
 String CardKbdScanRead()
 {

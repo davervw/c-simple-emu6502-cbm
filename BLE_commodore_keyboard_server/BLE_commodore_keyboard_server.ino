@@ -33,8 +33,28 @@ void setup() {
   Serial.setTimeout(0); // so we don't wait for reads
   //Wire.begin(G2, G1, 100000UL); // ATOMS3
   Wire.begin(32, 33, 100000UL); // M5Stick-C
-  
+  for (int i=1; !CardKB && i<=5; ++i)
+  {
+    if (Wire.requestFrom((uint8_t)0x5F, (size_t)1, true) == 1)
+    {
+      CardKB = true;
+      break;
+    }
+    delay(100);
+  }
+  if (!CardKB)
+  {
+    Wire.end();
+    Serial2.end();
+    Serial2.begin(115200, SERIAL_8N1, 32, 33);
+    Serial2.setTimeout(0); // so we don't wait for reads
+  }
+
   Serial.println("Starting Commodore 64/128 BLE Keyboard Service");
+  if (CardKB)
+    Serial.println("CardKB or USB Serial");
+  else
+    Serial.println("HW Serial or USB Serial");
   BLEDevice::init("Commodore 64/128 BLE Keyboard Service");
 
   BLEServer *pServer = BLEDevice::createServer();
@@ -59,7 +79,13 @@ void setup() {
 }
 
 void loop() {
-  String s = CardKbdScanRead();
+  String s = "";
+  if (CardKB) 
+    s = CardKbdScanRead();
+  else
+    s = Serial2.readString();
+  if (s.length() == 0)
+    s = Serial.readString();
   if (s.length() == 0)
     return;
   pCharacteristic->setValue(s.c_str());
