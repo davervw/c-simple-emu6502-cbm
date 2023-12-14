@@ -73,7 +73,9 @@
 #include "emuc128.h"
 #include "config.h"
 #include "cardkbdscan.h"
+#ifndef ARDUINO_TEENSY41
 #include "ble_keyboard.h"
+#endif
 
 // externs (globals)
 extern char* StartupPRG;
@@ -93,7 +95,6 @@ EmuC128::~EmuC128()
 }
 
 static int startup_state = 0;
-static bool esc_mode = false;
 
 bool EmuC128::ExecutePatch()
 {
@@ -241,7 +242,7 @@ bool EmuC128::ExecutePatch()
         }
         else if (startup_state == 1)
         {
-            ushort addr = (ushort)(GetMemory(0x24) | (GetMemory(0x25) << 8) + 2);
+            ushort addr = (ushort)((GetMemory(0x24) | (GetMemory(0x25) << 8)) + 2);
             SetMemory(47, (byte)addr);
             SetMemory(48, (byte)(addr >> 8));
 
@@ -306,7 +307,7 @@ bool EmuC128::ExecutePatch()
         return true;
     }
 
-#ifdef FIRE
+#ifdef ARDUINO_M5STACK_FIRE
     static ushort counter = 0;
     if (counter++ == 0) // infrequently check
     {
@@ -434,6 +435,7 @@ C128Memory::~C128Memory()
 
 void C128Memory::ReadKeyboard()
 {
+#ifdef ARDUINO_M5STACK_FIRE
   const String upString = "15,7,88";
   const String dnString = "7,88";
   const String crString = "1,88";
@@ -443,19 +445,23 @@ void C128Memory::ReadKeyboard()
   static int lastCr = 1;
   static int lastDn = 1;
   static int lastRun = 1;
+#endif
 
   String s;
+#ifndef ARDUINO_TEENSY41
   ble_keyboard->ServiceConnection();
   s = ble_keyboard->Read();
   if (s.length() != 0)
     ;
-  else if (CardKbd)
+  else 
+#endif
+  if (CardKbd)
     s = CardKbdScanRead();
   else if (Serial2.available())
     s = Serial2.readString();
-  else if (Serial0.available())
-    s = Serial0.readString();
-#ifdef FIRE
+  else if (SerialDef.available())
+    s = SerialDef.readString();
+#ifdef ARDUINO_M5STACK_FIRE
   else if (lastRun==0 && (lastRun=(digitalRead(39) & digitalRead(38)))==1)
     s = noString;
   else if (lastUp==0 && (lastUp=digitalRead(39))==1)
@@ -476,7 +482,7 @@ void C128Memory::ReadKeyboard()
   if (s.length() == 0)
     return;
 
-  int src = 0;
+  unsigned src = 0;
   int dest = 0;
   int scan = 0;
   int len = 0;
@@ -726,7 +732,8 @@ bool C128Memory::IsRam(int& addr, bool isWrite = false)
         case 1: size = 4096; break;
         case 2: size = 8192; break;
         case 3: size = 16384; break;
-        default: throw "shouldn't happen";
+        //default: throw "shouldn't happen";
+        default: size = 0; break; // shouldn't happen
         }
 
         bool isBottomShared = ((ram_cr & 4) != 0);

@@ -57,7 +57,9 @@
 #include "emuc64.h"
 #include "config.h"
 #include "cardkbdscan.h"
+#ifndef ARDUINO_TEENSY41
 #include "ble_keyboard.h"
+#endif
 
 // externs (globals)
 extern char* StartupPRG;
@@ -89,6 +91,7 @@ static void ReadKeyboard()
     64, 35, 44, 7, 7, 2, 2, 64
   };
 
+#ifdef ARDUINO_M5STACK_FIRE
   const String upString = "15,7,64";
   const String dnString = "7,64";
   const String crString = "1,64";
@@ -98,19 +101,23 @@ static void ReadKeyboard()
   static int lastCr = 1;
   static int lastDn = 1;
   static int lastRun = 1;
+#endif
 
   String s;
+#ifndef ARDUINO_TEENSY41
   ble_keyboard->ServiceConnection();
   s = ble_keyboard->Read();
   if (s.length() != 0)
     ;
-  else if (CardKbd)
+  else 
+#endif
+  if (CardKbd)
     s = CardKbdScanRead();
   else if (Serial2.available())
     s = Serial2.readString();
-  else if (Serial0.available())
-    s = Serial0.readString();
-#ifdef FIRE
+  else if (SerialDef.available())
+    s = SerialDef.readString();
+#ifdef ARDUINO_M5STACK_FIRE
   else if (lastRun==0 && (lastRun=(digitalRead(39) & digitalRead(38)))==1)
     s = noString;
   else if (lastUp==0 && (lastUp=digitalRead(39))==1)
@@ -356,7 +363,7 @@ bool EmuC64::ExecutePatch()
 		}
 	}	
 
-#ifdef FIRE
+#ifdef ARDUINO_M5STACK_FIRE
   static ushort counter = 0;
   if (counter++ == 0) // infrequently check
   {

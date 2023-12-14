@@ -34,11 +34,15 @@
 // ported from EmuD64 class at https://github.com/davervw/ts-emu-c64/blob/master/c64-6502.ts
 // and added write capability
 
-#include "config.h"
 #include <FS.h>
+#ifdef ARDUINO_LILYGO_T_DISPLAY_S3
+#include "FFat.h"
+#else
 #include <SD.h>
 #include <SPI.h>
+#endif
 #include "emud64.h"
+#include "config.h"
 
 //extern SDClass SD;
 
@@ -79,7 +83,11 @@ EmuD64::EmuD64(const char* filename_d64)
 EmuD64::~EmuD64()
 {
     FlushDisk();
+#ifdef ARDUINO_TEENSY41
+    extmem_free(bytes);
+#else    
     delete[] bytes;
+#endif    
     delete[] filename_d64;
     delete[] track_dirty;
 }
@@ -143,8 +151,8 @@ void EmuD64::InitializeData(unsigned char* disk_name, unsigned char* id)
 
 static void show_exception(const char* message)
 {
-  while (!Serial0); // wait for serial terminal connected
-  Serial0.println(message);
+  while (!SerialDef); // wait for serial terminal connected
+  SerialDef.println(message);
   while(1);
 }
 
@@ -377,14 +385,14 @@ int EmuD64::DirStruct::Store(EmuD64* d64, int dir_track, int dir_sector, int dir
     d64->bytes[i + 3] = file_track;
     d64->bytes[i + 4] = file_sector;
 
-    for (int j = 0; j < sizeof(filename); ++j)
+    for (unsigned j = 0; j < sizeof(filename); ++j)
         d64->bytes[i + 5 + j] = filename[j];
 
     d64->bytes[i + 21] = rel_track;
     d64->bytes[i + 22] = rel_sector;
     d64->bytes[i + 23] = rel_length;
 
-    for (int j = 0; j < sizeof(unused); ++j)
+    for (unsigned j = 0; j < sizeof(unused); ++j)
         d64->bytes[i + 24 + j] = unused[j];
 
     d64->bytes[i + 30] = n_sectors & 0xFF;
@@ -1019,10 +1027,18 @@ void EmuD64::LoadFromFilenameOrCreate()
         filename_d64[filename_len - 1] = '4';
     }
 
+#ifdef ARDUINO_LILYGO_T_DISPLAY_S3
+    File fp = FFat.open(filename_d64, FILE_READ);
+#else
     File fp = SD.open(filename_d64, FILE_READ);
+#endif    
     if (fp && fp.size() == bytes_per_disk)
     {
+#ifdef ARDUINO_TEENSY41
+        bytes = (unsigned char*)extmem_malloc(bytes_per_disk);
+#else      
         bytes = new unsigned char[bytes_per_disk];
+#endif        
 
         // Arduino/Teensy can only read 64K at a time, so read each track separately
         for (int track = 1; track <= n_tracks; ++track)
@@ -1045,7 +1061,11 @@ void EmuD64::LoadFromFilenameOrCreate()
     }
     else if (!fp)
     {
-        bytes = new unsigned char[bytes_per_disk];        
+#ifdef ARDUINO_TEENSY41
+        bytes = (unsigned char*)extmem_malloc(bytes_per_disk);
+#else      
+        bytes = new unsigned char[bytes_per_disk];
+#endif       
         InitializeData((unsigned char*)"DISK NAME", (unsigned char*)"ID");
         for (int i = 1; i <= n_tracks; ++i)
             track_dirty[i] = true;
@@ -1060,7 +1080,11 @@ void EmuD64::LoadFromFilenameOrCreate()
 
     if (filename != 0)
     {
+#ifdef ARDUINO_LILYGO_T_DISPLAY_S3
+        File fp = FFat.open(filename, FILE_READ);
+#else
         File fp = SD.open(filename, FILE_READ);
+#endif        
         if (fp)
         {
             int bin_len = fp.size();
@@ -1095,7 +1119,11 @@ void EmuD64::FlushDisk()
     if (dirty)
     {
         bool new_file = false;
+#ifdef ARDUINO_LILYGO_T_DISPLAY_S3
+        File fp = FFat.open(filename_d64, FILE_WRITE);
+#else
         File fp = SD.open(filename_d64, FILE_WRITE);
+#endif        
         if (fp.size() == 0) // in case couldn't open file, create file
         {
             for (int i = 1; i <= n_tracks; ++i)

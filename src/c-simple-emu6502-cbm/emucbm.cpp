@@ -33,10 +33,14 @@
 #include "emucbm.h"
 #include "emud64.h"
 
-#include "config.h"
 #include <FS.h>
+#ifdef ARDUINO_LILYGO_T_DISPLAY_S3
+#include "FFat.h"
+#else
 #include <SD.h>
 #include <SPI.h>
+#endif
+#include "config.h"
 
 // externs (globals)
 extern char* StartupPRG;
@@ -76,7 +80,7 @@ EmuD64* EmuCBM::GetDisk()
 byte* EmuCBM::OpenRead(const char* filename, int* p_ret_file_len)
 {
   static const int read_buffer_size = 65536;
-	static unsigned char* read_buffer = new unsigned char[read_buffer_size];
+  static unsigned char* read_buffer = new unsigned char[read_buffer_size];
 
   EmuD64* disk = GetDisk();
   if (disk == 0)
@@ -271,7 +275,11 @@ bool EmuCBM::ExecuteJSR(ushort addr)
 
 void EmuCBM::File_ReadAllBytes(byte* bytes, int size, const char* filename)
 {
+#ifdef ARDUINO_LILYGO_T_DISPLAY_S3
+    File fp = FFat.open(filename, FILE_READ);
+#else
     File fp = SD.open(filename, FILE_READ);
+#endif    
     if (!fp)
       return;
     fp.read(bytes, size);
