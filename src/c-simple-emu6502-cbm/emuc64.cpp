@@ -506,6 +506,8 @@ byte EmuC64::C64Memory::read(ushort addr)
       
       return ~value;
     }
+    else if (addr == 0xD41B && (io[0x412] & 0x80) != 0 && (io[0x40E] != 0 || io[0x40F] != 0))
+      return random(256);
     else
       return io[addr - io_addr];
   }
@@ -565,5 +567,9 @@ void EmuC64::C64Memory::write(ushort addr, byte value)
   else if (addr == 0xDC00)
   {
     io[addr - io_addr] = value;
-  } 
+  }
+  else if (addr >= 0xD400 && addr <= 0xD41A) // SID registers
+  {
+    io[addr - io_addr] = value;
+  }
 }
