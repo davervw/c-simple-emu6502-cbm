@@ -141,7 +141,7 @@ let keyDictionary: { [key: string]: any } = {
     'ArrowDown': { scan: 7 },
     'ArrowLeft': { scan: 2, shift: 1 },
     'ArrowRight': { scan: 2 },
-    'PageUp': { scan: 1024+64 },
+    'PageUp': { scan: 1024 },
     '1': { scan: 56, shift: 0 },
     '2': { scan: 59, shift: 0, release: '@' },
     '3': { scan: 8, shift: 0 },
