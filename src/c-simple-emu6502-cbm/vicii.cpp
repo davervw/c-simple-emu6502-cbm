@@ -191,8 +191,8 @@ void EmuVicII::DrawChar(byte c, int col, int row, int fg, int bg)
   int y0 = 40 + row*16;
 #endif
 #ifdef ILI9341  
-  int x0 = 20 + row*8;
-  int y0 = col*8;
+  int x0 = col*8;
+  int y0 = 20 + row*8;
 #endif  
 #ifdef ILI9488  
   int x0 = 10 + row*12;
@@ -218,7 +218,7 @@ for (int row_i=0; row_i<8; ++row_i)
       gfx->drawPixel(x0+col_i*2+1, y0+row_i*2+1, color);
 #endif
 #ifdef ILI9341
-      lcd.drawPixel(x0+col_i, y0+row_i, color);
+      lcd.drawPixel(y0+row_i, 319-(x0+col_i), color);
 #endif
 #ifdef ILI9488
       lcd.drawPixel(x0+scale_index(row_i), 479 - (y0+scale_index(col_i)), color);

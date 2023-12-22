@@ -23,11 +23,16 @@ const int Y0 = 56;
 #endif
 
 #ifdef ARDUINO_TEENSY41
+ #ifdef ILI9341
+#define VIC3TO2
+const int X0 = 28;
+const int Y0 = 28;
+ #endif
+ #ifdef ILI9488
 #define VIC1TO1
-// const int X0 = 64;
-// const int Y0 = 68;
 const int X0 = 20;
 const int Y0 = 22;
+ #endif
 #endif
 
 #ifdef ARDUINO_LILYGO_T_DISPLAY_S3
@@ -113,8 +118,14 @@ int EmuVic::Vic20ColorToLCDColor(byte value)
     case 4: return 0x8118; // DARKMAGENTA OR PURPLE
     case 5: return 0x3E03; // GREEN
     case 6: return 0x0015; // BLUE
+#ifdef ILI9341
+    case 7: return ILI9341_YELLOW;
+    case 8: return ILI9341_ORANGE;
+#endif    
+#ifdef ILI9488
     case 7: return ILI9488_YELLOW;
     case 8: return ILI9488_ORANGE;
+#endif    
     case 9: return 0xFFFA; // PALE YELLOW
     case 10: return 0xFC10; // PINK OR LT RED
     case 11: return 0xB73F; // LIGHTBLUE
@@ -186,12 +197,21 @@ void EmuVic::DrawChar(byte c, int col, int row, int fg, int bg)
   int maxcol = 8;
 #endif
 #ifdef ARDUINO_TEENSY41
+ #ifdef ILI9341
+  int y0 = Y0 + row*8;
+  int x0 = X0 + col*12;
+  int midcolor = bg;
+  int maxcol = 12;
+  int last_color;
+ #endif    
+ #ifdef ILI9488
   int y0 = Y0 + row*12;
   int x0 = X0 + col*20;
   int maxcol = 8;
   #define SCALEX(n) ((n*5+1)/2)
   #define SCALEY(n) ((n*3+1)/2)
   int colors[8][8];
+ #endif
 #endif
 #ifdef ARDUINO_LILYGO_T_DISPLAY_S3
   int maxcol = 8;
@@ -237,7 +257,7 @@ void EmuVic::DrawChar(byte c, int col, int row, int fg, int bg)
       gfx->drawPixel(x1+3, y1+1, color);
 #endif
 #ifdef ILI9341
-//      lcd.drawPixel(x0+col_i, y0+row_i, color);
+      lcd.drawPixel(y0+row_i, 319-(x0+col_i), color);
 #endif
 #ifdef ILI9488
       lcd.drawPixel(y0+SCALEY(row_i), 479-(x0+SCALEX(col_i)), color);
@@ -364,7 +384,10 @@ void EmuVic::DrawBorder(byte value)
 #endif
 #ifdef ARDUINO_TEENSY41
 #ifdef ILI9341
-  // ..
+    lcd.fillRect(0, 0, Y0, 320, border);
+    lcd.fillRect(Y0, 0, 23*8, X0, border);
+    lcd.fillRect(Y0, 320-X0, 23*8, X0, border);
+    lcd.fillRect(240-Y0, 0, Y0, 320, border);
 #endif
 #ifdef ILI9488    
     lcd.fillRect(0, 480-X0, 320, X0, border);
