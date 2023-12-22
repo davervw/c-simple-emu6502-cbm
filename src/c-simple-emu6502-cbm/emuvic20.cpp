@@ -372,8 +372,14 @@ static void ReadKeyboard()
 #endif  
   if (CardKbd)
     s = CardKbdScanRead();
+#ifndef ARDUINO_SUNTON_8048S070
+#ifndef ARDUINO_TEENSY41
+#ifndef ARDUINO_LILYGO_T_DISPLAY_S3
   else if (Serial2.available())
     s = Serial2.readString();
+#endif
+#endif
+#endif
   else if (SerialDef.available())
     s = SerialDef.readString();
 #ifdef ARDUINO_M5STACK_FIRE

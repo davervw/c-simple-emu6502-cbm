@@ -196,9 +196,11 @@ void setup() {
     Wire.end();
 #ifndef ARDUINO_SUNTON_8048S070
 #ifndef ARDUINO_TEENSY41
+#ifndef ARDUINO_LILYGO_T_DISPLAY_S3
     //Initialize serial (but don't wait for it to be connected, until there is an exception
     Serial2.begin(115200, SERIAL_8N1, RX2, -1);
     Serial2.setTimeout(0); // so we don't wait for reads
+#endif
 #endif
 #endif
   }
