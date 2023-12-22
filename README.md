@@ -1,16 +1,24 @@
-# M5Core C64 with GO 128 #
+# Commodore 64, 128, Vic-20 text LCD emulator *Unified* #
 
 ![GO 128](media/c128_on_m5.png)
 
-Features include rendering full color screen on M5Core LCD and supporting multiple Core models with a define change in M5Core.h.  60 times a second IRQ implemented to blink cursor. Requires SD support for roms and .D64/1541 floppy emulation, tested with Core2 and CoreS3 (must change defines in local M5Core.h).   GO 128 and GO 64 switch back and forth.
+Features include rendering full color screen on LCD and supporting multiple models.  60 times a second IRQ implemented to blink cursor. Requires SD (or FFAT partition) support for roms and .D64/1541 floppy emulation.   GO 128, GO 20, and GO 64 commands switch back and forth between systems.
 
-Build instructions
+## Compatible hardware ##
 
-1. Clone repository, switch to branch m5
-2. Open m5cbm/m5cbm.ino with Arduino 2.x IDE
-3. Modify M5Core.h to #define target, e.g. Core2 or CoreS3 (note Basic not supported at this time, see below)
-4. Build and deploy to M5Stack Core device, should complain "Card Mount Failed"
-5. Insert MicroSD with the following files (roms from Vice or similar, disk files optional), and reset
+* M5Stack Core Fire
+* M5Stack Core2 (supports optional wristband)
+* M5Stack CoreS3 (supports optional wristband)
+* Sunton ESP32-804S070
+* Teensy 4.1 with PSRAM
+* LilyGo T-Display-S3 (flash FAT partition instead of SD)
+
+## Build instructions ##
+
+1. Clone repository, switch to branch unified
+2. Open src/c-simple-emu6502-cbm/c-simple-emu6502-cbm.ino with Arduino 2.x IDE
+3. Build and deploy to compatible device, should complain "Card Mount Failed"
+4. Insert MicroSD with the following files (roms from Vice or similar, disk files optional), and reset; or [detailed instructions for LilyGo T-Display-S3 with FFAT partition](https://github.com/davervw/c-simple-emu6502-cbm/tree/lilygo-t-display-s3)
 
 ```
 roms\c64\basic
@@ -27,29 +35,13 @@ disks\drive9.d64
 Notes:
 
 * LOAD/SAVE/VERIFY/LOAD"$" commands are intercepted by emulator.  There are some bugs in C128 for LOAD, so user beware.  There is no DOS for status, rename, delete, etc.  SAVE always ovewrites without warning in this emulator.
-* GO 128 command added for switching to Commodore 128 mode (how? intercepted by the emulator)
-* Keyboard is a serial attached helper that sends scan codes.  It can either be a web page -- see [browser-keyscan-helper](https://github.com/davervw/c-simple-emu6502-cbm/tree/m5/browser-keyscan-helper) with USB serial attachment, or a physical device attached to Port.A -- see project [c128_keyscan](https://github.com/davervw/c128_keyscan/tree/ninetyone_tx2_itsy_bitsy).  I use both standard USB or Bluetooth keyboards, and my original C128D external keyboard.
-* See more description at blog entry: [extremely-small-emulated-c64](https://techwithdave.davevw.com/2023/06/extremely-small-emulated-c64.html)
+* GO 128 command added for switching to Commodore 128 mode (how? intercepted by the emulator).   Also GO 64, GO 20 working in these supported Commodore platforms.
+* Keyboard is I2C attached M5Stack CardKB, or a serial attached helper that sends scan codes.  It can also be a web page -- see [browser-keyscan-helper](https://github.com/davervw/c-simple-emu6502-cbm/tree/m5/browser-keyscan-helper) with USB serial attachment, or a physical device attached to M5 Core Port.A -- see project [c128_keyscan](https://github.com/davervw/c128_keyscan/tree/ninetyone_tx2_itsy_bitsy).  I use both standard USB or Bluetooth keyboards, and my original C128D external keyboard.
+* Or keyboard is custom BLE server for serial or M5 CardKB (I2C) keyboard attached to M5Stack M5-Stick-C or similar (see [src/BLE_commodore_keyboard_server project](https://github.com/davervw/c-simple-emu6502-cbm/tree/unified/src/BLE_commodore_keyboard_server)) 
 
-Open browser-keyscan-helper/index.html to run an adapter with instructions how to use a keyboard via serial from a desktop web browser (e.g. Chrome).
+See more description at blog entries:
 
-```
-TODO: integrate web-serial-polyfill because Chrome mobile web browser doesn't support Serial APIs directly.
-```
+* [extremely-small-emulated-c64](https://techwithdave.davevw.com/2023/06/extremely-small-emulated-c64.html)
 
-![M5 Basic Core shown next to mini USB keyboard](browser-keyscan-helper/core_keyboard.jpg)
+Open src/browser-keyscan-helper/index.html to run an adapter with instructions how to use a keyboard via serial from a desktop web browser (e.g. Chrome).
 
-![Photo showing bluetooth Palm Portable Keyboard, Phone running key scan helper with serial USB to M5](browser-keyscan-helper/palm_phone_serial.jpg)
-
-![Block diagram showing bluetooth Palm Portable Keyboard, Phone running key scan helper with serial USB to M5](browser-keyscan-helper/block_diagram.png)
-
-![Early prototype with various M5 Core models](media/m5cores.jpg)
-
-Supported/tested:
-* Fire IoT
-* Core2
-* CoreS3
-
-Not supported:
-* Whoops, screen not big enough on StickC, and not enough RAM
-* Basic Core not supported because implementation needs extra RAM
