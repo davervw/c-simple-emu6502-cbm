@@ -6,12 +6,12 @@ Features include rendering full color screen on LCD and supporting multiple mode
 
 ## Compatible hardware ##
 
-* M5Stack Core Fire
-* M5Stack Core2 (supports optional wristband)
-* M5Stack CoreS3 (supports optional wristband)
-* Sunton ESP32-804S070
-* Teensy 4.1 with PSRAM
-* LilyGo T-Display-S3 (flash FAT partition instead of SD)
+* M5Stack Core Fire 320x240
+* M5Stack Core2 (supports optional wristband) 320x240
+* M5Stack CoreS3 (supports optional wristband) 320x240
+* Sunton ESP32-804S070 7" 800x480
+* Teensy 4.1 with PSRAM, ILI9341 320x240, or ILI9488 480x320
+* LilyGo T-Display-S3 (flash FAT partition instead of SD) 320x170
 
 ## Build instructions ##
 
