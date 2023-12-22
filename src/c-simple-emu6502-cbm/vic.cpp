@@ -223,7 +223,6 @@ void EmuVic::DrawChar(byte c, int col, int row, int fg, int bg)
   #endif
 #ifdef M5STACK  
       M5.Lcd.drawPixel(x0+col_i, y0+row_i, color);
-      mask = mask >> 1;
 #endif
 #ifdef ARDUINO_SUNTON_8048S070
       int x1=x0+col_i*4;
