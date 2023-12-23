@@ -63,7 +63,6 @@ extern ILI9341_t3n lcd;
 #include "ILI9488_t3.h"
 extern ILI9488_t3 lcd;
 #endif
-#include "USBHost_t36.h"
 #endif
 ////////////////////////////
 #ifdef ARDUINO_LILYGO_T_DISPLAY_S3

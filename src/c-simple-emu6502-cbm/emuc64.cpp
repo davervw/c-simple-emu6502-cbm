@@ -57,7 +57,10 @@
 #include "emuc64.h"
 #include "config.h"
 #include "cardkbdscan.h"
-#ifndef ARDUINO_TEENSY41
+#ifdef ARDUINO_TEENSY41
+#include "USBtoCBMkeyboard.h"
+USBtoCBMkeyboard usbkbd;
+#else
 #include "ble_keyboard.h"
 #endif
 
@@ -141,6 +144,10 @@ static void ReadKeyboard()
   else if ((lastDn=digitalRead(37))==0)
     s = dnString;
 #endif    
+#ifdef ARDUINO_TEENSY41
+  else
+    s = usbkbd.Read();
+#endif
   if (s.length() == 0)
     return;
 
