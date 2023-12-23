@@ -53,13 +53,16 @@ This portable version (master branch unless otherwise specified) has been tested
 * NXP LPC1768 (ARM MBED): [forked](https://os.mbed.com/users/davervw/code/c-simple-emu6502-cbm/)
 * STM32F429 LCD (ARM MBED, note must rename ADC() method) [forked](https://os.mbed.com/users/davervw/code/C64-stm429_discovery/)
 * [Arduino branch](https://github.com/davervw/c-simple-emu6502-cbm/tree/arduino) from master
-* [Teensy_LCD branch](https://github.com/davervw/c-simple-emu6502-cbm/tree/teensy_lcd) from Arduino, keyboard mapping from STM32
-* [M5 branch](https://github.com/davervw/c-simple-emu6502-cbm/tree/m5) branched from Teensy_LCD for M5FireIoT, M5Core2, M5CoreS3, with merges from cpp branch for maximum features
 * [M5_core branch](https://github.com/davervw/c-simple-emu6502-cbm/tree/m5_core) original M5 Core support (no SIPPS RAM)
 * [m5-atom-s3 branch](https://github.com/davervw/c-simple-emu6502-cbm/tree/m5_atom_s3) for M5 Atom S3
 * [m5stick-c branch](https://github.com/davervw/c-simple-emu6502-cbm/tree/m5stickc) for M5Stick-C
-* [lilygo-t-display-s3 branch](https://github.com/davervw/c-simple-emu6502-cbm/tree/lilygo-t-display-s3) for LilyGo T-Display-S3
-* [ESP32-8048S070-7inch branch](https://github.com/davervw/c-simple-emu6502-cbm/tree/ESP32-8048S070-7inch) for Sunton ESP32-8048S070
+
+The following branches have been consolidated into a single [Unified](https://github.com/davervw/c-simple-emu6502-cbm/tree/unified) branch for improved sharing of code and features.  It is recommended to follow the unified branch instead of individual branches.
+
+* Teensy_LCD branch from Arduino, keyboard mapping from STM32
+* M5 branch branched from Teensy_LCD for M5FireIoT, M5Core2, M5CoreS3, with merges from cpp branch for maximum features
+* lilygo-t-display-s3 branch for LilyGo T-Display-S3
+* ESP32-8048S070-7inch branch for Sunton ESP32-8048S070
 
 Only CHRIN/CHROUT/READY(for startup program)/SETLFS/SETNAM/LOAD/SAVE are hooked for terminal version, so no, it won't run your favorite games, only maybe simple ASCII text adventures or such.  Sorry no PETSCII either (except LCD versions).   Some versions (Windows, Linux, Teensy, M5) with lots of RAM available also have D64 support for simple emulation of 1541 disk images so you can have a persistant collection of files that should be compatible with other emulators.
 
