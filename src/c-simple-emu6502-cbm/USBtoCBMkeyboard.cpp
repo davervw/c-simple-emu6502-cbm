@@ -1,4 +1,5 @@
 #include "config.h"
+#ifdef ARDUINO_TEENSY41
 #include "USBtoCBMkeyboard.h"
 
 static USBHost myusb;
@@ -217,3 +218,4 @@ String USBtoCBMkeyboard::Read()
   //SerialDef.print(s);
   return s;
 }
+#endif
