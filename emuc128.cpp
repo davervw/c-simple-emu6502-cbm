@@ -689,7 +689,7 @@ byte VDC8563::GetAddressRegister()
     else
     {
         ready = true; // simulate delay in processing
-        return 0;
+        return 0x36;
     }
 }
 
@@ -706,7 +706,17 @@ void VDC8563::SetAddressRegister(byte value)
 byte VDC8563::GetDataRegister()
 {
     if (ready)
+    {
+        if (register_addr == 31)
+        {
+            ushort dest = (ushort)((registers[18] << 8) + registers[19]);
+            data = vdc_ram[dest++];
+            registers[18] = (byte)(dest >> 8);
+            registers[19] = (byte)dest;
+        }
+
         return data;
+    }
     else
     {
         ready = true;
@@ -718,56 +728,36 @@ void VDC8563::SetDataRegister(byte value)
 {
     ready = false; // simulate delay in processing
 
-    if (register_addr == 5 || register_addr == 9 || register_addr == 11 || register_addr == 23 || register_addr == 29)
-        data &= 0x1F; // only 5 bits
-    else if (register_addr == 8)
-        data &= 3; // only 2 bits
-    else if (register_addr == 10)
-        data &= 0x7F; // only 7 bits
-    else if (register_addr == 28)
-        data &= 0xF0; // only upper 4 bits
-    else if (register_addr == 36)
-        data &= 0x0F; // only 4 bits
-    else if (register_addr == 37)
-        data &= 0x3F; // only 6 bits ???
-
     if (register_addr < registers_size)
     {
-        registers[register_addr] = data;
+        registers[register_addr] = value;
 
         if (register_addr == 31)
         {
-            ushort dest = (ushort)(registers[18] + (registers[19] << 8));
-            if ((registers[24] & 0x80) == 0)
-                vdc_ram[dest++] = data;
-            else
-            {
-                ushort src = (ushort)(registers[32] + (registers[33] << 8));
-                vdc_ram[dest++] = vdc_ram[src++];
-                registers[32] = (byte)src;
-                registers[33] = (byte)(src >> 8);
-            }
-            registers[18] = (byte)dest;
-            registers[19] = (byte)(dest >> 8);
+            ushort dest = (ushort)((registers[18] << 8) + registers[19]);
+            vdc_ram[dest++] = value;
+            registers[18] = (byte)(dest >> 8);
+            registers[19] = (byte)dest;
         }
         else if (register_addr == 30)
         {
+            ushort count = (value == 0) ? 256 : value;
             ushort dest = (ushort)(registers[18] + (registers[19] << 8));
             if ((registers[24] & 0x80) == 0)
             {
-                for (int i = 0; i < value; ++i)
+                for (int i = 0; i < count; ++i)
                     vdc_ram[dest++] = registers[31];
             }
             else
             {
-                ushort src = (ushort)(registers[32] + (registers[33] << 8));
-                for (int i = 0; i < value; ++i)
+                ushort src = (ushort)((registers[32] << 8) + registers[33]);
+                for (int i = 0; i < count; ++i)
                     vdc_ram[dest++] = vdc_ram[src++];
-                registers[32] = (byte)src;
-                registers[33] = (byte)(src >> 8);
+                registers[32] = (byte)(src >> 8);
+                registers[33] = (byte)src;
             }
-            registers[18] = (byte)dest;
-            registers[19] = (byte)(dest >> 8);
+            registers[18] = (byte)(dest >> 8);
+            registers[19] = (byte)dest;
         }
     }
 }
