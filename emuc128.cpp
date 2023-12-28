@@ -741,8 +741,8 @@ void VDC8563::SetDataRegister(byte value)
         }
         else if (register_addr == 30)
         {
-            ushort count = (value == 0) ? 256 : value;
-            ushort dest = (ushort)(registers[18] + (registers[19] << 8));
+            int count = (value == 0) ? 256 : value;
+            ushort dest = (ushort)((registers[18] << 8) + registers[19]);
             if ((registers[24] & 0x80) == 0)
             {
                 for (int i = 0; i < count; ++i)
