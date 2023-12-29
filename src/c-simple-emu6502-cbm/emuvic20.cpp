@@ -206,7 +206,7 @@ bool EmuVic20::ExecutePatch()
 		}
 		else if (startup_state == 1)
 		{
-			ushort addr = (ushort)(GetMemory(0x22) | (GetMemory(0x23) << 8) + 2);
+			ushort addr = (ushort)((GetMemory(0x22) | (GetMemory(0x23) << 8)) + 2);
 			SetMemory(45, (byte)addr);
 			SetMemory(46, (byte)(addr >> 8));
 
@@ -410,7 +410,7 @@ static void ReadKeyboard()
   if (s.length() == 0)
     return;
   {
-    int src = 0;
+    unsigned src = 0;
     int dest = 0;
     int scan = 0;
     int len = 0;

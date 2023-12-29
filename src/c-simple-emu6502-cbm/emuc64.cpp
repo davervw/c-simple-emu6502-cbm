@@ -151,7 +151,7 @@ static void ReadKeyboard()
   if (s.length() == 0)
     return;
 
-  int src = 0;
+  unsigned src = 0;
   int dest = 0;
   int scan = 0;
   int len = 0;

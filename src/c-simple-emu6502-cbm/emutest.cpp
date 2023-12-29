@@ -88,9 +88,9 @@ bool EmuTest::ExecutePatch()
         printf("%04X Test FAIL\n", PC);
         while(1) {} // loop forever
     }
-    if (GetMemory(PC) == 0x4C/*JMP*/
-        && (GetMemory((ushort)(PC + 1)) == (PC & 0xFF) && GetMemory((ushort)(PC + 2)) == (PC >> 8)
-            || GetMemory((ushort)(PC + 1)) == 0x00 && GetMemory((ushort)(PC + 2)) == 0x04)
+    if ( GetMemory(PC) == 0x4C/*JMP*/
+        && ((GetMemory((ushort)(PC + 1)) == (PC & 0xFF) && GetMemory((ushort)(PC + 2)) == (PC >> 8))
+            || (GetMemory((ushort)(PC + 1)) == 0x00 && GetMemory((ushort)(PC + 2)) == 0x04) )
         )
     {
         printf("%04X COMPLETED SUCCESS\n", PC);
