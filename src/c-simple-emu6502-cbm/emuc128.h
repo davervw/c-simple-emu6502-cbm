@@ -34,6 +34,7 @@
 
 #include "emucbm.h"
 #include "vicii.h"
+#include "vdc.h"
 
 class C128Memory;
 
@@ -56,25 +57,6 @@ private:
 private:
 	EmuC128(const EmuC128& other); // disabled
 	bool operator==(const EmuC128& other) const; // disabled
-};
-
-class VDC8563
-{
-private:
-	byte* registers;
-	byte* vdc_ram;
-	byte register_addr;
-	byte data;
-	bool ready = false;
-
-public:
-	VDC8563();
-	~VDC8563();
-
-	byte GetAddressRegister();
-	void SetAddressRegister(byte value);
-	byte GetDataRegister();
-	void SetDataRegister(byte value);
 };
 
 class C128Memory : public Emu6502::Memory
