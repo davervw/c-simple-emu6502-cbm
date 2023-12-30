@@ -10,6 +10,8 @@ EmuVicII::EmuVicII(byte* vram, byte* vio, byte* vcolor_nybles, byte* vchargen)
   old_video = new byte[1000];
   old_color = new byte[1000];
   postponeDrawChar = false;
+  active = true;
+  border = 0;
 
   memset(old_video, 32, 1000);
   memset(old_color, 0, 1000);
@@ -27,6 +29,21 @@ EmuVicII::~EmuVicII()
 {
   delete [] old_video;
   delete [] old_color;
+}
+
+void EmuVicII::Activate()
+{
+  if (!active)
+  {
+    active = true;
+    DrawBorder(border);
+    RedrawScreen();
+  }
+}
+
+void EmuVicII::Deactivate()
+{
+  active = false;
 }
 
  // RGB565 colors picked with http://www.barth-dev.de/online/rgb565-color-picker/
@@ -174,7 +191,7 @@ static int average_color(int color1, int color2)
 
 void EmuVicII::DrawChar(byte c, int col, int row, int fg, int bg)
 {
-  if (postponeDrawChar)
+  if (postponeDrawChar || !active)
     return;
   
 #ifdef M5STACK  
@@ -314,30 +331,34 @@ void EmuVicII::RedrawScreenEfficientlyAfterPostponed()
 
 void EmuVicII::DrawBorder(byte value)
 {
-    int border = C64ColorToLCDColor(value);
+    if (!active)
+      return;
+
+    border = value;
+    int color = C64ColorToLCDColor(border);
 #ifdef M5STACK
     M5.Lcd.startWrite();
-    M5.Lcd.fillRect(0, 0, 320, 20, border);
-    M5.Lcd.fillRect(0, 220, 320, 20, border);
+    M5.Lcd.fillRect(0, 0, 320, 20, color);
+    M5.Lcd.fillRect(0, 220, 320, 20, color);
     M5.Lcd.endWrite();
 #endif    
 #ifdef ARDUINO_SUNTON_8048S070
-    gfx->fillRect(0, 0, 800, 40, border);
-    gfx->fillRect(0, 440, 800, 40, border);
-    gfx->fillRect(0, 40, 80, 400, border);
-    gfx->fillRect(720, 40, 80, 400, border);
+    gfx->fillRect(0, 0, 800, 40, color);
+    gfx->fillRect(0, 440, 800, 40, color);
+    gfx->fillRect(0, 40, 80, 400, color);
+    gfx->fillRect(720, 40, 80, 400, color);
 #endif
 #ifdef ILI9341    
-    lcd.fillRect(0, 0, 20, 320, border);
-    lcd.fillRect(220, 0, 20, 320, border);
+    lcd.fillRect(0, 0, 20, 320, color);
+    lcd.fillRect(220, 0, 20, 320, color);
 #endif    
 #ifdef ILI9488    
-    lcd.fillRect(0, 0, 10, 480, border);
-    lcd.fillRect(310, 0, 10, 480, border);
+    lcd.fillRect(0, 0, 10, 480, color);
+    lcd.fillRect(310, 0, 10, 480, color);
 #endif   
 #ifdef ARDUINO_LILYGO_T_DISPLAY_S3
-    lcd.fillRect(0, 0, 320, 10, border);
-    lcd.fillRect(0, 160, 320, 10, border);
+    lcd.fillRect(0, 0, 320, 10, color);
+    lcd.fillRect(0, 160, 320, 10, color);
 #endif
 }
 

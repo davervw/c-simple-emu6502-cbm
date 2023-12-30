@@ -14,6 +14,8 @@ public:
   void RedrawScreenEfficientlyAfterPostponed();
   void DrawBorder(byte value);
   void SaveOldVideoAndColor();
+  void Activate();
+  void Deactivate();
 
   byte* ram;
   byte* io;
@@ -22,4 +24,6 @@ public:
   byte* old_video;
   byte* old_color;
   bool postponeDrawChar;
+  bool active;
+  byte border;
 };

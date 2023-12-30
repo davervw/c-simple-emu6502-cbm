@@ -654,6 +654,21 @@ void C128Memory::write(ushort addr, byte value)
             bool changedRequiresUpdate = ram[addr128k] != value;
             if (changedRequiresUpdate)
             {
+              if (addr128k == 215 && ram[addr128k] != value)
+              {
+                ram[addr128k] = value;
+                if (value & 128)
+                {
+                  vdc->Activate();
+                  vicii->Deactivate();
+                }
+                else
+                {
+                  vdc->Deactivate();
+                  vicii->Activate();                 
+                }
+                return;
+              }
               ram[addr128k] = value;
               if (addr128k >= 1024 && addr128k < 2024)
                 vicii->DrawChar(addr128k-1024);
