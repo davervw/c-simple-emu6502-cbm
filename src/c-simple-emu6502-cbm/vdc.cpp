@@ -101,8 +101,9 @@ void VDC8563::DrawChar(byte c, int col, int row, int fg, int bg, byte attrib)
   int y0 = 40 + row * 16;
 #endif
 #ifdef ILI9488
-  int x0 = 60 + row * 8;
+  int x0 = 10 + row * 12;
   int y0 = col * 6;
+  #define SCALEY(n) ((n*3+1)/2)
 #endif
   byte* src = &vdc_ram[0x2000] + 16 * c + 4096 * (attrib >> 7);
   bool inverse = ((registers[24] & 0x40) != 0);
@@ -121,7 +122,7 @@ void VDC8563::DrawChar(byte c, int col, int row, int fg, int bg, byte attrib)
 #endif      
 #ifdef ILI9488
       if (col_i > 0 && col_i < 7)
-        lcd.drawPixel(x0+row_i, 479-(y0+col_i-1), color);
+        lcd.drawPixel(x0+SCALEY(row_i), 479-(y0+col_i-1), color);
 #endif
       mask >>= 1;
     }
