@@ -153,10 +153,10 @@ void VDC8563::RedrawScreen()
   bool attributesEnabled = ((registers[25] & 0x40) != 0);
   for (int row = 0; row < 25; ++row)
   {
-    byte attrib = vdc_ram[2048+offset];
-    int fg = attributesEnabled ? VDCColorToLCDColor(attrib) : VDCColorToLCDColor(registers[26] >> 4);
     for (int col = 0; col < 80; ++col)
     {
+      byte attrib = vdc_ram[2048+offset];
+      int fg = attributesEnabled ? VDCColorToLCDColor(attrib) : VDCColorToLCDColor(registers[26] >> 4);
       DrawChar(vdc_ram[offset], col, row, fg, bg, attrib);
       ++offset;
     }
