@@ -91,6 +91,22 @@ int VDC8563::VDCColorToLCDColor(byte value)
   }
 }
 
+#ifdef ILI9488
+int static average_color(int color0, int color2)
+{
+  if (color0 == color2)
+    return color0;  
+  unsigned char r0, g0, b0, r1, g1, b1, r2, g2, b2;
+  lcd.color565toRGB(color0, r0, g0, b0);
+  lcd.color565toRGB(color2, r2, g2, b2);
+  r1 = (r0+r2)/2;
+  g1 = (g0+g2)/2;
+  b1 = (b0+b2)/2;
+  int color1 = CL(r1, g1, b1);
+  return color1;
+}
+#endif
+
 void VDC8563::DrawChar(byte c, int col, int row, int fg, int bg, byte attrib)
 {
   if (!active)
@@ -104,6 +120,8 @@ void VDC8563::DrawChar(byte c, int col, int row, int fg, int bg, byte attrib)
   int x0 = 10 + row * 12;
   int y0 = col * 6;
   #define SCALEY(n) ((n*3+1)/2)
+  int colors[6];
+  bool fill = true;
 #endif
   byte* src = &vdc_ram[0x2000] + 16 * c + 4096 * (attrib >> 7);
   bool inverse = ((registers[24] & 0x40) != 0);
@@ -122,7 +140,12 @@ void VDC8563::DrawChar(byte c, int col, int row, int fg, int bg, byte attrib)
 #endif      
 #ifdef ILI9488
       if (col_i > 0 && col_i < 7)
+      {
+        if (fill && (row_i & 1) == 1)
+          lcd.drawPixel(x0+SCALEY(row_i)-1, 479-(y0+col_i-1), average_color(color, colors[col_i-1]));
         lcd.drawPixel(x0+SCALEY(row_i), 479-(y0+col_i-1), color);
+        colors[col_i-1] = color;
+      }
 #endif
       mask >>= 1;
     }
