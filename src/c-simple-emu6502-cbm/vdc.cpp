@@ -120,7 +120,7 @@ void VDC8563::DrawChar(byte c, int col, int row, int fg, int bg, byte attrib)
   int x0 = 10 + row * 12;
   int y0 = col * 6;
   #define SCALEY(n) ((n*3+1)/2)
-  int colors[6];
+  int colors[8];
   bool fill = true;
 #endif
   byte* src = &vdc_ram[0x2000] + 16 * c + 4096 * (attrib >> 7);
@@ -139,13 +139,24 @@ void VDC8563::DrawChar(byte c, int col, int row, int fg, int bg, byte attrib)
       gfx->drawPixel(x0+col_i, y0+row_i*2+1, color);
 #endif      
 #ifdef ILI9488
-      if (col_i > 0 && col_i < 7)
+      if (col_i >= 2 && col_i <= 5)
       {
         if (fill && (row_i & 1) == 1)
-          lcd.drawPixel(x0+SCALEY(row_i)-1, 479-(y0+col_i-1), average_color(color, colors[col_i-1]));
+          lcd.drawPixel(x0+SCALEY(row_i)-1, 479-(y0+col_i-1), average_color(color, colors[col_i]));
         lcd.drawPixel(x0+SCALEY(row_i), 479-(y0+col_i-1), color);
-        colors[col_i-1] = color;
       }
+      else if (col_i == 1 || col_i == 7)
+      {
+        int adj = (col_i == 7) ? 1 : 0;
+        int mid = average_color(color, colors[col_i-1]);
+        if (fill && (row_i & 1) == 1)
+        {
+          int midabove = average_color(colors[col_i], (((src[row_i-1] & (mask << 1)) != 0 || underlined) ^ inverse ^ isCursor) ? fg : bg);
+          lcd.drawPixel(x0+SCALEY(row_i)-1, 479-(y0+col_i-1-adj), average_color(mid, midabove));
+        }
+        lcd.drawPixel(x0+SCALEY(row_i), 479-(y0+col_i-1-adj), mid);
+      }
+      colors[col_i] = color;
 #endif
       mask >>= 1;
     }
