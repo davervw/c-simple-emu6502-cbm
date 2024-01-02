@@ -43,6 +43,7 @@ Notes:
 * Different hardware has different capabilities.  
 * M5 Fire has three physical buttons that act as cursor up/down and Enter (also left two does Shift-Run, and outer left/right switch to next emulator).
 * Supporting different LCD resolutions different than Commodore supported has been an exercise in upscaling and downscaling.
+* VDC 8563/8568 text emulation is included in the Commodore 128 emulator only.  Use GRAPHIC 5 command to switch to the 80 column text screen.   GRAPHIC 0 will return to the 40 column screen.
 
 See more description at blog entries:
 
