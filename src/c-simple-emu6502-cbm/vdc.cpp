@@ -39,6 +39,9 @@ void VDC8563::Activate()
 #ifdef M5STACK
     M5.Lcd.fillRect(0, 0, 320, 240, bg);
 #endif
+#ifdef ARDUINO_LILYGO_T_DISPLAY_S3
+    lcd.fillRect(0, 0, 320, 170, bg);
+#endif
 #ifdef ILI9341
     lcd.fillRect(0, 0, 240, 320, bg);
 #endif
@@ -77,6 +80,23 @@ int VDC8563::VDCColorToLCDColor(byte value)
     case 15: return WHITE;
 #endif
 #ifdef M5STACK
+    case 1: return TFT_DARKGREY;
+    case 2: return TFT_BLUE;
+    case 3: return 0x841F; // LIGHTBLUE
+    case 4: return 0x0400; // DARKGREEN
+    case 5: return 0xBFF7; // LIGHTGREEN
+    case 6: return TFT_DARKCYAN; // MED GRAY
+    case 7: return TFT_CYAN;
+    case 8: return TFT_RED;
+    case 9: return 0xFC10; // PINK OR LT RED
+    case 10: return 0x8118; // DARKMAGENTA OR PURPLE
+    case 11: return 0xF81F; // LIGHT MAGENTA
+    case 12: return 0x8283; // BROWN;
+    case 13: return TFT_YELLOW;
+    case 14: return TFT_LIGHTGREY;
+    case 15: return TFT_WHITE;
+#endif
+#ifdef ARDUINO_LILYGO_T_DISPLAY_S3
     case 1: return TFT_DARKGREY;
     case 2: return TFT_BLUE;
     case 3: return 0x841F; // LIGHTBLUE
@@ -140,6 +160,15 @@ static int average_color(int color1, int color2)
   return ((red & 0x1f) << 11) | ((green & 0x3f) << 5) | (blue & 0x1F);
 }
 #endif
+#ifdef ARDUINO_LILYGO_T_DISPLAY_S3
+static int average_color(int color1, int color2)
+{ // extract 565 color from 16-bit values, average them, and combine back the same way
+  int red = ((color1 >> 11) + (color2 >> 11)) / 2;
+  int green = (((color1 >> 5) & 0x3F) + (((color2 >> 5) & 0x3F))) / 2;
+  int blue = ((color1 & 0x1F) + (color2 & 0x1F)) / 2;
+  return ((red & 0x1f) << 11) | ((green & 0x3f) << 5) | (blue & 0x1F);
+}
+#endif
 #ifdef ILI9341
 int static average_color(int color0, int color2)
 {
@@ -186,6 +215,12 @@ void VDC8563::DrawChar(byte c, int col, int row, int fg, int bg, byte attrib)
   int colors[8];
   M5.Lcd.startWrite();
 #endif
+#ifdef ARDUINO_LILYGO_T_DISPLAY_S3
+  int x0 = col * 4;
+  int y0 = 10 + row * 6;
+  int colors[4];
+  int last_color;
+#endif
 #ifdef ILI9341
   int x0 = col * 4;
   int y0 = 20 + row * 8;
@@ -217,6 +252,24 @@ void VDC8563::DrawChar(byte c, int col, int row, int fg, int bg, byte attrib)
       if (col_i & 1)
         M5.Lcd.drawPixel(x0+col_i/2, y0+row_i, average_color(colors[col_i-1], color));
       colors[col_i] = color;
+#endif
+#ifdef ARDUINO_LILYGO_T_DISPLAY_S3
+      if (col_i & 1)
+      {
+        int mid = average_color(last_color, color);
+        if (row_i > 1 && row_i < 6)
+          lcd.drawPixel(x0+col_i/2, y0+row_i-1, mid);
+        else if (row_i == 1 || row_i == 7)
+        {
+          int adj = (row_i == 7) ? 2 : 1;
+          mid = average_color(mid, colors[col_i/2]);
+          lcd.drawPixel(x0+col_i/2, y0+row_i-adj, mid);
+        }
+        else
+          colors[col_i/2] = mid;
+      }
+      else
+        last_color = color;
 #endif
 #ifdef ILI9341
       if (col_i & 1)
@@ -431,6 +484,9 @@ void VDC8563::SetDataRegister(byte value)
 #endif    
 #ifdef M5STACK
         M5.Lcd.fillRect(0, 0, 320, 240, bg);
+#endif
+#ifdef ARDUINO_LILYGO_T_DISPLAY_S3
+        lcd.fillRect(0, 0, 320, 170, bg);
 #endif
 #ifdef ILI9341
         lcd.fillRect(0, 0, 240, 320, bg);
