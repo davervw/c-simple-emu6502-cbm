@@ -35,7 +35,10 @@ void VDC8563::Activate()
     int bg = VDCColorToLCDColor(registers[26]);
 #ifdef ARDUINO_SUNTON_8048S070
     gfx->fillRect(0, 0, 800, 480, bg);
-#endif    
+#endif
+#ifdef ILI9341
+    lcd.fillRect(0, 0, 240, 320, bg);
+#endif
 #ifdef ILI9488
     lcd.fillRect(0, 0, 320, 480, bg);
 #endif
@@ -70,6 +73,23 @@ int VDC8563::VDCColorToLCDColor(byte value)
     case 14: return LIGHTGREY;
     case 15: return WHITE;
 #endif
+#ifdef ILI9341
+    case 1: return ILI9341_DARKGREY;
+    case 2: return ILI9341_BLUE;
+    case 3: return 0x841F; // LIGHTBLUE
+    case 4: return 0x0400; // DARKGREEN
+    case 5: return 0xBFF7; // LIGHTGREEN
+    case 6: return ILI9341_DARKCYAN; // MED GRAY
+    case 7: return ILI9341_CYAN;
+    case 8: return ILI9341_RED;
+    case 9: return 0xFC10; // PINK OR LT RED
+    case 10: return 0x8118; // DARKMAGENTA OR PURPLE
+    case 11: return 0xF81F; // LIGHT MAGENTA
+    case 12: return 0x8283; // BROWN;
+    case 13: return ILI9341_YELLOW;
+    case 14: return ILI9341_LIGHTGREY;
+    case 15: return ILI9341_WHITE;
+#endif
 #ifdef ILI9488    
     case 1: return ILI9488_DARKGREY;
     case 2: return ILI9488_BLUE;
@@ -91,6 +111,21 @@ int VDC8563::VDCColorToLCDColor(byte value)
   }
 }
 
+#ifdef ILI9341
+int static average_color(int color0, int color2)
+{
+  if (color0 == color2)
+    return color0;  
+  unsigned char r0, g0, b0, r1, g1, b1, r2, g2, b2;
+  lcd.color565toRGB(color0, r0, g0, b0);
+  lcd.color565toRGB(color2, r2, g2, b2);
+  r1 = (r0+r2)/2;
+  g1 = (g0+g2)/2;
+  b1 = (b0+b2)/2;
+  int color1 = CL(r1, g1, b1);
+  return color1;
+}
+#endif
 #ifdef ILI9488
 int static average_color(int color0, int color2)
 {
@@ -116,6 +151,11 @@ void VDC8563::DrawChar(byte c, int col, int row, int fg, int bg, byte attrib)
   int x0 = 80 + col * 8;
   int y0 = 40 + row * 16;
 #endif
+#ifdef ILI9341
+  int x0 = col * 4;
+  int y0 = 20 + row * 8;
+  int colors[8];
+#endif
 #ifdef ILI9488
   int x0 = 10 + row * 12;
   int y0 = col * 6;
@@ -138,6 +178,11 @@ void VDC8563::DrawChar(byte c, int col, int row, int fg, int bg, byte attrib)
       gfx->drawPixel(x0+col_i, y0+row_i*2, color);
       gfx->drawPixel(x0+col_i, y0+row_i*2+1, color);
 #endif      
+#ifdef ILI9341
+      if (col_i & 1)
+        lcd.drawPixel(y0+row_i, 319-(x0+col_i/2), average_color(colors[col_i-1], color));
+      colors[col_i] = color;
+#endif
 #ifdef ILI9488
       if (col_i >= 2 && col_i <= 5)
       {
@@ -341,6 +386,9 @@ void VDC8563::SetDataRegister(byte value)
 #ifdef ARDUINO_SUNTON_8048S070
         gfx->fillRect(0, 0, 800, 480, bg);
 #endif    
+#ifdef ILI9341
+        lcd.fillRect(0, 0, 240, 320, bg);
+#endif
 #ifdef ILI9488
         lcd.fillRect(0, 0, 320, 480, bg);
 #endif
