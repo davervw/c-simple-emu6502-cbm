@@ -6,7 +6,7 @@ static USBHost myusb;
 static USBHub hub1(myusb);
 static USBHub hub2(myusb);
 static KeyboardController keyboard1(myusb);
-static USBDriver *drivers[] = {&hub1, &hub2, &keyboard1};
+//static USBDriver *drivers[] = {&hub1, &hub2, &keyboard1};
 
 // array allows multiple keys/modifiers pressed at one time
 static int scan_codes[9] = { 64, 64, 64, 64, 64, 64, 64, 64, 64 } ;
