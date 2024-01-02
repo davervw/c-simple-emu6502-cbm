@@ -36,6 +36,9 @@ void VDC8563::Activate()
 #ifdef ARDUINO_SUNTON_8048S070
     gfx->fillRect(0, 0, 800, 480, bg);
 #endif
+#ifdef M5STACK
+    M5.Lcd.fillRect(0, 0, 320, 240, bg);
+#endif
 #ifdef ILI9341
     lcd.fillRect(0, 0, 240, 320, bg);
 #endif
@@ -72,6 +75,23 @@ int VDC8563::VDCColorToLCDColor(byte value)
     case 13: return YELLOW;
     case 14: return LIGHTGREY;
     case 15: return WHITE;
+#endif
+#ifdef M5STACK
+    case 1: return TFT_DARKGREY;
+    case 2: return TFT_BLUE;
+    case 3: return 0x841F; // LIGHTBLUE
+    case 4: return 0x0400; // DARKGREEN
+    case 5: return 0xBFF7; // LIGHTGREEN
+    case 6: return TFT_DARKCYAN; // MED GRAY
+    case 7: return TFT_CYAN;
+    case 8: return TFT_RED;
+    case 9: return 0xFC10; // PINK OR LT RED
+    case 10: return 0x8118; // DARKMAGENTA OR PURPLE
+    case 11: return 0xF81F; // LIGHT MAGENTA
+    case 12: return 0x8283; // BROWN;
+    case 13: return TFT_YELLOW;
+    case 14: return TFT_LIGHTGREY;
+    case 15: return TFT_WHITE;
 #endif
 #ifdef ILI9341
     case 1: return ILI9341_DARKGREY;
@@ -111,6 +131,15 @@ int VDC8563::VDCColorToLCDColor(byte value)
   }
 }
 
+#ifdef M5STACK
+static int average_color(int color1, int color2)
+{ // extract 565 color from 16-bit values, average them, and combine back the same way
+  int red = ((color1 >> 11) + (color2 >> 11)) / 2;
+  int green = (((color1 >> 5) & 0x3F) + (((color2 >> 5) & 0x3F))) / 2;
+  int blue = ((color1 & 0x1F) + (color2 & 0x1F)) / 2;
+  return ((red & 0x1f) << 11) | ((green & 0x3f) << 5) | (blue & 0x1F);
+}
+#endif
 #ifdef ILI9341
 int static average_color(int color0, int color2)
 {
@@ -151,6 +180,12 @@ void VDC8563::DrawChar(byte c, int col, int row, int fg, int bg, byte attrib)
   int x0 = 80 + col * 8;
   int y0 = 40 + row * 16;
 #endif
+#ifdef M5STACK
+  int x0 = col * 4;
+  int y0 = 20 + row * 8;
+  int colors[8];
+  M5.Lcd.startWrite();
+#endif
 #ifdef ILI9341
   int x0 = col * 4;
   int y0 = 20 + row * 8;
@@ -178,6 +213,11 @@ void VDC8563::DrawChar(byte c, int col, int row, int fg, int bg, byte attrib)
       gfx->drawPixel(x0+col_i, y0+row_i*2, color);
       gfx->drawPixel(x0+col_i, y0+row_i*2+1, color);
 #endif      
+#ifdef M5STACK
+      if (col_i & 1)
+        M5.Lcd.drawPixel(x0+col_i/2, y0+row_i, average_color(colors[col_i-1], color));
+      colors[col_i] = color;
+#endif
 #ifdef ILI9341
       if (col_i & 1)
         lcd.drawPixel(y0+row_i, 319-(x0+col_i/2), average_color(colors[col_i-1], color));
@@ -206,6 +246,9 @@ void VDC8563::DrawChar(byte c, int col, int row, int fg, int bg, byte attrib)
       mask >>= 1;
     }
   }
+#ifdef M5STACK   
+  M5.Lcd.endWrite();
+#endif  
 }
 
 void VDC8563::DrawChar(int offset)
@@ -386,6 +429,9 @@ void VDC8563::SetDataRegister(byte value)
 #ifdef ARDUINO_SUNTON_8048S070
         gfx->fillRect(0, 0, 800, 480, bg);
 #endif    
+#ifdef M5STACK
+        M5.Lcd.fillRect(0, 0, 320, 240, bg);
+#endif
 #ifdef ILI9341
         lcd.fillRect(0, 0, 240, 320, bg);
 #endif
