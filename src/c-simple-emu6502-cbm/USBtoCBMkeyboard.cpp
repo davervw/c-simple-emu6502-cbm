@@ -192,6 +192,8 @@ String USBtoCBMkeyboard::Read()
   {
     if (scan_codes[i] & 256)
       scan_codes[i]^=256;
+    if (scan_codes[i] & 512)
+      scan_codes[i]^=512;
     if (scan_codes[i] == 64)
       continue;
     char buffer[8];
