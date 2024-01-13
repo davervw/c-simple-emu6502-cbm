@@ -18,20 +18,22 @@ and choose one LCD in emuc64.cpp
 #define ILI9488 // 320x480
 
 ````
-load
 ![](teensy41_lcd.jpg)
 
-Wiring
+Wiring listed in LCD pin ordering
 
 | Teensy Pin   | LCD Pin     |
 | ------------ | ----------- |
 | Vin (USB 5V) | LCD VCC     |
 | GND          | LCD GND     |
-| 9            | LCD DC      |
 | 10 CS        | LCD CS      |
-| 11 MOSI      | LCD SI/MOSI |
-| 12 MISO      | LCD SO/MISO |
 | 3.3V         | LCD RESET   |
+| 9            | LCD DC      |
+| 11 MOSI      | LCD SI/MOSI |
 | 13 SCK       | LCD SCK     |
+|              | LCD LED     |
+| 12 MISO      | LCD SO/MISO |
 
 And 100 Ohm resistor between LCD VCC and LCD LED backlight pins
+
+LCD Touch pins are not connected, not used in software
