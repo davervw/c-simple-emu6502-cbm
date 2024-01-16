@@ -56,6 +56,7 @@ This portable version (master branch unless otherwise specified) has been tested
 * [M5_core branch](https://github.com/davervw/c-simple-emu6502-cbm/tree/m5_core) original M5 Core support (no SIPPS RAM)
 * [m5-atom-s3 branch](https://github.com/davervw/c-simple-emu6502-cbm/tree/m5_atom_s3) for M5 Atom S3
 * [m5stick-c branch](https://github.com/davervw/c-simple-emu6502-cbm/tree/m5stickc) for M5Stick-C
+* [m5-stamp-s3 branch](https://github.com/davervw/c-simple-emu6502-cbm/tree/m5_stamp_s3) for M5 Stamp-S3
 
 The following branches have been consolidated into a single [Unified](https://github.com/davervw/c-simple-emu6502-cbm/tree/unified) branch for improved sharing of code and features.  It is recommended to follow the unified branch instead of individual branches.
 
