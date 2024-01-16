@@ -40,40 +40,16 @@
 
 #include "emuc64.h"
 #include "emu6502.h"
-#include "M5Core.h"
-#include "FFat.h"
-#include "cardkbdscan.h"
+#include <Arduino.h>
+#include <Arduino_GFX_Library.h>
+
+Arduino_DataBus *bus = new Arduino_HWSPI(1/*dc*/, GFX_NOT_DEFINED/*cs*/, 7/*sclk*/, 5/*mosi*/, GFX_NOT_DEFINED/*miso*/, &SPI, true/*is_shared_interface*/);
+Arduino_GFX *gfx = new Arduino_ST7789(bus, 3/*rst*/, 1/*r*/, true/*ips*/, 240, 320);
 
 void setup() {
-  M5.begin(/*lcd*/true, /*usbserial*/true, /*i2c*/true, /*led*/false);  // Init M5AtomS3.  初始化 M5AtomS3
-  M5Serial.setTimeout(0); // so we don't wait for reads
-
-  Wire.begin(G2, G1, 100000UL);
-  for (int i=1; i<=2; ++i)
-  {
-    if (Wire.requestFrom(0x5F, 1, true) == 1)
-    {
-      CardKbd = true;
-      break;
-    }
-  }
-
-  //Initialize serial (but don't wait for it to be connected, until there is an exception
-  if (!CardKbd)
-  {
-    Wire.end();
-    Serial.end();
-    Serial.begin(115200, SERIAL_8N1, G2, G1);
-    Serial.setTimeout(0); // so we don't wait for reads
-  }
-  // Serial2.begin(115200, SERIAL_8N1, G21, G22);
-  // Serial2.setTimeout(0); // so we don't wait for reads
-
-  M5.IMU.begin();
-
-  if (!FFat.begin())
-    Serial.println("WARNING: did not mount FFAT");
-
+  gfx->begin();
+  Serial.begin(115200);
+  Serial.setTimeout(0); // so we don't wait for reads
   C64_Init();
 }
 
@@ -81,4 +57,3 @@ void loop() {
   // put your main code here, to run repeatedly:
   ResetRun(ExecutePatch); 
 }
-

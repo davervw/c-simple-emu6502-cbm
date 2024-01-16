@@ -59,9 +59,9 @@
 #ifndef TEST6502 // should be undefined in emu6502.h to run the normal C64 emulator, see emutest.cpp for more details
 
 #include "emuc64.h"
-#include "M5Core.h"
-#include "FFat.h"
-#include "cardkbdscan.h"
+#include <Arduino.h>
+#include <Arduino_GFX_Library.h>
+#include <FFAT.h>
 
 // globals
 const char* StartupPRG = 0;
@@ -89,65 +89,21 @@ static int scan_codes[16] = { 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64
 static const int io_size = 0x1000;
 static byte io[io_size];
 
-static int viewX = -8;
-static int viewY = -8;
-static int zoomOut = 1;
-
 static void RedrawScreen();
 static void DrawBorder(int);
 
+extern Arduino_GFX* gfx;
+
 static void ReadKeyboard()
 {
-  static int accelCount = 0;
-  if (!zoomOut && ++accelCount >= 12)
-  {
-    float ax, ay, az;
-    M5.IMU.getAccel(&ax, &ay, &az);
-    accelCount = 0;
-    int x, y;
-    if (ay > 0.1)
-      x = 200;
-    else if (ay > -0.1)
-      x = 104;
-    else
-      x = -8;
-    if (ax > 0.1)
-      y = 80;
-    else
-      y = -8;
-    if (viewX != x || viewY != y)
-    {
-      viewX = x;
-      viewY = y;
-      //M5Serial.printf("%f %f %d %d\n", ax, ay, x, y);
-      DrawBorder(io[0x20]);
-      RedrawScreen();
-    }
-  }
-
-  M5.Btn.read();
-  if (M5.Btn.wasReleased())
-  {
-    zoomOut = 1-zoomOut;
-    DrawBorder(io[0x20]);
-    RedrawScreen();
-  }
-
   String s;
-  if (CardKbd)
-  {
-    s = CardKbdScanRead();
-    if (s.length() == 0)
-      return;
-  }
+  if (Serial.available())
+    s = Serial.readString();
   else if (Serial.available())
     s = Serial.readString();
-  else if (M5Serial.available())
-    s = M5Serial.readString();
   else
     return;
   {
-    M5Serial.print(s);
     int src = 0;
     int dest = 0;
     int scan = 0;
@@ -203,40 +159,40 @@ bool FileLoad(byte* p_err)
   	FileAddr = addr;
 		return false;
 	}
-  char start[2];
-  int read = file.readBytes(&start[0], sizeof(start));
-  if (read != 2) {
-    FileAddr = addr;
-    file.close();
-    return false;
-  }
-	byte lo = start[0];
-	byte hi = start[1];
-	if (startup) {
-		if (lo == 1)
-			FileSec = 0;
-		else
-			FileSec = 1;
-	}
-	if (FileSec == 1) // use address in file? yes-use, no-ignore
-		addr = lo | (hi << 8); // use address specified in file
-	while (success) {
-    int i = file.read();
-    if (i < 0)
-      break;
-    if (FileVerify) {
-      if (GetMemory(addr) != i) {
-        *p_err = 28; // VERIFY
-        success = false;
-      }
-    }
-    else
-      SetMemory(addr, (byte)i);
-    ++addr;
-	}
-	FileAddr = addr;
-  file.close();
-	return success;
+  // char start[2];
+  // int read = file.readBytes(&start[0], sizeof(start));
+  // if (read != 2) {
+  //   FileAddr = addr;
+  //   file.close();
+  //   return false;
+  // }
+	// byte lo = start[0];
+	// byte hi = start[1];
+	// if (startup) {
+	// 	if (lo == 1)
+	// 		FileSec = 0;
+	// 	else
+	// 		FileSec = 1;
+	// }
+	// if (FileSec == 1) // use address in file? yes-use, no-ignore
+	// 	addr = lo | (hi << 8); // use address specified in file
+	// while (success) {
+  //   int i = file.read();
+  //   if (i < 0)
+  //     break;
+  //   if (FileVerify) {
+  //     if (GetMemory(addr) != i) {
+  //       *p_err = 28; // VERIFY
+  //       success = false;
+  //     }
+  //   }
+  //   else
+  //     SetMemory(addr, (byte)i);
+  //   ++addr;
+	// }
+	// FileAddr = addr;
+  // file.close();
+	// return success;
 }
 
 bool FileSave(const char* filename, ushort addr1, ushort addr2)
@@ -249,13 +205,13 @@ bool FileSave(const char* filename, ushort addr1, ushort addr2)
   free(fullpath);
   if (!file)
     return false;
-  file.write(LO(addr1));
-  file.write(HI(addr1));
-  ushort len = addr2 - addr1;
-	for (int i = 0; i < len; ++i)
-    file.write(GetMemory(addr1+i));
-  file.close();
-  return true;
+  // file.write(LO(addr1));
+  // file.write(HI(addr1));
+  // ushort len = addr2 - addr1;
+	// for (int i = 0; i < len; ++i)
+  //   file.write(GetMemory(addr1+i));
+  // file.close();
+  // return true;
 }
 
 static bool LoadStartupPrg()
@@ -1222,7 +1178,7 @@ void C64_Init(void)
   ram[1] = 0x07;
 
   // initialize LCD screen
-  M5.Lcd.fillScreen(0x0000); // BLACK
+  gfx->fillScreen(0x0000); // BLACK
 }
 
 // RGB565 colors picked with http://www.barth-dev.de/online/rgb565-color-picker/
@@ -1230,22 +1186,22 @@ int C64ColorToLCDColor(byte value)
 {
   switch (value & 0xF)
   {
-    case 0: return TFT_BLACK;
-    case 1: return TFT_WHITE;
-    case 2: return TFT_RED;
-    case 3: return TFT_CYAN;
+    case 0: return BLACK;
+    case 1: return WHITE;
+    case 2: return RED;
+    case 3: return CYAN;
     case 4: return 0x8118; // DARKMAGENTA OR PURPLE
     case 5: return 0x0400; // DARKGREEN
-    case 6: return TFT_BLUE;
-    case 7: return TFT_YELLOW;
-    case 8: return TFT_ORANGE;
+    case 6: return BLUE;
+    case 7: return YELLOW;
+    case 8: return ORANGE;
     case 9: return 0x8283; // BROWN;
     case 10: return 0xFC10; // PINK OR LT RED
-    case 11: return TFT_DARKGREY;
-    case 12: return TFT_DARKCYAN; // MED GRAY
+    case 11: return DARKGREY;
+    case 12: return DARKCYAN; // MED GRAY
     case 13: return 0x07E0; // LIGHTGREEN;
     case 14: return 0x841F; // LIGHTBLUE;
-    case 15: return TFT_LIGHTGREY;
+    case 15: return LIGHTGREY;
     default: return 0;
   }
 }
@@ -1281,6 +1237,18 @@ int AverageColor(int color1, int color2, int mult1, int mult2)
   return color;
 }
 
+static int average_color(int color1, int color2)
+{
+  if (color1 == color2)
+    return color1;    
+  // extract 565 color from 16-bit values, average them, and combine back the same way
+  int red = ((color1 >> 11) + (color2 >> 11)) / 2;
+  int green = (((color1 >> 5) & 0x3F) + (((color2 >> 5) & 0x3F))) / 2;
+  int blue = ((color1 & 0x1F) + (color2 & 0x1F)) / 2;
+  int color = ((red & 0x1f) << 11) | ((green & 0x3f) << 5) | (blue & 0x1F);
+  return color;
+}
+
 void DrawChar(byte c, int col, int row, int fg, int bg)
 {
   if (postponeDrawChar)
@@ -1288,46 +1256,20 @@ void DrawChar(byte c, int col, int row, int fg, int bg)
   
   int offset = ((io[0x18] & 2) == 0) ? 0 : (8*256);
   const byte* shape = &chargen_rom[c*8+offset];
-  if (zoomOut)
+  int x0 = col*7 + 20;
+  int y0 = row*8 + 20;
+  for (int row_i=0; row_i<8; ++row_i)
   {
-    // reduce 8x8 character into 3x4 pixels to fit on screen as 120x100 pixels total, using color averaging to reduce image
-    int x0 = 4 + col*3;
-    int y0 = 14 + row*4;
-    for (int row_i=0; row_i<4; ++row_i)
+    int mask = 128;
+    for (int col_i=0; col_i<7; ++col_i)
     {
-      int mask = 128;
-      int col_i = 0;
-      int i = 0;
-      while (col_i < 8)
-      {
-        int count = 0;
-        int width = (col_i == 3) ? 2 : 3;
-        int total = width*2;
-        for (int x=0; x<width; ++x)
-        {
-          for (int y=0; y<2; ++y)
-            if ((shape[row_i*2+y] & mask) != 0) 
-              ++count;
-          mask = mask >> 1;
-        }
-        M5.Lcd.drawPixel(x0+i, y0+row_i, AverageColor(fg, bg, count, total-count));
-        col_i += width;
-        ++i;
-      }
-    }
-  }
-  else
-  {
-    int x0 = col*8 - viewX;
-    int y0 = row*8 - viewY;
-    for (int row_i=0; row_i<8; ++row_i)
-    {
-      int mask = 128;
-      for (int col_i=0; col_i<8; ++col_i)
-      {
-        M5.Lcd.drawPixel(x0+col_i, y0+row_i, ((shape[row_i] & mask) == 0) ? bg : fg);
-        mask = mask >> 1;
-      }
+      int color = ((shape[row_i] & mask) == 0) ? bg : fg;
+      if (col_i < 6)
+        gfx->drawPixel(x0+col_i, y0+row_i, color);
+      mask = mask >> 1;
+      color = average_color(color, ((shape[row_i] & mask) == 0) ? bg : fg);
+      if (col_i == 6)
+        gfx->drawPixel(x0+col_i, y0+row_i, color);
     }
   }
 }
@@ -1336,22 +1278,10 @@ static void DrawBorder(int colorIndex)
 {
   colorIndex &= 0xF;
   int border = C64ColorToLCDColor(colorIndex);
-  // M5.Lcd.fillRect(0, 0, 128, 4, border);
-  // M5.Lcd.fillRect(0, 0, 4, 128, border);
-  if (zoomOut)
-  {
-    M5.Lcd.fillRect(0, 0, 128, 14, border);
-    M5.Lcd.fillRect(0, 114, 128, 14, border);
-    M5.Lcd.fillRect(0, 14, 4, 100, border);
-    M5.Lcd.fillRect(124, 14, 4, 100, border);
-  }
-  else
-  {
-    M5.Lcd.fillRect(-8-viewX, -8-viewY, 336, 8, border);
-    M5.Lcd.fillRect(-8-viewX, 200-viewY, 336, 8, border);
-    M5.Lcd.fillRect(-8-viewX, 0-viewY, 8, 200, border);
-    M5.Lcd.fillRect(320-viewX, 0-viewY, 8, 200, border);
-  }
+  gfx->fillRect(0, 0, 320, 20, border);
+  gfx->fillRect(0, 20, 20, 200, border);
+  gfx->fillRect(300, 20, 20, 200, border);
+  gfx->fillRect(0, 220, 320, 20, border);
   io[0x20] = colorIndex;
 }
 
