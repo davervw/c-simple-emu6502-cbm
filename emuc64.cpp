@@ -61,7 +61,7 @@
 #include "emuc64.h"
 #include <Arduino.h>
 #include <Arduino_GFX_Library.h>
-#include <FFAT.h>
+#include <SD.h>
 
 // globals
 const char* StartupPRG = 0;
@@ -152,7 +152,7 @@ bool FileLoad(byte* p_err)
 	const char* filename = (StartupPRG != NULL) ? StartupPRG : FileName;
   char* fullpath = (char*)malloc(strlen(filename)+2);
   sprintf(fullpath, "/%s", filename);
-  File file = FFat.open(fullpath);
+  File file = SD.open(fullpath);
   free(fullpath);
 	if (!file) {
 		*p_err = 4; // FILE NOT FOUND
@@ -201,7 +201,7 @@ bool FileSave(const char* filename, ushort addr1, ushort addr2)
 		return false;
   char* fullpath = (char*)malloc(strlen(filename)+2);
   sprintf(fullpath, "/%s", filename);
-  File file = FFat.open(fullpath, FILE_WRITE);
+  File file = SD.open(fullpath, FILE_WRITE);
   free(fullpath);
   if (!file)
     return false;
