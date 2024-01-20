@@ -43,8 +43,6 @@
 #include <Arduino.h>
 #include <Arduino_GFX_Library.h>
 
-// Arduino_DataBus *bus = new Arduino_HWSPI(1/*dc*/, GFX_NOT_DEFINED/*cs*/, 7/*sclk*/, 5/*mosi*/, GFX_NOT_DEFINED/*miso*/, &SPI, true/*is_shared_interface*/);
-// Arduino_GFX *gfx = new Arduino_ST7789(bus, 3/*rst*/, 1/*r*/, true/*ips*/, 240, 320);
 Arduino_DataBus *bus = new Arduino_HWSPI(6/*dc*/, 7/*cs*/, 2/*sclk*/, 3/*mosi*/, 10/*miso*/, &SPI, true/*is_shared_interface*/);
 Arduino_GFX *gfx = new Arduino_ST7789(bus, 11/*rst*/, 1/*r*/, true/*ips*/, 240, 320);
 
