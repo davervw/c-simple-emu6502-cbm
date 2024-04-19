@@ -3,6 +3,7 @@ Debug
 Release
 c-simple-emu6502-cbm.vcxproj.user
 *.exe
+c-simple-emu6502-cbm
 obj/
 enc_temp_folder/
 roms/
