@@ -51,6 +51,15 @@
     <ClCompile Include="emutest.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="emumin.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="m6850.h">
+      <Filter>Header Files</Filter>
+    </ClCompile>
+    <ClCompile Include="m6850.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="emu6502.h">
@@ -81,6 +90,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="emutest.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="emumin.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

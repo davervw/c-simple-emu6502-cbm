@@ -38,6 +38,7 @@
 #include "emuvic20.h"
 #include "emupet.h"
 #include "emutest.h"
+#include "emumin.h"
 
 int main_go_num = 0;
 
@@ -58,7 +59,7 @@ int fileExists(const char* filename)
 int main(int argc, char* argv[])
 {
 	fprintf(stderr, "\n");
-	fprintf(stderr, "c-simple-emu-cbm version 1.61\n");
+	fprintf(stderr, "c-simple-emu-cbm version 1.7\n");
 	fprintf(stderr, "Copyright (c) 2024 by David R. Van Wagner\n");
 	fprintf(stderr, "MIT License\n");
 	fprintf(stderr, "github.com/davervw\n");
@@ -87,6 +88,8 @@ int main(int argc, char* argv[])
 			emu = new EmuPET(32);
 		else if (main_go_num == -1)
 			emu = new EmuTest(EmuCBM::StartupPRG);
+		else if (main_go_num == 1)
+			emu = new EmuMinimum(EmuCBM::StartupPRG, 60 * 1024, 4096, 0xFFF8);
 		else
 			emu = new EmuC64(64 * 1024);
 

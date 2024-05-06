@@ -5,4 +5,11 @@ c-simple-emu6502-cbm.vcxproj.user
 *.exe
 obj/
 enc_temp_folder/
-roms/
+!roms/
+roms/c128
+roms/c64
+roms/pet
+roms/ted
+roms/test
+roms/vic20
+
