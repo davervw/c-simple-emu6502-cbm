@@ -7,7 +7,7 @@
 //
 // MIT License
 //
-// Copyright (c) 2023 by David R. Van Wagner
+// Copyright (c) 2024 by David R. Van Wagner
 // davevw.com
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -58,8 +58,8 @@ int fileExists(const char* filename)
 int main(int argc, char* argv[])
 {
 	fprintf(stderr, "\n");
-	fprintf(stderr, "c-simple-emu-cbm version 1.6\n");
-	fprintf(stderr, "Copyright (c) 2023 by David R. Van Wagner\n");
+	fprintf(stderr, "c-simple-emu-cbm version 1.61\n");
+	fprintf(stderr, "Copyright (c) 2024 by David R. Van Wagner\n");
 	fprintf(stderr, "MIT License\n");
 	fprintf(stderr, "github.com/davervw\n");
 	fprintf(stderr, "\n");
