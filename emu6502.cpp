@@ -923,37 +923,37 @@ void Emu6502::Ind(char *dis, int dis_size, const char* opcode, ushort addr, usho
 	*p_bytes = 3;
 	ushort addr1 = (ushort)(GetMemory((ushort)(addr + 1)) | (GetMemory((ushort)(addr + 2)) << 8));
 	*p_addr2 = (ushort)(GetMemory(addr1) | (GetMemory((ushort)(addr1 + 1)) << 8));
-	snprintf(dis, dis_size, "%s ($%0X4)", opcode, addr1);
+	snprintf(dis, dis_size, "%s ($%04X)", opcode, addr1);
 }
 
 void Emu6502::IndX(char *dis, int dis_size, const char* opcode, ushort addr, byte *p_bytes)
 {
 	*p_bytes = 2;
-	snprintf(dis, dis_size, "%s ($%0X2,X)", opcode, GetMemory((ushort)(addr + 1)));
+	snprintf(dis, dis_size, "%s ($%02X,X)", opcode, GetMemory((ushort)(addr + 1)));
 }
 
 void Emu6502::IndY(char *dis, int dis_size, const char* opcode, ushort addr, byte *p_bytes)
 {
 	*p_bytes = 2;
-	snprintf(dis, dis_size, "%s ($%0X2),Y", opcode, GetMemory((ushort)(addr + 1)));
+	snprintf(dis, dis_size, "%s ($%02X),Y", opcode, GetMemory((ushort)(addr + 1)));
 }
 
 void Emu6502::ZP(char *dis, int dis_size, const char* opcode, ushort addr, byte *p_bytes)
 {
 	*p_bytes = 2;
-	snprintf(dis, dis_size, "%s $%0X2", opcode, GetMemory((ushort)(addr + 1)));
+	snprintf(dis, dis_size, "%s $%02X", opcode, GetMemory((ushort)(addr + 1)));
 }
 
 void Emu6502::ZPX(char *dis, int dis_size, const char* opcode, ushort addr, byte *p_bytes)
 {
 	*p_bytes = 2;
-	snprintf(dis, dis_size, "%s $%0X2,X", opcode, GetMemory((ushort)(addr + 1)));
+	snprintf(dis, dis_size, "%s $%02X,X", opcode, GetMemory((ushort)(addr + 1)));
 }
 
 void Emu6502::ZPY(char *dis, int dis_size, const char* opcode, ushort addr, byte *p_bytes)
 {
 	*p_bytes = 2;
-	snprintf(dis, dis_size, "%s $%0X2,Y", opcode, GetMemory((ushort)(addr + 1)));
+	snprintf(dis, dis_size, "%s $%02X,Y", opcode, GetMemory((ushort)(addr + 1)));
 }
 
 void Emu6502::ABS(char *dis, int dis_size, const char* opcode, ushort addr, byte *p_bytes)
