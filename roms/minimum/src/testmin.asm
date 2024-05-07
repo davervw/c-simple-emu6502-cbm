@@ -6,16 +6,21 @@
 ; echos characters, changing case of alphabetical entries
 
 ; MC6850
-UART_DATA = $FFF8 ; data register
-UART_STCR = $FFF9 ; status and control register
+UART_DATA = $FFF8 ; data register (read/write)
+UART_STCR = $FFF9 ; status (read) and control register (write)
 
 * = $F000
 RESET:
+    lda #0b00000011 ; reset device
+    sta UART_STCR
+    lda #0b00010110 ; 0=rint disabled, 00=rtsn low, tint disabled 101=8n1 10=div 64
+    sta UART_STCR
     lda #$80
     ldx #$f0
     jsr STROUT
---  bit UART_STCR
-    bpl --
+--  lda UART_STCR
+    and #1
+    beq --
     lda UART_DATA
     cmp #$41 ; 'A'
     bcc ++
@@ -29,19 +34,23 @@ RESET:
     bcs ++
     eor #$20 ; to uppercase
 ++
--   bit UART_STCR
-    bvc -
-    sta UART_DATA
+    tax
+-   lda UART_STCR
+    and #2
+    beq - ; branch if TDRE-0 (not empty) waiting for transmit
+    stx UART_DATA
     jmp --
 STROUT:
     sta $00
     stx $01
     ldy #$00
 --  lda ($00),y
+    tax
     beq +
--   bit UART_STCR
-    bvc -
-    sta UART_DATA
+-   lda UART_STCR
+    and #2
+    beq - ; branch if TDRE=0 (not empty) waiting for transmit
+    stx UART_DATA
     iny
     bne --
 +   rts

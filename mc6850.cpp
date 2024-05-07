@@ -35,9 +35,15 @@
 
 MC6850::MC6850()
 {
-	status = 0b01000000;
-	control = 0b11000000;
-	set_receive_data_register_full(); // simulate always have byte to read
+	status.value = 0;
+
+	control.value = 0;
+	control.rts_tint = RTS_TINT::low_disabled;
+	control.clk = CLOCK::RESET;
+
+	// require reset by user before use
+	clear_receive_data_register_full();
+	clear_transmit_data_register_empty();
 }
 
 MC6850::~MC6850()
@@ -49,13 +55,14 @@ byte MC6850::read_data()
 	// TODO: on async receive (simulated?) set receive_data_register_full, set interrupt if enabled
 	clear_irq();
 	byte data = getchar();
-	// TODO: clear_receive_data_register_full(); on read
+	clear_receive_data_register_full();
+	set_receive_data_register_full(); // TODO: wait for data
 	return data;
 }
 
 void MC6850::write_data(byte value)
 {
-	if (control & 0x10)
+	if (control.mode & b8n2)
 		putchar(value);
 	else
 		putchar(value & 0x7F);
@@ -65,47 +72,57 @@ void MC6850::write_data(byte value)
 	set_transmit_data_register_empty();
 }
 
-byte MC6850::read_status()
+byte MC6850::read_status() const
 {
-	return status;
+	return status.value;
 }
 
 void MC6850::write_control(byte value)
 {
-	control = value;
+	CONTROL incoming { };
+	incoming.value = value;
+	if (control.clk == CLOCK::RESET && incoming.clk != CLOCK::RESET) {
+		set_receive_data_register_full(); // simulate always have byte to read // TODO: check
+		set_transmit_data_register_empty();
+	}
+	else if (incoming.clk == CLOCK::RESET) {
+		status.value = 0;
+		status.tdre = 1;
+	}
+	control.value = value;
 }
 
-bool MC6850::read_irq()
+bool MC6850::read_irq() const
 {
-	return (bool)(status & 1);
+	return (bool)(status.irqn);
 }
 
 void MC6850::clear_irq()
 {
-	status &= 0xFE;
+	status.irqn = 0;
 }
 
 void MC6850::set_irq()
 {
-	status |= 1;
+	status.irqn = 1;
 }
 
 void MC6850::clear_receive_data_register_full()
 {
-	status &= 0x7F;
+	status.rdrf = 0;
 }
 
 void MC6850::set_receive_data_register_full()
 {
-	status |= 0x80;
+	status.rdrf = 1;
 }
 
 void MC6850::clear_transmit_data_register_empty()
 {
-	status &= 0xBF;
+	status.tdre = 0;
 }
 
 void MC6850::set_transmit_data_register_empty()
 {
-	status |= 0x40;
+	status.tdre = 1;
 }
