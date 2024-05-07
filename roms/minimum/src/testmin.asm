@@ -47,11 +47,8 @@ STROUT:
 +   rts
 
 * = $F080
-    !text "HELLO M6850 UART!", 13, 10, 0
-    !text "*"
-
-* = $F800
-    !text "ABC123", 0
+    !text "HELLO MC6850 UART!", 13, 10, 0
+    !text "*" ; test that STROUT finishes
 
 * = $FFF0
 NMI:rti
