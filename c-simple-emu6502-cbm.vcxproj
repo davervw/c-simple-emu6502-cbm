@@ -29,8 +29,7 @@
     <ClCompile Include="emutest.cpp" />
     <ClCompile Include="emuvic20.cpp" />
     <ClCompile Include="gettimeofday.c" />
-    <ClCompile Include="m6850.cpp" />
-    <ClCompile Include="m6850.h" />
+    <ClCompile Include="mc6850.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="emupet.cpp" />
     <ClCompile Include="emumin.cpp" />
@@ -47,6 +46,7 @@
     <ClInclude Include="emutest.h" />
     <ClInclude Include="emuvic20.h" />
     <ClInclude Include="emupet.h" />
+    <ClInclude Include="mc6850.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>

@@ -2,11 +2,11 @@
 
 #include "emu6502.h"
 
-class M6850
+class MC6850
 {
 public:
-	M6850();
-	~M6850();
+	MC6850();
+	~MC6850();
 	byte read_data();
 	void write_data(byte value);
 	byte read_status();

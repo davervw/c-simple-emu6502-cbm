@@ -30,21 +30,21 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "m6850.h"
+#include "mc6850.h"
 #include <stdio.h>
 
-M6850::M6850()
+MC6850::MC6850()
 {
 	status = 0b01000000;
 	control = 0b11000000;
 	set_receive_data_register_full(); // simulate always have byte to read
 }
 
-M6850::~M6850()
+MC6850::~MC6850()
 {
 }
 
-byte M6850::read_data()
+byte MC6850::read_data()
 {
 	// TODO: on async receive (simulated?) set receive_data_register_full, set interrupt if enabled
 	clear_irq();
@@ -53,7 +53,7 @@ byte M6850::read_data()
 	return data;
 }
 
-void M6850::write_data(byte value)
+void MC6850::write_data(byte value)
 {
 	if (control & 0x10)
 		putchar(value);
@@ -65,47 +65,47 @@ void M6850::write_data(byte value)
 	set_transmit_data_register_empty();
 }
 
-byte M6850::read_status()
+byte MC6850::read_status()
 {
 	return status;
 }
 
-void M6850::write_control(byte value)
+void MC6850::write_control(byte value)
 {
 	control = value;
 }
 
-bool M6850::read_irq()
+bool MC6850::read_irq()
 {
 	return (bool)(status & 1);
 }
 
-void M6850::clear_irq()
+void MC6850::clear_irq()
 {
 	status &= 0xFE;
 }
 
-void M6850::set_irq()
+void MC6850::set_irq()
 {
 	status |= 1;
 }
 
-void M6850::clear_receive_data_register_full()
+void MC6850::clear_receive_data_register_full()
 {
 	status &= 0x7F;
 }
 
-void M6850::set_receive_data_register_full()
+void MC6850::set_receive_data_register_full()
 {
 	status |= 0x80;
 }
 
-void M6850::clear_transmit_data_register_empty()
+void MC6850::clear_transmit_data_register_empty()
 {
 	status &= 0xBF;
 }
 
-void M6850::set_transmit_data_register_empty()
+void MC6850::set_transmit_data_register_empty()
 {
 	status |= 0x40;
 }

@@ -54,10 +54,7 @@
     <ClCompile Include="emumin.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="m6850.h">
-      <Filter>Header Files</Filter>
-    </ClCompile>
-    <ClCompile Include="m6850.cpp">
+    <ClCompile Include="mc6850.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -93,6 +90,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="emumin.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="mc6850.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

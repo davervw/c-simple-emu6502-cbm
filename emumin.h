@@ -1,7 +1,7 @@
 #pragma once
 
 #include "emu6502.h"
-#include "m6850.h"
+#include "mc6850.h"
 
 class EmuMinimum : public Emu6502
 {
@@ -35,7 +35,7 @@ private:
 	ushort romsize;
 	ushort romaddr;
 	ushort serialaddr;
-	M6850 uart;
+	MC6850 uart;
 
 private:
 	MinimumMemory(const MinimumMemory& other); // disabled
