@@ -12,4 +12,4 @@ roms/pet
 roms/ted
 roms/test
 roms/vic20
-
+roms/minimum/*.lbl
