@@ -52,7 +52,7 @@ STROUT:
 
 * = $FFF0
 NMI:rti
-IRQ:jmp $fff1
+IRQ:jmp IRQ
 
 * = $FFFA
     !byte <NMI, >NMI
