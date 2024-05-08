@@ -65,6 +65,13 @@ RESET:
 	cli
 	jsr UART_INIT
 	jmp escape
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
 notcr:
 	cmp #$94
 	beq backspace
@@ -75,13 +82,6 @@ notcr:
 escape:
 	lda #$DC ; backslash
 	jsr UART_OUT
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
 getline:
 	lda #13
 	jsr UART_OUT
@@ -210,8 +210,7 @@ prhex:
 	bcc echo
 	adc #6
 echo:
-	jsr UART_OUT
-	rts
+	jmp UART_OUT
 
 * = $fffa
 	!byte <NMI, >NMI
