@@ -55,6 +55,12 @@ byte MC6850::read_data()
 	// TODO: on async receive (simulated?) set receive_data_register_full, set interrupt if enabled
 	clear_irq();
 	byte data = getchar();
+	if (control.mode == MODE::b7e1
+		|| control.mode == MODE::b7e2
+		|| control.mode == MODE::b7o1
+		|| control.mode == MODE::b7o2
+		)
+		data = data & 0x7F; // TODO: parity
 	clear_receive_data_register_full();
 	set_receive_data_register_full(); // TODO: wait for data
 	return data;
@@ -62,7 +68,12 @@ byte MC6850::read_data()
 
 void MC6850::write_data(byte value)
 {
-	if (control.mode & b8n2)
+	// TODO: parity
+	if (control.mode == MODE::b8e1
+		|| control.mode == MODE::b8n1
+		|| control.mode == MODE::b8n2
+		|| control.mode == MODE::b8o1
+	)
 		putchar(value);
 	else
 		putchar(value & 0x7F);
