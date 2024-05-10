@@ -213,6 +213,6 @@ echo:
 	jmp UART_OUT
 
 * = $fffa
-	!byte <NMI, >NMI
-	!byte <RESET, >RESET
-	!byte $00, $00 ; IRQ
+	!word NMI
+	!word RESET
+	!word RESET ; IRQ (incl. BRK)
