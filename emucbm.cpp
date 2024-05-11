@@ -151,7 +151,7 @@ bool EmuCBM::ExecuteJSR(ushort addr)
     return true; // return value for ExecutePatch so will reloop execution to allow berakpoint/trace/ExecutePatch/etc.
 }
 
-void EmuCBM::File_ReadAllBytes(byte* bytes, unsigned int size, const char* filename)
+unsigned EmuCBM::File_ReadAllBytes(byte* bytes, unsigned long size, const char* filename)
 {
 	int file;
 #ifdef WINDOWS	
@@ -172,12 +172,13 @@ void EmuCBM::File_ReadAllBytes(byte* bytes, unsigned int size, const char* filen
 		exit(1);
 	}
 #ifdef WINDOWS
-	_read(file, bytes, size);
+	unsigned bytes_read = _read(file, bytes, size);
 	_close(file);
 #else
-	read(file, bytes, size);
+	unsigned bytes_read = read(file, bytes, size);
 	close(file);
-#endif	
+#endif
+	return bytes_read;
 }
 
 static byte* OpenRead(const char* filename, int* p_ret_file_len)

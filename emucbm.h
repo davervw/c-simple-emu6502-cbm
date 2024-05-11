@@ -11,7 +11,7 @@ public:
 
 public:
 	static const char* StartupPRG;
-	static void File_ReadAllBytes(byte* bytes, unsigned int size, const char* filename);
+	static unsigned File_ReadAllBytes(byte* bytes, unsigned long size, const char* filename);
 
 protected:
 	bool ExecutePatch();

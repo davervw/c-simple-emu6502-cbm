@@ -40,10 +40,11 @@
 
 #include "emumin.h"
 
-EmuMinimum::EmuMinimum(const char* filename, ushort ramsize, ushort romsize, ushort serialaddr)
-	: Emu6502(new MinimumMemory(filename, ramsize, romsize, serialaddr))
+EmuMinimum::EmuMinimum(const char* filename, ushort serialaddr)
+	: Emu6502(new MinimumMemory(filename, serialaddr))
 {
 	step = true;
+	printf("RAM=%d ROM=%d\n", ((MinimumMemory*)memory)->getramsize(), ((MinimumMemory*)memory)->getromsize());
 }
 
 EmuMinimum::~EmuMinimum()
@@ -65,15 +66,19 @@ void EmuMinimum::SetMemory(ushort addr, byte value)
 	memory->write(addr, value);
 }
 
-MinimumMemory::MinimumMemory(const char* filename, ushort ramsize, ushort romsize, ushort serialaddr)
+MinimumMemory::MinimumMemory(const char* filename, ushort serialaddr)
 {
 	this->ramsize = ramsize;
 	this->romsize = romsize;
 	this->serialaddr = serialaddr;
-	ram = new unsigned char[0x100000]; // allocate full 64K
-	memset(ram, 0, ramsize);
+	unsigned maxram = 0x10000;
+	ram = new unsigned char[maxram]; // allocate full 64K
+	memset(ram, 0, maxram);
+	romsize = EmuCBM::File_ReadAllBytes(ram, maxram, filename);
 	romaddr = (ushort)(0x10000 - romsize); // rom loads from end of memory, assumes sized correctly
-	EmuCBM::File_ReadAllBytes(&ram[romaddr], romsize, filename);
+	memmove_s(&ram[romaddr], romsize, ram, romsize);
+	ramsize = romaddr;
+	memset(ram, 0, ramsize);
 }
 
 MinimumMemory::~MinimumMemory()
@@ -98,4 +103,14 @@ void MinimumMemory::write(ushort addr, byte value)
 		uart.write_control(value);
 	else if (addr < ramsize)
 		ram[addr] = value;
+}
+
+unsigned MinimumMemory::getramsize()
+{
+	return ramsize;
+}
+
+unsigned MinimumMemory::getromsize()
+{
+	return romsize;
 }

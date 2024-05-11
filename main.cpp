@@ -89,7 +89,14 @@ int main(int argc, char* argv[])
 		else if (main_go_num == -1)
 			emu = new EmuTest(EmuCBM::StartupPRG);
 		else if (main_go_num == 1)
-			emu = new EmuMinimum(EmuCBM::StartupPRG, 60 * 1024, 4096, 0xFFF8);
+		{
+			char buffer[256];
+
+			puts("Filename? ");
+			gets_s(buffer);
+
+			emu = new EmuMinimum(buffer, 0xFFF8);
+		}
 		else
 			emu = new EmuC64(64 * 1024);
 
