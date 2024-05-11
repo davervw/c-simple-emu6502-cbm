@@ -40,10 +40,11 @@
 
 #include "emumin.h"
 
+extern int main_go_num;
+
 EmuMinimum::EmuMinimum(const char* filename, ushort serialaddr)
 	: Emu6502(new MinimumMemory(filename, serialaddr))
 {
-	step = true;
 	printf("RAM=%d ROM=%d\n", ((MinimumMemory*)memory)->getramsize(), ((MinimumMemory*)memory)->getromsize());
 }
 
@@ -53,6 +54,8 @@ EmuMinimum::~EmuMinimum()
 
 bool EmuMinimum::ExecutePatch()
 {
+	if (main_go_num != 1)
+		quit = true;
 	return false;
 }
 
@@ -103,6 +106,8 @@ void MinimumMemory::write(ushort addr, byte value)
 		uart.write_control(value);
 	else if (addr < ramsize)
 		ram[addr] = value;
+	else if (addr == 0xFFFF)
+		main_go_num = value;
 }
 
 unsigned MinimumMemory::getramsize()
