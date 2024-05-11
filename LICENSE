@@ -3,7 +3,7 @@ C64/6502 Emulator for Microsoft Windows Console
 
 MIT License
 
-Copyright(c) 2021 by David R. Van Wagner
+Copyright(c) 2024 by David R. Van Wagner
 davevw.com
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -23,3 +23,11 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+===============================================================================
+
+NO LICENSE IS SPECIFIED FOR:
+wozmon by Steve Wozniak from Apple-1 Operation Manual, 1976, Apple Computer Company
+adapted to ACME syntax, and modified for minimum 6502/MC6850 by David R. Van Wagner
+
+===============================================================================
