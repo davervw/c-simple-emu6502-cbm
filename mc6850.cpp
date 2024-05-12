@@ -76,10 +76,7 @@ byte MC6850::read_data()
 		)
 		data = data & 0x7F; // TODO: parity
 	if (keypressed)
-	{
 		clear_receive_data_register_full();
-		set_receive_data_register_full(); // TODO: wait for data
-	}
 	return data;
 }
 
@@ -102,7 +99,8 @@ void MC6850::write_data(byte value)
 
 byte MC6850::read_status()
 {
-	status.rdrf = _kbhit();
+	if (!line_editor)
+		status.rdrf = _kbhit() ? 1 : 0;
 	return status.value;
 }
 
@@ -111,7 +109,8 @@ void MC6850::write_control(byte value)
 	CONTROL incoming { };
 	incoming.value = value;
 	if (control.clk == CLOCK::RESET && incoming.clk != CLOCK::RESET) {
-		set_receive_data_register_full(); // simulate always have byte to read // TODO: check
+		if (line_editor)
+			set_receive_data_register_full(); // simulate always have byte to read // TODO: check
 		set_transmit_data_register_empty();
 	}
 	else if (incoming.clk == CLOCK::RESET) {
