@@ -37,7 +37,7 @@ NMI: rti
 UART_INIT:
 	ldx #0b00000111 ; 11=reset device
 	stx UART_STCR
-	inx ; #0b00001000 ; 0=rint disabled, 00=rtsn low, tint disabled 010=7e1 10=div 1
+	inx ; #0b00001000 ; 0=rint disabled, 00=rtsn low, tint disabled 010=7e1 00=div 1
 	sta UART_STCR
 	rts
 UART_OUT:
