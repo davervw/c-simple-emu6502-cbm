@@ -56,7 +56,8 @@
 //                       1   1                       rtsn low, transmits break on data output, transmitting interrupt disabled
 //                   0                               receive interrupt disabled
 //                   1                               receive interrupt enabled
-// Status Register IRQN, PE, OVRN, FE, CTSN, DCD, TDRE, RDRF
+// Status Register SR7   SR6 SR5   SR4 SR3   SR2  SR1   SR0
+//                 IRQN, PE, OVRN, FE, CTSN, DCD, TDRE, RDRF
 //                 1=interrupt     1=framing error
 //                       1=parity error           1=transmit data register empty
 //                           1=overrun 0=ctsn 1=carrier  1=read data register full
@@ -119,14 +120,15 @@ class MC6850
 	} CLOCK;
 
 public:
-	MC6850();
+	MC6850(bool line_editor);
 	~MC6850();
 	byte read_data();
 	void write_data(byte value);
-	byte read_status() const;
+	byte read_status();
 	void write_control(byte value);
 	bool read_irq() const;
 private:
+	bool line_editor;
 	void clear_irq();
 	void set_irq();
 	void clear_receive_data_register_full();

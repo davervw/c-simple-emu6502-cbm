@@ -32,9 +32,12 @@
 
 #include "mc6850.h"
 #include <stdio.h>
+#include <conio.h>
 
-MC6850::MC6850()
+MC6850::MC6850(bool line_editor)
 {
+	this->line_editor = line_editor;
+
 	status.value = 0;
 
 	control.value = 0;
@@ -54,15 +57,29 @@ byte MC6850::read_data()
 {
 	// TODO: on async receive (simulated?) set receive_data_register_full, set interrupt if enabled
 	clear_irq();
-	byte data = getchar();
+	byte data = 0;
+	bool keypressed = false;
+	if (line_editor)
+	{
+		data = getchar();
+		keypressed = true;
+	}
+	else if (_kbhit())
+	{
+		data = _getch();
+		keypressed = true;
+	}
 	if (control.mode == MODE::b7e1
 		|| control.mode == MODE::b7e2
 		|| control.mode == MODE::b7o1
 		|| control.mode == MODE::b7o2
 		)
 		data = data & 0x7F; // TODO: parity
-	clear_receive_data_register_full();
-	set_receive_data_register_full(); // TODO: wait for data
+	if (keypressed)
+	{
+		clear_receive_data_register_full();
+		set_receive_data_register_full(); // TODO: wait for data
+	}
 	return data;
 }
 
@@ -83,8 +100,9 @@ void MC6850::write_data(byte value)
 	set_transmit_data_register_empty();
 }
 
-byte MC6850::read_status() const
+byte MC6850::read_status()
 {
+	status.rdrf = _kbhit();
 	return status.value;
 }
 

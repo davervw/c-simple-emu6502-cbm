@@ -42,8 +42,8 @@
 
 extern int main_go_num;
 
-EmuMinimum::EmuMinimum(const char* filename, ushort serialaddr)
-	: Emu6502(new MinimumMemory(filename, serialaddr))
+EmuMinimum::EmuMinimum(const char* filename, ushort serialaddr, bool line_editor)
+	: Emu6502(new MinimumMemory(filename, serialaddr, line_editor))
 {
 	printf("RAM=%d ROM=%d\n", ((MinimumMemory*)memory)->getramsize(), ((MinimumMemory*)memory)->getromsize());
 }
@@ -69,8 +69,9 @@ void EmuMinimum::SetMemory(ushort addr, byte value)
 	memory->write(addr, value);
 }
 
-MinimumMemory::MinimumMemory(const char* filename, ushort serialaddr)
+MinimumMemory::MinimumMemory(const char* filename, ushort serialaddr, bool line_editor)
 {
+	uart = new MC6850(line_editor);
 	this->ramsize = ramsize;
 	this->romsize = romsize;
 	this->serialaddr = serialaddr;
@@ -92,18 +93,18 @@ MinimumMemory::~MinimumMemory()
 byte MinimumMemory::read(ushort addr)
 {
 	if (addr == serialaddr)
-		return uart.read_data();
+		return uart->read_data();
 	if (addr == serialaddr + 1)
-		return uart.read_status();
+		return uart->read_status();
 	return ram[addr];
 }
 
 void MinimumMemory::write(ushort addr, byte value)
 {
 	if (addr == serialaddr)
-		uart.write_data(value);
+		uart->write_data(value);
 	else if (addr == serialaddr + 1)
-		uart.write_control(value);
+		uart->write_control(value);
 	else if (addr < ramsize)
 		ram[addr] = value;
 	else if (addr == 0xFFFF)

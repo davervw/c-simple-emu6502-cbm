@@ -91,11 +91,14 @@ int main(int argc, char* argv[])
 		else if (main_go_num == 1)
 		{
 			char buffer[256];
+			bool unknown_filename = (EmuCBM::StartupPRG == 0 || *EmuCBM::StartupPRG == 0);
+			if (unknown_filename)
+			{
+				puts("Minimum ROM Filename? ");
+				EmuCBM::StartupPRG = fgets(buffer, sizeof(buffer), stdin);
+			}
 
-			puts("Filename? ");
-			gets_s(buffer);
-
-			emu = new EmuMinimum(buffer, 0xFFF8);
+			emu = new EmuMinimum(EmuCBM::StartupPRG, 0xFFF8, false);
 		}
 		else
 			emu = new EmuC64(64 * 1024);

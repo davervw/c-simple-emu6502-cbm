@@ -5,7 +5,11 @@
 ; * Using MC6850 UART (instead of MC6520 and KBD/CRT)
 ; * extra processing for expected mark parity, software caps lock, and revised newline/carriage return processing
 ; * revised to expect terminal line edit mode instead of echo off character processing
-; * revised to acme syntax
+; * revised to acme assembler syntax
+; Further revisions by David R. Van Wagner
+; * adding variable to select carriage return vs. line feed
+; * configuration added for display memory number of bytes (e.g. 7 or 15)
+; * added BACKSPACECHAR configuration variable
 
 xaml=$24
 xamh=$25
@@ -21,16 +25,20 @@ in=$200
 UART_DATA=$FFF8
 UART_STCR=$FFF9
 
+EOL=$8D ; carriage return or line feed?
+LINECOUNTMASK=15
+BACKSPACECHAR=$88 ; ^H
+
 * = $F000
 NMI: rti
 
 ;** MC6850 added by David R. Van Wagner davevw.com ***************************************
 * = $FE00
 UART_INIT:
-    lda #0b00000011 ; 11=reset device
-    sta UART_STCR
-    lda #0b00001010 ; 0=rint disabled, 00=rtsn low, tint disabled 010=7e1 10=div 64
-    sta UART_STCR
+	ldx #0b00000111 ; 11=reset device
+	stx UART_STCR
+	inx ; #0b00001000 ; 0=rint disabled, 00=rtsn low, tint disabled 010=7e1 10=div 1
+	sta UART_STCR
 	rts
 UART_OUT:
 	pha
@@ -55,8 +63,13 @@ UART_IN:
 	cmp #$78
 	bcs +
 	eor #$20
-+   ora #$80 ; Apple Model 1 expects 7-bit with marked parity (8th bit always set)
-	rts
++	ora #$80 ; Apple Model 1 expects 7-bit with marked parity (8th bit always set)
+ 	rts
+; create jump table for utility methods
+* = $FEF7
+	jmp UART_INIT
+	jmp UART_IN
+	jmp UART_OUT
 ;** MC6850 added by David R. Van Wagner davevw.com ***************************************
 
 * = $FF00
@@ -73,9 +86,9 @@ RESET:
 	nop
 	nop
 notcr:
-	cmp #$94
+	cmp #BACKSPACECHAR ; examples are $88 ^H, $FF Del, $94 CBM Backspace, $DF Underscore (and CBM left arrow)
 	beq backspace
-	cmp #$83
+	cmp #$9B
 	beq escape
 	iny
 	bpl nextchar
@@ -92,8 +105,8 @@ backspace:
 nextchar:
 	jsr UART_IN
 	sta in, y
-	;jsr UART_OUT - needed only if terminal echo off, line editing off
-	cmp #$8A
+	jsr UART_OUT ; needed only if terminal echo off, line editing off
+	cmp #EOL
 	bne notcr
 	ldy #$ff
 	lda #$00
@@ -106,7 +119,7 @@ blskip:
 	iny
 nextitem:
 	lda in, y
-	cmp #$8A
+	cmp #EOL
 	beq getline
 	cmp #$AE ; period
 	bcc blskip
@@ -190,7 +203,7 @@ xamnext:
 	inc xamh
 mod8chk:
 	lda xaml
-	and #7
+	and #LINECOUNTMASK
 	bpl nxtprnt ; should always branch
 
 *=$FFDC

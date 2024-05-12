@@ -6,7 +6,7 @@
 class EmuMinimum : public Emu6502
 {
 public:
-	EmuMinimum(const char* filename, ushort serialaddr);
+	EmuMinimum(const char* filename, ushort serialaddr, bool line_editor);
 	virtual ~EmuMinimum();
 
 protected:
@@ -24,7 +24,7 @@ private:
 class MinimumMemory : public Emu6502::Memory
 {
 public:
-	MinimumMemory(const char* filename, ushort serialaddr);
+	MinimumMemory(const char* filename, ushort serialaddr, bool line_editor);
 	virtual ~MinimumMemory();
 	virtual byte read(ushort addr);
 	virtual void write(ushort addr, byte value);
@@ -37,7 +37,7 @@ private:
 	ushort romsize;
 	ushort romaddr;
 	ushort serialaddr;
-	MC6850 uart;
+	MC6850* uart;
 
 private:
 	MinimumMemory(const MinimumMemory& other); // disabled
