@@ -47,13 +47,9 @@ UART_OUT:
 	beq - ; branch if TDRE=0, not finished transmitting
 	pla
 	pha
-	and #$7F
+	and #$7F ; force 7-bit ASCII output, mask out any high bit
 	sta UART_DATA
-	cmp #13
-	bne +
-	lda #10 ; add newline along with carriage return
-	jsr UART_OUT
-+	pla
+	pla
 	rts
 UART_IN:
 -	lda UART_STCR

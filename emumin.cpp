@@ -45,7 +45,7 @@ extern int main_go_num;
 EmuMinimum::EmuMinimum(const char* filename, ushort serialaddr, bool line_editor)
 	: Emu6502(new MinimumMemory(filename, serialaddr, line_editor))
 {
-	printf("RAM=%d ROM=%d\n", ((MinimumMemory*)memory)->getramsize(), ((MinimumMemory*)memory)->getromsize());
+	printf("RAM=%d ROM=%d\r\n", ((MinimumMemory*)memory)->getramsize(), ((MinimumMemory*)memory)->getromsize());
 }
 
 EmuMinimum::~EmuMinimum()
@@ -80,7 +80,11 @@ MinimumMemory::MinimumMemory(const char* filename, ushort serialaddr, bool line_
 	memset(ram, 0, maxram);
 	romsize = EmuCBM::File_ReadAllBytes(ram, maxram, filename);
 	romaddr = (ushort)(0x10000 - romsize); // rom loads from end of memory, assumes sized correctly
+#ifdef WINDOWS
 	memmove_s(&ram[romaddr], romsize, ram, romsize);
+#else
+	memmove(&ram[romaddr], ram, romsize);
+#endif
 	ramsize = romaddr;
 	memset(ram, 0, ramsize);
 }

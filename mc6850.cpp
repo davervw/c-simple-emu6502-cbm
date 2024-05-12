@@ -32,11 +32,53 @@
 
 #include "mc6850.h"
 #include <stdio.h>
+#ifdef WINDOWS
 #include <conio.h>
+#else
+#include <fcntl.h>
+#include <unistd.h>
+#include <termios.h>
+
+static byte readbyte;
+static byte readbyte_count = 0;
+
+static bool _kbhit()
+{
+	if (readbyte_count > 0)
+		return true;
+
+	int result = read(STDIN_FILENO, &readbyte, 1);
+	if (result >= 0) 
+		readbyte_count = result;
+	return (bool)readbyte_count;
+}
+
+static byte _getch()
+{
+	if (readbyte_count == 0 && !_kbhit())
+		return 0;
+
+	readbyte_count = 0; // mark read
+	return readbyte;
+}
+struct termios save_term;
+#endif
 
 MC6850::MC6850(bool line_editor)
 {
 	this->line_editor = line_editor;
+
+#ifndef WINDOWS
+	if (!line_editor)
+	{
+		struct termios term;
+		tcgetattr(STDIN_FILENO, &save_term);
+		cfmakeraw(&term);
+		term.c_cc[VMIN] = 0;
+		term.c_cc[VTIME] = 0;
+		tcsetattr(STDIN_FILENO, TCSANOW, &term);
+	}
+#endif
 
 	status.value = 0;
 
@@ -51,6 +93,10 @@ MC6850::MC6850(bool line_editor)
 
 MC6850::~MC6850()
 {
+#ifndef WINDOWS
+	if (!line_editor)
+		tcsetattr(STDIN_FILENO, TCSANOW, &save_term);
+#endif
 }
 
 byte MC6850::read_data()
@@ -77,20 +123,36 @@ byte MC6850::read_data()
 		data = data & 0x7F; // TODO: parity
 	if (keypressed)
 		clear_receive_data_register_full();
+
+	// standardize backspace so firmware can be consistent
+	if (data == 0x7F)
+		data = 8;
+
 	return data;
 }
 
 void MC6850::write_data(byte value)
 {
+	if (control.clk == CLOCK::RESET)
+		return; // require configuration
+
 	// TODO: parity
-	if (control.mode == MODE::b8e1
-		|| control.mode == MODE::b8n1
-		|| control.mode == MODE::b8n2
-		|| control.mode == MODE::b8o1
-	)
+	if (control.mode == MODE::b7e1
+		|| control.mode == MODE::b7e2
+		|| control.mode == MODE::b7o1
+		|| control.mode == MODE::b7o2)
+	{
+		value &= 0x7F;
+	}
+
+	if (value == '\n')
+		putchar('\r'); // insert carriage return before newline
+	if (value >= ' ' || value == '\r' || value == '\n' || value == 8 || value == 7) // skip most other control codes
 		putchar(value);
-	else
-		putchar(value & 0x7F);
+	if (value == '\r')
+		putchar('\n'); // add newline after carriage return
+
+	fflush(stdout);
 	clear_irq();
 	clear_transmit_data_register_empty();
 	// TODO: delay and set interrupt per transmission time
