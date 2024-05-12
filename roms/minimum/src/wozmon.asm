@@ -46,27 +46,44 @@ UART_OUT:
 	and #2
 	beq - ; branch if TDRE=0, not finished transmitting
 	pla
+	pha
+	and #$7F
 	sta UART_DATA
 	cmp #13
 	bne +
 	lda #10 ; add newline along with carriage return
-	bne UART_OUT
-+	rts
+	jsr UART_OUT
++	pla
+	rts
 UART_IN:
 -	lda UART_STCR
 	and #1
 	beq - ; branch if TDRF=0, not received
 	lda UART_DATA
 	; software "CAPS LOCK" because wozmon expects only uppercase
-	cmp #$61
+	cmp #$1C ; ^\ to act like a BRK, to return to monitor, if reading keys
+	beq BREAK
+    cmp #$61
 	bcc +
-	cmp #$78
+	cmp #$7b
 	bcs +
 	eor #$20
 +	ora #$80 ; Apple Model 1 expects 7-bit with marked parity (8th bit always set)
  	rts
+UART_CHK: ; set or clear N flag based on read ready (character waiting)
+	pha ; save A
+	lda UART_STCR
+	lsr ; put rightmost bit in carry
+	pla ; restore A affects flags
+	ror ; move carry to left bit, right bit to carry
+	php ; push processor to save N
+	rol ; restore A affects flags
+	plp ; pull processor to restore N
+	rts
+BREAK: brk
 ; create jump table for utility methods
-* = $FEF7
+* = $FEF4
+	jmp UART_CHK
 	jmp UART_INIT
 	jmp UART_IN
 	jmp UART_OUT
