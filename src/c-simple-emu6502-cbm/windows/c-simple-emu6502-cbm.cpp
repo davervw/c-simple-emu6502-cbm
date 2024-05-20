@@ -36,6 +36,9 @@ ID2D1Bitmap* bitmap = 0;
 float pixelWidth = 0;
 float pixelHeight = 0;
 char chargen_rom[1024];
+DWORD childThread = 0;
+bool shuttingDown = false;
+HANDLE hChildThread = 0;
 
 // Forward declarations of functions included in this code module:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -117,8 +120,10 @@ static bool CreateRenderTarget(HWND hWnd)
         render2d = 0;
     }
 
-    if (!GetClientRect(hWnd, &clientRect))
+    if (!GetClientRect(hWnd, &clientRect)) {
+        OutputDebugStringA("GetClientRect failed\n");
         return false;
+    }
 
     // this size property cannot be ommited, otherwise render target doesn't seem to work
     D2D1_SIZE_U size = D2D1::SizeU(clientRect.right - clientRect.left, clientRect.bottom - clientRect.top);
@@ -132,8 +137,10 @@ static bool CreateRenderTarget(HWND hWnd)
         D2D1::RenderTargetProperties(D2D1_RENDER_TARGET_TYPE_DEFAULT, pixelFormat),
         D2D1::HwndRenderTargetProperties(hWnd, size),
         &render2d);
-    if (result != S_OK)
+    if (result != S_OK) {
+        OutputDebugStringA("CreateHwndRenderTarget failed\n");
         return false;
+    }
 
     // Thanks to https://www.codeproject.com/Questions/5368277/Directdraw-surface-w-bitmap-not-rendering
     D2D1_BITMAP_PROPERTIES bitmapProps{};
@@ -142,8 +149,10 @@ static bool CreateRenderTarget(HWND hWnd)
     bitmapProps.dpiY = 0;
     bitmapProps.pixelFormat = pixelFormat;
     result = render2d->CreateBitmap(D2D1::SizeU(8, 8), bitmapProps, &bitmap);
-    if (result != S_OK)
+    if (result != S_OK) {
+        OutputDebugStringA("CreateBitmap failed\n");
         return false;
+    }
 
     pixelWidth = (clientRect.right - clientRect.left) / (320.0f + 64);
     pixelHeight = (clientRect.bottom - clientRect.top) / (200.0f + 64);
@@ -151,6 +160,19 @@ static bool CreateRenderTarget(HWND hWnd)
     //render2d->SetAntialiasMode(D2D1_ANTIALIAS_MODE_ALIASED);
 
     return true;
+}
+
+DWORD WINAPI ThreadProc(LPVOID lpParameter)
+{
+    HWND hWnd = (HWND)lpParameter;
+    auto result = SendMessage(hWnd, WM_USER, 0, 0);
+
+    while (!shuttingDown)
+        Sleep(20);
+
+    OutputDebugStringA("Exiting thread\n");
+
+    return 0;
 }
 
 //
@@ -172,15 +194,20 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
     if (!hWnd)
     {
+        OutputDebugStringA("CreateWindowW failed\n");
         return FALSE;
     }
 
-    HRESULT result = D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, &factory2d);
-    if (result != S_OK)
+    HRESULT result = D2D1CreateFactory(D2D1_FACTORY_TYPE_MULTI_THREADED, &factory2d);
+    if (result != S_OK) {
+        OutputDebugStringA("D2D1CreateFactory failed\n");
         return false;
+    }
 
-    if (!CreateRenderTarget(hWnd))
+    if (!CreateRenderTarget(hWnd)) {
+        OutputDebugStringA("CreateRenderTarget failed\n");
         return FALSE;
+    }
 
     FILE* f = 0;
     fopen_s(&f, "roms/minimum/asciifont.bin", "rb");
@@ -210,6 +237,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message)
     {
+    case WM_CREATE:
+    {
+        hChildThread = CreateThread(NULL, 0, ThreadProc, (LPVOID*)hWnd, 0, &childThread);
+    }
+    break;
     case WM_COMMAND:
     {
         int wmId = LOWORD(wParam);
@@ -252,7 +284,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             float x1 = (float)clientRect.right;
             float y1 = clientRect.top + pixelHeight * 32;
             float x2 = x0;
-            float y2 = y1;
+            float y2 = y1-1; // minus one to avoid stitching so color is continuous
             float x3 = clientRect.right - pixelWidth * 32;
             float y3 = y2;
             float x4 = clientRect.left + pixelWidth * 32;
@@ -265,9 +297,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             float y7 = (float)clientRect.bottom;
 
             render2d->FillRectangle(D2D1::RectF(x0, y0, x1, y1), brushBorder);
-            render2d->FillRectangle(D2D1::RectF(x2, y2, x4, y4), brushBorder);
+            render2d->FillRectangle(D2D1::RectF(x2, y2, x4, y7), brushBorder);
+            render2d->FillRectangle(D2D1::RectF(x3, y3, x5, y7), brushBorder);
             render2d->FillRectangle(D2D1::RectF(x6, y6, x7, y7), brushBorder);
-            render2d->FillRectangle(D2D1::RectF(x3, y3, x5, y5), brushBorder);
         }
         RenderC64Text(hWnd, "**** COMMODORE 64 BASIC V2 ****", 4, 1);
         RenderC64Text(hWnd, "64K RAM SYSTEM  38911 BASIC BYTES FREE", 1, 3);
@@ -284,9 +316,24 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         if (!CreateRenderTarget(hWnd))
             return DefWindowProc(hWnd, message, wParam, lParam);
         break;
+    case WM_USER:
+    {
+        //auto id = GetCurrentThreadId();
+        //wchar_t buffer[80];
+        //if (_snwprintf_s(buffer, sizeof(buffer), _T("WM_USER thread id %d\n"), (int)id) <= 0)
+        //    buffer[0] = 0;
+        //OutputDebugStringW(buffer);
+        //MessageBox(hWnd, _T("WM_USER"), _T("WndProc"), MB_OK);
+        return 1234;
+    }
     case WM_DESTROY:
+    {
+        shuttingDown = true;
+        WaitForSingleObject(hChildThread, 1000);
+        OutputDebugStringA("Exiting main Window\n");
         PostQuitMessage(0);
         break;
+    }
     default:
         return DefWindowProc(hWnd, message, wParam, lParam);
     }
