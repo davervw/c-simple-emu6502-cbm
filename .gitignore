@@ -11,3 +11,12 @@ esp32.svd
 esp32s3.svd
 browser-keyscan-helper/node_modules
 c-simple.DC68A2E0/
+!roms/
+roms/c128/
+roms/c64/
+roms/pet/
+roms/ted/
+roms/test/
+roms/vic20/
+roms/minimum/wozmon*
+*.swp

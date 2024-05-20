@@ -1,0 +1,6 @@
+	IRQ	= $fff1
+	UART_STCR	= $fff9
+	UART_DATA	= $fff8
+	NMI	= $fff0
+	RESET	= $f000
+	STROUT	= $f03f	; ?

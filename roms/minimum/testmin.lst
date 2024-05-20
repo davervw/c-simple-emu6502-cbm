@@ -1,0 +1,71 @@
+
+; ******** Source: testmin.asm
+     1                          ; testmin.asm
+     2                          ; Copyright (c) 2024 by David R. Van Wagner
+     3                          ; davevw.com
+     4                          ;
+     5                          ; test 6502/6850 minimum system operation
+     6                          ; echos characters, changing case of alphabetical entries
+     7                          
+     8                          ; MC6850
+     9                          UART_DATA = $FFF8 ; data register (read/write)
+    10                          UART_STCR = $FFF9 ; status (read) and control register (write)
+    11                          
+    12                          * = $F000
+    13                          RESET:
+    14  f000 a903                   lda #0b00000011 ; reset device
+    15  f002 8df9ff                 sta UART_STCR
+    16  f005 a916                   lda #0b00010110 ; 0=rint disabled, 00=rtsn low, tint disabled 101=8n1 10=div 64
+    17  f007 8df9ff                 sta UART_STCR
+    18  f00a a980                   lda #$80
+    19  f00c a2f0                   ldx #$f0
+    20  f00e 203ff0                 jsr STROUT
+    21  f011 adf9ff             --  lda UART_STCR
+    22  f014 2901                   and #1
+    23  f016 f0f9                   beq --
+    24  f018 adf8ff                 lda UART_DATA
+    25  f01b c941                   cmp #$41 ; 'A'
+    26  f01d 9012                   bcc ++
+    27  f01f c95b                   cmp #$5b ; 'Z'+1
+    28  f021 b004                   bcs +
+    29  f023 0920                   ora #$20 ; to lowercase
+    30  f025 d00a                   bne ++
+    31  f027 c961               +   cmp #$61 ; 'a'
+    32  f029 9006                   bcc ++
+    33  f02b c97b                   cmp #$7b ; 'z'+1
+    34  f02d b002                   bcs ++
+    35  f02f 4920                   eor #$20 ; to uppercase
+    36                          ++
+    37  f031 aa                     tax
+    38  f032 adf9ff             -   lda UART_STCR
+    39  f035 2902                   and #2
+    40  f037 f0f9                   beq - ; branch if TDRE-0 (not empty) waiting for transmit
+    41  f039 8ef8ff                 stx UART_DATA
+    42  f03c 4c11f0                 jmp --
+    43                          STROUT:
+    44  f03f 8500                   sta $00
+    45  f041 8601                   stx $01
+    46  f043 a000                   ldy #$00
+    47  f045 b100               --  lda ($00),y
+    48  f047 aa                     tax
+    49  f048 f00d                   beq +
+    50  f04a adf9ff             -   lda UART_STCR
+    51  f04d 2902                   and #2
+    52  f04f f0f9                   beq - ; branch if TDRE=0 (not empty) waiting for transmit
+    53  f051 8ef8ff                 stx UART_DATA
+    54  f054 c8                     iny
+    55  f055 d0ee                   bne --
+    56  f057 60                 +   rts
+    57                          
+    58                          * = $F080
+    59  f080 48454c4c4f204d43...    !text "HELLO MC6850 UART!", 13, 10, 0
+    60  f095 2a                     !text "*" ; test that STROUT finishes
+    61                          
+    62                          * = $FFF0
+    63  fff0 40                 NMI:rti
+    64  fff1 4cf1ff             IRQ:jmp IRQ
+    65                          
+    66                          * = $FFFA
+    67  fffa f0ff                   !byte <NMI, >NMI
+    68  fffc 00f0                   !byte <RESET, >RESET
+    69  fffe f1ff                   !byte <IRQ, >IRQ
