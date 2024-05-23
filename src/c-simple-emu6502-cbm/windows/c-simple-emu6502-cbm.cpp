@@ -167,8 +167,8 @@ DWORD WINAPI ThreadProc(LPVOID lpParameter)
     HWND hWnd = (HWND)lpParameter;
     auto result = SendMessage(hWnd, WM_USER, 0, 0);
 
-    while (!shuttingDown)
-        Sleep(20);
+    extern void start(bool&);
+    start(shuttingDown);
 
     OutputDebugStringA("Exiting thread\n");
 

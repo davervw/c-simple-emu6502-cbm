@@ -127,6 +127,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="emu6502.cpp" />
+    <ClCompile Include="emutest.cpp" />
+    <ClCompile Include="start.cpp" />
     <ClCompile Include="windows\c-simple-emu6502-cbm.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -137,6 +140,8 @@
     <ResourceCompile Include="windows\c-simple-emu6502-cbm.rc" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="emu6502.h" />
+    <ClInclude Include="emutest.h" />
     <ClInclude Include="windows\c-simple-emu6502-cbm.h" />
     <ClInclude Include="windows\framework.h" />
     <ClInclude Include="windows\Resource.h" />

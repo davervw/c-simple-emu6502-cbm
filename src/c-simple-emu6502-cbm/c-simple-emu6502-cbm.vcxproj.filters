@@ -2,6 +2,9 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="windows\c-simple-emu6502-cbm.cpp" />
+    <ClCompile Include="emu6502.cpp" />
+    <ClCompile Include="emutest.cpp" />
+    <ClCompile Include="start.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="windows\framework.h">
@@ -14,6 +17,12 @@
       <Filter>Includes</Filter>
     </ClInclude>
     <ClInclude Include="windows\Resource.h">
+      <Filter>Includes</Filter>
+    </ClInclude>
+    <ClInclude Include="emu6502.h">
+      <Filter>Includes</Filter>
+    </ClInclude>
+    <ClInclude Include="emutest.h">
       <Filter>Includes</Filter>
     </ClInclude>
   </ItemGroup>

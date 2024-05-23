@@ -52,6 +52,20 @@ extern const char* StartupPRG;
 
 #include "emutest.h"
 
+#ifdef _WINDOWS
+#include <Windows.h>
+#define PRINTF wprintf
+template<class... Args> // https://stackoverflow.com/questions/1657883/variable-number-of-arguments-in-c
+void wprintf(_Printf_format_string_ const char* fmt, Args... args)
+{
+    char buffer[200]{};
+    _snprintf_s(buffer, sizeof(buffer), fmt, args...);
+    OutputDebugStringA(buffer);
+}
+#else
+#define PRINTF printf
+#endif
+
 static bool start = true;
 static int last_test = -1;
 
@@ -85,7 +99,7 @@ bool EmuTest::ExecutePatch()
     }
     if (GetMemory(PC) == 0xD0/*BNE*/ && !Z && GetMemory((ushort)(PC + 1)) == 0xFE)
     {
-        printf("%04X Test FAIL\n", PC);
+        PRINTF("%04X Test FAIL\n", PC);
         while(1) {} // loop forever
     }
     if ( GetMemory(PC) == 0x4C/*JMP*/
@@ -93,14 +107,14 @@ bool EmuTest::ExecutePatch()
             || (GetMemory((ushort)(PC + 1)) == 0x00 && GetMemory((ushort)(PC + 2)) == 0x04) )
         )
     {
-        printf("%04X COMPLETED SUCCESS\n", PC);
+        PRINTF("%04X COMPLETED SUCCESS\n", PC);
         quit = true;
         while(1) {} // loop forever
     }
     if (GetMemory(0x200) != last_test)
     {
         last_test = GetMemory(0x200);
-        printf("%04X Starting test %02X\n", PC, last_test);
+        PRINTF("%04X Starting test %02X\n", PC, last_test);
         return false;
     }
 	return false;
@@ -115,11 +129,20 @@ static const byte rom[64 * 1024] = {
 
 EmuTest::TestMemory::TestMemory(const char* filename)
 {
-	const int ram_size = 65536;
-	ram = new unsigned char[ram_size];
-	memset(ram, 0, ram_size);
-  memcpy(ram, rom, ram_size);
-	//EmuCBM::File_ReadAllBytes(ram, ram_size, filename);
+    const int ram_size = 65536;
+    ram = new unsigned char[ram_size];
+    memset(ram, 0, ram_size);
+    memcpy(ram, rom, ram_size);
+#ifdef _WINDOWS
+    FILE* f = 0;
+    fopen_s(&f, filename, "rb");
+    if (f == 0)
+        return;
+    auto bytes = fread(ram, 1, ram_size, f);
+    fclose(f);
+#else
+	EmuCBM::File_ReadAllBytes(ram, ram_size, filename);
+#endif
 }
 
 EmuTest::TestMemory::~TestMemory()

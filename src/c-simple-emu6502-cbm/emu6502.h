@@ -102,6 +102,8 @@ protected:
   bool step;
   bool quit;
 
+  bool sixty_hz_irq;
+
 private:
   byte Subtract(byte reg, byte value, bool *p_overflow);
   byte SubtractWithoutOverflow(byte reg, byte value);
