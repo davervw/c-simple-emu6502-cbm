@@ -3,11 +3,11 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
 // c-simple-emu-cbm (C Portable Version);
-// C64/6502 Emulator for M5Stack Cores
+// C64/6502 Unified Emulator for M5Stack/Teensy/ESP32 LCDs and Windows
 //
 // MIT License
 //
-// Copyright (c) 2023 by David R. Van Wagner
+// Copyright (c) 2024 by David R. Van Wagner
 // davevw.com
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -57,8 +57,6 @@ class EmuC64 : public EmuCBM
     byte* basic_rom;
     byte* kernal_rom;
     byte* chargen_rom;
-    byte* old_video;
-    byte* old_color;
 
   public:
     EmuVicII* vicii;

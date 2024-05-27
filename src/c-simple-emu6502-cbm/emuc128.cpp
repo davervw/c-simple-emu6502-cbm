@@ -7,7 +7,7 @@
 //
 // MIT License
 //
-// Copyright (c) 2020-2022 by David R. Van Wagner
+// Copyright (c) 2024 by David R. Van Wagner
 // davevw.com
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -72,6 +72,10 @@
 
 #include "emuc128.h"
 #include "config.h"
+#ifdef _WINDOWS
+#include "WindowsKeyboard.h"
+#include "WindowsTime.h"
+#else
 #include "cardkbdscan.h"
 #ifdef ARDUINO_TEENSY41
 #include "USBtoCBMkeyboard.h"
@@ -79,9 +83,10 @@ extern USBtoCBMkeyboard usbkbd;
 #else
 #include "ble_keyboard.h"
 #endif
+#endif // NOT _WINDOWS
 
 // externs (globals)
-extern char* StartupPRG;
+extern const char* StartupPRG;
 extern int main_go_num;
 
 // array allows multiple keys/modifiers pressed at one time
@@ -106,8 +111,7 @@ bool EmuC128::ExecutePatch()
     int found_NMI = 0;
     for (int i=0; !found_NMI && i<16; ++i)
       if (scan_codes[i] & 1024)
-        found_NMI = 1;
-    
+        found_NMI = 1;    
     if (NMI)
     {
       if (!found_NMI)
@@ -125,6 +129,16 @@ bool EmuC128::ExecutePatch()
       PC = (ushort)(GetMemory(0xFFFA) + (GetMemory(0xFFFB) << 8)); // JMP(NMI)
       return true; // overriden, and PC changed, so caller should reloop before execution to allow breakpoint/trace/ExecutePatch/etc.
     }
+
+#ifdef _WINDOWS
+    static unsigned counter = 0;
+    if ((++counter & 0x0400) == 0) {
+        if (((C128Memory*)memory)->vicii->active)
+            ((C128Memory*)memory)->vicii->CheckPaintFrame(timer_now);
+        if (((C128Memory*)memory)->vdc->active)
+            ((C128Memory*)memory)->vdc->CheckPaintFrame(timer_now);
+    }
+#endif
 
     if (GetMemory(PC) == 0x6C && GetMemory((ushort)(PC + 1)) == 0x30 && GetMemory((ushort)(PC + 2)) == 0x03) // catch JMP(LOAD_VECTOR), redirect to jump table
     {
@@ -438,6 +452,10 @@ C128Memory::~C128Memory()
 
 void C128Memory::ReadKeyboard()
 {
+#ifdef _WINDOWS
+    WindowsKeyboard::get_scan_codes(scan_codes, 16);
+    return;
+#endif
 #ifdef ARDUINO_M5STACK_FIRE
   const String upString = "15,7,88";
   const String dnString = "7,88";
@@ -450,6 +468,9 @@ void C128Memory::ReadKeyboard()
   static int lastRun = 1;
 #endif
 
+  bool caps = false;
+
+#ifndef _WINDOWS
   String s;
 #ifndef ARDUINO_TEENSY41
   ble_keyboard->ServiceConnection();
@@ -499,7 +520,6 @@ void C128Memory::ReadKeyboard()
   int dest = 0;
   int scan = 0;
   int len = 0;
-  bool caps = false;
   while (src < s.length() && dest < 16) {
     char c = s.charAt(src++);
     if (c >= '0' && c <= '9') {
@@ -518,6 +538,7 @@ void C128Memory::ReadKeyboard()
   }
   while (dest < 16)
     scan_codes[dest++] = 88;
+#endif NOT _WINDOWS
   
   ram[1] = (ram[2] & 0xBF) | (caps ? 0 : 0x40);
 }
@@ -658,14 +679,14 @@ void C128Memory::write(ushort addr, byte value)
               {
                 ram[addr128k] = value;
                 if (value & 128)
-                {
-                  vdc->Activate();
-                  vicii->Deactivate();
-                }
-                else
-                {
-                  vdc->Deactivate();
-                  vicii->Activate();                 
+				{
+					vicii->Deactivate();
+					vdc->Activate();
+				}
+				else
+				{
+					vdc->Deactivate();
+					vicii->Activate();
                 }
                 return;
               }

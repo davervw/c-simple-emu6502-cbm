@@ -1,7 +1,44 @@
-// VDC8563 ////////////////////////////////////////////////////////////
+// VDC8563 - 80 column video display chip on C128 (and VDC8568 on C128D)
+//
+////////////////////////////////////////////////////////////////////////////////
+//
+// c-simple-emu-cbm (C Portable Version)
+// C64/6502 Unified Emulator for M5Stack/Teensy/ESP32 LCDs and Windows
+//
+// MIT License
+//
+// Copyright (c) 2024 by David R. Van Wagner
+// davevw.com
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+//
+////////////////////////////////////////////////////////////////////////////////
 
+#include "emu6502.h"
 #include "config.h"
 #include "vdc.h"
+
+#ifdef _WINDOWS
+#include <memory.h>
+#include <WindowsDraw.h>
+#include <WindowsTime.h>
+#endif // _WINDOWS
 
 const int vdc_ram_size = 64 * 1024;
 const int registers_size = 38;
@@ -33,6 +70,14 @@ void VDC8563::Activate()
   {
     active = true;
     int bg = VDCColorToLCDColor(registers[26]);
+#ifdef _WINDOWS
+    if (!WindowsDraw::CreateRenderTarget(640, 200, 32, 16, redrawRequiredSignal))
+        throw "CreateRenderTarget failed";
+    WindowsDraw::BeginDraw();
+    WindowsDraw::DrawBorder(0, 0, 0); // BLACK
+    unsigned long last_refresh = micros();
+    needsPaintFrame = false;
+#endif
 #ifdef ARDUINO_SUNTON_8048S070
     gfx->fillRect(0, 0, 800, 480, bg);
 #endif
@@ -55,6 +100,9 @@ void VDC8563::Activate()
 void VDC8563::Deactivate()
 {
   active = false;
+#ifdef _WINDOWS
+  WindowsDraw::EndDraw();
+#endif
 }
 
 int VDC8563::VDCColorToLCDColor(byte value)
@@ -147,6 +195,23 @@ int VDC8563::VDCColorToLCDColor(byte value)
     case 14: return ILI9488_LIGHTGREY;
     case 15: return ILI9488_WHITE;
 #endif  
+#ifdef _WINDOWS
+    case 1: return 0x8410; // DARKGRAY
+    case 2: return 0x0018; // BLUE
+    case 3: return 0x841F; // LIGHTBLUE
+    case 4: return 0x0400; // DARKGREEN
+    case 5: return 0xBFF7; // LIGHTGREEN
+    case 6: return 0x0208; // MED GRAY OR DARK CYAN
+    case 7: return 0x07FF; // CYAN
+    case 8: return 0xF800; // RED
+    case 9: return 0xFC10; // PINK OR LT RED
+    case 10: return 0x8118; // DARKMAGENTA OR PURPLE
+    case 11: return 0xF81F; // LIGHT MAGENTA
+    case 12: return 0x8283; // BROWN;
+    case 13: return 0xFFE0; // YELLOW;
+    case 14: return 0x4208; // LIGHTGREY
+    case 15: return 0xFFFF; // WHITE
+#endif  
     default: return 0xFFFF; // WHITE
   }
 }
@@ -200,6 +265,15 @@ int static average_color(int color0, int color2)
 }
 #endif
 
+#ifdef _WINDOWS
+static void Extract565Color(int color, byte& red, byte& green, byte& blue) // TODO: one copy
+{
+    red = (color >> 11) * 255 / 32;
+    green = ((color >> 5) & 0x3F) * 255 / 64;
+    blue = (color & 0x1F) * 255 / 32;
+}
+#endif
+
 void VDC8563::DrawChar(byte c, int col, int row, int fg, int bg, byte attrib)
 {
   if (!active)
@@ -237,6 +311,24 @@ void VDC8563::DrawChar(byte c, int col, int row, int fg, int bg, byte attrib)
   bool inverse = ((registers[24] & 0x40) != 0);
   byte cursorMode = (registers[10] >> 5) & 3;
   bool isCursor = ( row*80+col == (registers[14] << 8 | registers[15]) && cursorMode != 1 );
+  if (attrib & 0x20 && registers[29] < 8 && !(inverse ^ isCursor)) {
+      static byte underlined[8];
+      memcpy(underlined, src, 8);
+      underlined[registers[29]] = 255;
+      src = underlined;
+  }
+#ifdef _WINDOWS
+  byte fg_red, fg_green, fg_blue;
+  byte bg_red, bg_green, bg_blue;
+  Extract565Color(fg, fg_red, fg_green, fg_blue);
+  Extract565Color(bg, bg_red, bg_green, bg_blue);
+  if (inverse ^ isCursor)
+	  WindowsDraw::DrawCharacter2Color(src, col, row, bg_red, bg_green, bg_blue, fg_red, fg_green, fg_blue);
+  else
+	  WindowsDraw::DrawCharacter2Color(src, col, row, fg_red, fg_green, fg_blue, bg_red, bg_green, bg_blue);
+  needsPaintFrame = true;
+  return;
+#else // NOT _WINDOWS
   for (int row_i=0; row_i<8; ++row_i)
   {
     int mask = 128;
@@ -301,7 +393,8 @@ void VDC8563::DrawChar(byte c, int col, int row, int fg, int bg, byte attrib)
   }
 #ifdef M5STACK   
   M5.Lcd.endWrite();
-#endif  
+#endif
+#endif // NOT _WINDOWS
 }
 
 void VDC8563::DrawChar(int offset)
@@ -332,7 +425,7 @@ void VDC8563::RedrawScreen()
     {
       byte attrib = vdc_ram[2048+offset];
       int fg = attributesEnabled ? VDCColorToLCDColor(attrib) : VDCColorToLCDColor(registers[26] >> 4);
-      DrawChar(vdc_ram[offset], col, row, fg, bg, attrib);
+      DrawChar(vdc_ram[offset], col, row, fg, bg, attrib); // TODO: optimize whether need to draw
       ++offset;
     }
   }
@@ -420,13 +513,15 @@ void VDC8563::SetDataRegister(byte value)
         {
             for (int i = 0; i < count; ++i)
             {
-                vdc_ram[dest] = registers[31];
-                if (active)
-                {
-                  if (dest >= 0 && dest < 2000)
-                    DrawChar(dest);
-                  else if (dest >= 2048 && dest < 4048)
-                    DrawChar(dest & 0x7FF);
+                if (vdc_ram[dest] != registers[31]) { // optimize out redundant screen updates
+                    vdc_ram[dest] = registers[31];
+                    if (active)
+                    {
+                        if (dest >= 0 && dest < 2000)
+                            DrawChar(dest);
+                        else if (dest >= 2048 && dest < 4048)
+                            DrawChar(dest & 0x7FF);
+                    }
                 }
                 ++dest;
             }
@@ -507,8 +602,28 @@ void VDC8563::SetDataRegister(byte value)
     else if (register_addr == 15)
     {
       registers[register_addr] = value;
-      DrawChar((registers[14] << 8) | registers[15]);
+      byte cursorMode = (registers[10] >> 5) & 3;
+      if (cursorMode != 1) // optmize out if cursor is off
+        DrawChar((registers[14] << 8) | registers[15]);
     }
     else
       registers[register_addr] = value;
 }
+
+#ifdef _WINDOWS
+void VDC8563::CheckPaintFrame(unsigned long micros_now)
+{
+    if (redrawRequiredSignal || needsPaintFrame && (micros_now - lastPaintFrame) >= paintFrameInterval)
+    {
+        if (redrawRequiredSignal) {
+            redrawRequiredSignal = false;
+            WindowsDraw::DrawBorder(0, 0, 0); // BLACK
+            RedrawScreen();
+        }
+        WindowsDraw::EndDraw(); // will paint anything pending
+        WindowsDraw::BeginDraw(); // start a new session
+        lastPaintFrame = micros_now;
+        needsPaintFrame = false;
+    }
+}
+#endif // _WINDOWS

@@ -1,6 +1,12 @@
 #include "vic.h"
 #include "config.h"
 
+#ifdef _WINDOWS
+#include <memory.h>
+#include <WindowsDraw.h>
+#include <WindowsTime.h>
+#endif // _WINDOWS
+
 #ifdef M5STACK
 //#define VIC1TO1 // 1 to 1 pixels horizontally and vertically
 #define VIC3TO2 //3 pixels for every 2 pixels horizontally, 1 to 1 pixels vertically
@@ -40,18 +46,29 @@ const int X0 = 6;
 const int Y0 = 5;
 #endif
 
-EmuVic::EmuVic(byte* vram, byte* vio, byte* vcolor_nybles, byte* vchargen)
+EmuVic::EmuVic(byte* vram, byte* vio, byte* vchargen)
 {
   ram = vram;
   io = vio;
-  color_nybles = vcolor_nybles;
   chargen = vchargen;
   old_video = new byte[22*23];
   old_color = new byte[22*23];
   postponeDrawChar = false;
+  video_ram_addr = 0x1e00;
+  color_ram_addr = 0x9600;
+  color_nybles = &vio[color_ram_addr - 0x9000];
+  io[2] = 128; // default video memory
 
   memset(old_video, 32, 22*23);
   memset(old_color, 0, 22*23);
+
+#ifdef _WINDOWS
+  if (!WindowsDraw::CreateRenderTarget(22*8, 23*8, 32, 32, redrawRequiredSignal))
+      throw "CreateRenderTarget failed";
+  WindowsDraw::BeginDraw();
+  unsigned long last_refresh = micros();
+  needsPaintFrame = false;
+#endif // _WINDOWS
 
   // initialize LCD screen
 #ifdef M5STACK  
@@ -60,6 +77,9 @@ EmuVic::EmuVic(byte* vram, byte* vio, byte* vcolor_nybles, byte* vchargen)
 #ifdef ARDUINO_SUNTON_8048S070
   gfx->fillScreen(0x0000);  // BLACK
 #endif  
+#ifdef _WINDOWS
+  WindowsDraw::ClearScreen(0, 0, 0); // BLACK
+#endif
 }
 
 EmuVic::~EmuVic()
@@ -109,7 +129,7 @@ int EmuVic::Vic20ColorToLCDColor(byte value)
     case 13: return 0xBFF7; // LIGHTGREEN
     case 14: return 0xB73F; // LIGHTBLUE
     case 15: return 0xDF50; // YELLOW BROWN
-  #endif    
+#endif    
 #ifdef ARDUINO_TEENSY41
     case 0: return 0x0000; // BLACK
     case 1: return 0xFFFF; // WHITE
@@ -133,8 +153,8 @@ int EmuVic::Vic20ColorToLCDColor(byte value)
     case 13: return 0xBFF7; // LIGHTGREEN
     case 14: return 0xB73F; // LIGHTBLUE
     case 15: return 0xDF50; // YELLOW BROWN
-  #endif    
-  #ifdef ARDUINO_LILYGO_T_DISPLAY_S3
+#endif    
+#ifdef ARDUINO_LILYGO_T_DISPLAY_S3
     case 0: return 0x0000; // BLACK
     case 1: return 0xFFFF; // WHITE
     case 2: return 0x8800; // RED
@@ -144,6 +164,24 @@ int EmuVic::Vic20ColorToLCDColor(byte value)
     case 6: return 0x0015; // BLUE
     case 7: return TFT_YELLOW;
     case 8: return TFT_ORANGE; // ORANGE
+    case 9: return 0xFFFA; // PALE YELLOW
+    case 10: return 0xFC10; // PINK OR LT RED
+    case 11: return 0xB73F; // LIGHTBLUE
+    case 12: return 0xF61F; // LIGHTMAGENTA
+    case 13: return 0xBFF7; // LIGHTGREEN
+    case 14: return 0xB73F; // LIGHTBLUE
+    case 15: return 0xDF50; // YELLOW BROWN
+#endif
+#ifdef _WINDOWS
+    case 0: return 0x0000; // BLACK
+    case 1: return 0xFFFF; // WHITE
+    case 2: return 0x8800; // RED
+    case 3: return 0xA77E; // CYAN
+    case 4: return 0x8118; // DARKMAGENTA OR PURPLE
+    case 5: return 0x3E03; // GREEN
+    case 6: return 0x0015; // BLUE
+    case 7: return 0xFFE0; // YELLOW
+    case 8: return 0xFCC0; // ORANGE
     case 9: return 0xFFFA; // PALE YELLOW
     case 10: return 0xFC10; // PINK OR LT RED
     case 11: return 0xB73F; // LIGHTBLUE
@@ -168,6 +206,15 @@ static int average_color(int color1, int color2)
   return color;
 }
 
+#ifdef _WINDOWS
+static void Extract565Color(int color, byte& red, byte& green, byte& blue) // TODO: one copy
+{
+    red = (color >> 11) * 255 / 32;
+    green = ((color >> 5) & 0x3F) * 255 / 64;
+    blue = (color & 0x1F) * 255 / 32;
+}
+#endif
+
 void EmuVic::DrawChar(byte c, int col, int row, int fg, int bg)
 {
   if (postponeDrawChar)
@@ -178,6 +225,15 @@ void EmuVic::DrawChar(byte c, int col, int row, int fg, int bg)
 #endif
   int offset = ((io[0x5] & 2) == 0) ? 0 : (8*256);
   const byte* shape = &chargen[c*8+offset];
+#ifdef _WINDOWS
+  byte fg_red, fg_green, fg_blue;
+  byte bg_red, bg_green, bg_blue;
+  Extract565Color(fg, fg_red, fg_green, fg_blue);
+  Extract565Color(bg, bg_red, bg_green, bg_blue);
+  WindowsDraw::DrawCharacter2Color(shape, col, row, fg_red, fg_green, fg_blue, bg_red, bg_green, bg_blue);
+  needsPaintFrame = true;
+  return;
+#else // NOT _WINDOWS
 #ifdef M5STACK  
   int y0 = Y0 + row*8;
 #ifdef VIC1TO1  
@@ -307,6 +363,7 @@ void EmuVic::DrawChar(byte c, int col, int row, int fg, int bg)
 #ifdef M5STACK
   M5.Lcd.endWrite();
 #endif
+#endif // NOT _WINDOWS
 }
 
 void EmuVic::DrawChar(int offset)
@@ -315,7 +372,7 @@ void EmuVic::DrawChar(int offset)
   int row = offset / 22;
   int fg = EmuVic::Vic20ColorToLCDColor(color_nybles[offset] & 7);
   int bg = EmuVic::Vic20ColorToLCDColor(io[0xf] >> 4);
-  DrawChar(ram[0x1E00+offset], col, row, fg, bg);
+  DrawChar(ram[video_ram_addr+offset], col, row, fg, bg);
 }
 
 void EmuVic::RedrawScreen()
@@ -330,7 +387,7 @@ void EmuVic::RedrawScreen()
     for (int col = 0; col < 22; ++col)
     {
       int fg = EmuVic::Vic20ColorToLCDColor(color_nybles[offset] & 7);
-      DrawChar(ram[0x1E00 + offset], col, row, fg, bg);
+      DrawChar(ram[video_ram_addr + offset], col, row, fg, bg);
       ++offset;
     }
   }
@@ -352,7 +409,7 @@ void EmuVic::RedrawScreenEfficientlyAfterPostponed()
     {
       int fg = EmuVic::Vic20ColorToLCDColor(color_nybles[offset]);
       byte old_char = old_video[offset];
-      byte new_char = ram[0x1E00 + offset];
+      byte new_char = ram[video_ram_addr + offset];
       byte old_fg_index = old_color[offset] & 0xF;
       byte new_fg_index = color_nybles[offset] & 0xF;
       if (old_char != new_char || old_fg_index != new_fg_index)
@@ -368,6 +425,12 @@ void EmuVic::RedrawScreenEfficientlyAfterPostponed()
 void EmuVic::DrawBorder(byte value)
 {
     int border = Vic20ColorToLCDColor(value & 7);
+#ifdef _WINDOWS
+    byte red, green, blue;
+    Extract565Color(border, red, green, blue);
+    WindowsDraw::DrawBorder(red, green, blue);
+    needsPaintFrame = true;
+#endif // _WINDOWS
 #ifdef M5STACK
     M5.Lcd.startWrite();
     M5.Lcd.fillRect(0, 0, 320, Y0, border);
@@ -406,6 +469,24 @@ void EmuVic::DrawBorder(byte value)
 
 void EmuVic::SaveOldVideoAndColor()
 {
-    memcpy(&old_video[0], &ram[0x1E00], 22*23);
+    memcpy(&old_video[0], &ram[video_ram_addr], 22*23);
     memcpy(&old_color[0], &color_nybles[0], 22*23);
 }
+
+#ifdef _WINDOWS
+void EmuVic::CheckPaintFrame(unsigned long micros_now)
+{
+    if (redrawRequiredSignal || needsPaintFrame && (micros_now - lastPaintFrame) >= paintFrameInterval)
+    {
+        if (redrawRequiredSignal) {
+            redrawRequiredSignal = false;
+            WindowsDraw::DrawBorder(0, 0, 0); // BLACK
+            RedrawScreen();
+        }
+        WindowsDraw::EndDraw(); // will paint anything pending
+        WindowsDraw::BeginDraw(); // start a new session
+        lastPaintFrame = micros_now;
+        needsPaintFrame = false;
+    }
+}
+#endif // _WINDOWS

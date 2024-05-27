@@ -1,10 +1,36 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="windows\c-simple-emu6502-cbm.cpp" />
     <ClCompile Include="emu6502.cpp" />
     <ClCompile Include="emutest.cpp" />
-    <ClCompile Include="start.cpp" />
+    <ClCompile Include="emuc64.cpp" />
+    <ClCompile Include="emucbm.cpp" />
+    <ClCompile Include="emud64.cpp" />
+    <ClCompile Include="vicii.cpp" />
+    <ClCompile Include="emuc128.cpp" />
+    <ClCompile Include="vdc.cpp" />
+    <ClCompile Include="vic.cpp" />
+    <ClCompile Include="windows\WindowsDraw.cpp">
+      <Filter>Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="windows\WindowsFile.cpp">
+      <Filter>Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="windows\WindowsKeyboard.cpp">
+      <Filter>Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="windows\WindowsMain.cpp">
+      <Filter>Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="windows\WindowsStart.cpp">
+      <Filter>Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="windows\WindowsTime.cpp">
+      <Filter>Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="emuvic20.cpp">
+      <Filter>Includes</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="windows\framework.h">
@@ -25,6 +51,43 @@
     <ClInclude Include="emutest.h">
       <Filter>Includes</Filter>
     </ClInclude>
+    <ClInclude Include="emuc64.h">
+      <Filter>Includes</Filter>
+    </ClInclude>
+    <ClInclude Include="emucbm.h">
+      <Filter>Includes</Filter>
+    </ClInclude>
+    <ClInclude Include="emud64.h">
+      <Filter>Includes</Filter>
+    </ClInclude>
+    <ClInclude Include="vicii.h">
+      <Filter>Includes</Filter>
+    </ClInclude>
+    <ClInclude Include="emuvic20.h" />
+    <ClInclude Include="windows\WindowsDraw.h">
+      <Filter>Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="windows\WindowsStart.h">
+      <Filter>Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="windows\WindowsFile.h">
+      <Filter>Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="windows\WindowsKeyboard.h">
+      <Filter>Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="windows\WindowsTime.h">
+      <Filter>Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="emuc128.h">
+      <Filter>Includes</Filter>
+    </ClInclude>
+    <ClInclude Include="vdc.h">
+      <Filter>Includes</Filter>
+    </ClInclude>
+    <ClInclude Include="vic.h">
+      <Filter>Includes</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Image Include="windows\c-simple-emu6502-cbm.ico">
@@ -40,6 +103,9 @@
     </Filter>
     <Filter Include="Includes">
       <UniqueIdentifier>{9b5810cc-3830-4fe3-82fd-7e4354eb5829}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Windows">
+      <UniqueIdentifier>{ecb9392e-0ac7-4f70-b654-c899400fe8e4}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

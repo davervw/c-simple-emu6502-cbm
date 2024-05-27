@@ -7,6 +7,8 @@
 
 // NOTE: M5Stack_Core_ESP32 doesn't include PSRAM so won't work with this solution (use one of other listed boards below instead).
 
+// TODO: more build instructions needed for Arduino IDE options because they can get tricky
+
 ////////////////////////////
 #ifdef ARDUINO_M5STACK_Core2
 #include <M5Core2.h>

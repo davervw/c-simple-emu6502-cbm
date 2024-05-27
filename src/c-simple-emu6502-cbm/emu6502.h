@@ -3,11 +3,11 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
 // c-simple-emu-cbm (C Portable Version);
-// C64/6502 Emulator for M5Stack Cores
+// C64/6502 Unified Emulator for M5Stack/Teensy/ESP32 LCDs and Windows
 //
 // MIT License
 //
-// Copyright (c) 2023 by David R. Van Wagner
+// Copyright (c) 2024 by David R. Van Wagner
 // davevw.com
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -102,7 +102,8 @@ protected:
   bool step;
   bool quit;
 
-  bool sixty_hz_irq;
+  bool sixty_hz_irq; // TODO: add external timer source object, shouldn't be part of 6502
+  unsigned long timer_now; // TODO: move to internal timing object
 
 private:
   byte Subtract(byte reg, byte value, bool *p_overflow);

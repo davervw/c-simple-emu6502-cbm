@@ -1,4 +1,4 @@
-// VDC8563 - 80 column video display chip on C128 (and VDC8568 on C128D)
+// WindowsKeyboard.h - Emu6502 - Windows to C128 scan codes keyboard driver
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -32,40 +32,12 @@
 
 #pragma once
 
-class VDC8563
-{
-private:
-	byte* registers;
-	byte* vdc_ram;
-	byte register_addr;
-	byte data;
-	bool ready = false;
+#include "framework.h"
+#include <string.h>
+#include <stdio.h>
 
+class WindowsKeyboard {
 public:
-	VDC8563();
-	~VDC8563();
-
-	bool active = false;
-
-	byte GetAddressRegister();
-	void SetAddressRegister(byte value);
-	byte GetDataRegister();
-	void SetDataRegister(byte value);
-	void Activate();
-	void Deactivate();
-	int VDCColorToLCDColor(byte value);
-	void DrawChar(byte c, int col, int row, int fg, int bg, byte attrib);
-	void DrawChar(int offset);
-	void RedrawScreen();
-	// void BlinkCursor();
-	// void HideCursor();
-	// void ShowCursor();
-
-#ifdef _WINDOWS
-	void CheckPaintFrame(unsigned long micros_now);
-	bool needsPaintFrame;
-	unsigned long lastPaintFrame;
-	static const long paintFrameInterval = 1000000 / 60; // TODO: have LCDs employ this technique for more optimal screen refreshes (screen scrolling, and other high rate updates)
-	bool redrawRequiredSignal;
-#endif // _WINDOWS
+	LRESULT static ReceiveMessage(UINT message, WPARAM wParam, LPARAM lParam);
+	void static get_scan_codes(int* scan_codes, int count);
 };

@@ -1,5 +1,43 @@
+// vicii.cpp - C64 VIC-II Video Chip Emulation
+//
+////////////////////////////////////////////////////////////////////////////////
+//
+// c-simple-emu-cbm (C Portable Version)
+// C64/6502 Unified Emulator for M5Stack/Teensy/ESP32 LCDs and Windows
+//
+// MIT License
+//
+// Copyright (c) 2024 by David R. Van Wagner
+// davevw.com
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+//
+////////////////////////////////////////////////////////////////////////////////
+
 #include "vicii.h"
 #include "config.h"
+
+#ifdef _WINDOWS
+#include <Windows.h>
+#include <WindowsDraw.h>
+#include <WindowsTime.h>
+#endif
 
 EmuVicII::EmuVicII(byte* vram, byte* vio, byte* vcolor_nybles, byte* vchargen)
 {
@@ -16,7 +54,18 @@ EmuVicII::EmuVicII(byte* vram, byte* vio, byte* vcolor_nybles, byte* vchargen)
   memset(old_video, 32, 1000);
   memset(old_color, 0, 1000);
 
+#ifdef _WINDOWS
+  if (!WindowsDraw::CreateRenderTarget(320, 200, 32, 32, redrawRequiredSignal))
+      throw "CreateRenderTarget failed";
+  WindowsDraw::BeginDraw();
+  unsigned long last_refresh = micros();
+  needsPaintFrame = false;
+#endif
+
   // initialize LCD screen
+#ifdef _WINDOWS
+  WindowsDraw::ClearScreen(0, 0, 0); // BLACK
+#endif
 #ifdef M5STACK
   M5.Lcd.fillScreen(0x0000);  // BLACK
 #endif
@@ -29,13 +78,23 @@ EmuVicII::~EmuVicII()
 {
   delete [] old_video;
   delete [] old_color;
+#ifdef _WINDOWS
+  WindowsDraw::EndDraw();
+#endif
 }
 
 void EmuVicII::Activate()
 {
   if (!active)
-  {
+  {        
     active = true;
+#ifdef _WINDOWS
+    if (!WindowsDraw::CreateRenderTarget(320, 200, 32, 32, redrawRequiredSignal))
+        throw "CreateRenderTarget failed";
+    WindowsDraw::BeginDraw();
+    unsigned long last_refresh = micros();
+    needsPaintFrame = false;
+#endif
     DrawBorder(border);
     RedrawScreen();
   }
@@ -44,7 +103,28 @@ void EmuVicII::Activate()
 void EmuVicII::Deactivate()
 {
   active = false;
+#ifdef _WINDOWS
+  WindowsDraw::EndDraw();
+#endif
 }
+
+#ifdef _WINDOWS
+void EmuVicII::CheckPaintFrame(unsigned long micros_now)
+{
+    if (redrawRequiredSignal || needsPaintFrame && (micros_now - lastPaintFrame) >= paintFrameInterval)
+    {
+        if (redrawRequiredSignal) {
+            redrawRequiredSignal = false;
+            DrawBorder(border);
+            RedrawScreen();
+        }
+        WindowsDraw::EndDraw(); // will paint anything pending
+        WindowsDraw::BeginDraw(); // start a new session
+        lastPaintFrame = micros_now;
+        needsPaintFrame = false;
+    }
+}
+#endif // _WINDOWS
 
  // RGB565 colors picked with http://www.barth-dev.de/online/rgb565-color-picker/
 int EmuVicII::C64ColorToLCDColor(byte value)
@@ -141,6 +221,24 @@ int EmuVicII::C64ColorToLCDColor(byte value)
     case 14: return 0x841F; // LIGHTBLUE;
     case 15: return TFT_LIGHTGREY;
 #endif
+#ifdef _WINDOWS
+    case 0: return 0x0000; // BLACK
+    case 1: return 0xFFFF; // WHITE
+    case 2: return 0xF800; // RED
+    case 3: return 0x07FF; // CYAN
+    case 4: return 0x8118; // DARKMAGENTA OR PURPLE
+    case 5: return 0x0400; // DARKGREEN
+    case 6: return 0x0018; // BLUE
+    case 7: return 0xFFE0; // YELLOW
+    case 8: return 0xFCC0; // ORANGE
+    case 9: return 0x8283; // BROWN
+    case 10: return 0xFC10; // PINK OR LT RED
+    case 11: return 0x8410; // DARKGREY
+    case 12: return 0x0208; // DARKCYAN
+    case 13: return 0xBFF7; // LIGHTGREEN
+    case 14: return 0x841F; // LIGHTBLUE
+    case 15: return 0x4208; // LIGHTGREY
+#endif
     default: return 0;
   }
 }
@@ -189,16 +287,36 @@ static int average_color(int color1, int color2)
 }
 #endif
 
+#ifdef _WINDOWS
+static void Extract565Color(int color, byte& red, byte& green, byte& blue)
+{
+    red = (color >> 11) * 255 / 32;
+    green = ((color >> 5) & 0x3F) * 255 / 64;
+    blue = (color & 0x1F) * 255 / 32;
+}
+#endif
+
 void EmuVicII::DrawChar(byte c, int col, int row, int fg, int bg)
 {
   if (postponeDrawChar || !active)
     return;
   
+  int offset = ((io[0x18] & 2) == 0) ? 0 : (8 * 256);
+  const byte* shape = &chargen[c * 8 + offset];
+
+#ifdef _WINDOWS
+  byte fg_red, fg_green, fg_blue;
+  byte bg_red, bg_green, bg_blue;
+  Extract565Color(fg, fg_red, fg_green, fg_blue);
+  Extract565Color(bg, bg_red, bg_green, bg_blue);
+  WindowsDraw::DrawCharacter2Color(shape, col, row, fg_red, fg_green, fg_blue, bg_red, bg_green, bg_blue);
+  needsPaintFrame = true;
+  return;
+#endif
+
 #ifdef M5STACK  
   M5.Lcd.startWrite();
 #endif  
-  int offset = ((io[0x18] & 2) == 0) ? 0 : (8*256);
-  const byte* shape = &chargen[c*8+offset];
 #ifdef M5STACK  
   int x0 = 0 + col*8;
   int y0 = 20 + row*8;
@@ -336,6 +454,12 @@ void EmuVicII::DrawBorder(byte value)
 
     border = value;
     int color = C64ColorToLCDColor(border);
+#ifdef _WINDOWS
+    byte red, green, blue;
+    Extract565Color(color, red, green, blue);
+    WindowsDraw::DrawBorder(red, green, blue);
+    needsPaintFrame = true;
+#endif
 #ifdef M5STACK
     M5.Lcd.startWrite();
     M5.Lcd.fillRect(0, 0, 320, 20, color);

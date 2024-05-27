@@ -1,4 +1,4 @@
-// VDC8563 - 80 column video display chip on C128 (and VDC8568 on C128D)
+// WindowsStart.cpp - starts Commodore emulators for Windows
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -30,42 +30,42 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#pragma once
-
-class VDC8563
-{
-private:
-	byte* registers;
-	byte* vdc_ram;
-	byte register_addr;
-	byte data;
-	bool ready = false;
-
-public:
-	VDC8563();
-	~VDC8563();
-
-	bool active = false;
-
-	byte GetAddressRegister();
-	void SetAddressRegister(byte value);
-	byte GetDataRegister();
-	void SetDataRegister(byte value);
-	void Activate();
-	void Deactivate();
-	int VDCColorToLCDColor(byte value);
-	void DrawChar(byte c, int col, int row, int fg, int bg, byte attrib);
-	void DrawChar(int offset);
-	void RedrawScreen();
-	// void BlinkCursor();
-	// void HideCursor();
-	// void ShowCursor();
-
 #ifdef _WINDOWS
-	void CheckPaintFrame(unsigned long micros_now);
-	bool needsPaintFrame;
-	unsigned long lastPaintFrame;
-	static const long paintFrameInterval = 1000000 / 60; // TODO: have LCDs employ this technique for more optimal screen refreshes (screen scrolling, and other high rate updates)
-	bool redrawRequiredSignal;
+#include "../emutest.h"
+#include "../emu6502.h"
+#include "../emuc64.h"
+#include "../emuvic20.h"
+#include "../emuc128.h"
+#include "WindowsStart.h"
+
+int main_go_num = 64;
+const char* StartupPRG = 0;
+HWND hWnd;
+
+void WindowsStart(HWND hWnd, bool& shuttingDown)
+{
+	::hWnd = hWnd;
+
+	while (true)
+	{
+		Emu6502* system = 0;
+		switch (main_go_num)
+		{
+			case 0: 
+				system = new EmuTest(); 
+				break;
+			case 20: 
+				system = new EmuVic20(40); 
+				break;
+			case 128:
+				system = new EmuC128();
+				break;
+			case 64: 
+			default: 
+				system = new EmuC64(); break;
+		}
+		system->ResetRun();
+		delete system;
+	}
+}
 #endif // _WINDOWS
-};

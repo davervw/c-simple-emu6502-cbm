@@ -76,6 +76,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>windows</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -90,6 +91,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>windows</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -104,10 +106,12 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>windows</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <Profile>false</Profile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -118,19 +122,34 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>windows</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <LinkTimeCodeGeneration>UseFastLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+      <Profile>false</Profile>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="emu6502.cpp" />
+    <ClCompile Include="emuc128.cpp" />
+    <ClCompile Include="emuc64.cpp" />
+    <ClCompile Include="emucbm.cpp" />
+    <ClCompile Include="emud64.cpp" />
     <ClCompile Include="emutest.cpp" />
-    <ClCompile Include="start.cpp" />
-    <ClCompile Include="windows\c-simple-emu6502-cbm.cpp" />
+    <ClCompile Include="emuvic20.cpp" />
+    <ClCompile Include="vdc.cpp" />
+    <ClCompile Include="vic.cpp" />
+    <ClCompile Include="vicii.cpp" />
+    <ClCompile Include="windows\WindowsDraw.cpp" />
+    <ClCompile Include="windows\WindowsStart.cpp" />
+    <ClCompile Include="windows\WindowsFile.cpp" />
+    <ClCompile Include="windows\WindowsKeyboard.cpp" />
+    <ClCompile Include="windows\WindowsMain.cpp" />
+    <ClCompile Include="windows\WindowsTime.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="windows\c-simple-emu6502-cbm.ico" />
@@ -141,11 +160,24 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="emu6502.h" />
+    <ClInclude Include="emuc128.h" />
+    <ClInclude Include="emuc64.h" />
+    <ClInclude Include="emucbm.h" />
+    <ClInclude Include="emud64.h" />
     <ClInclude Include="emutest.h" />
+    <ClInclude Include="emuvic20.h" />
+    <ClInclude Include="vdc.h" />
+    <ClInclude Include="vic.h" />
+    <ClInclude Include="vicii.h" />
     <ClInclude Include="windows\c-simple-emu6502-cbm.h" />
     <ClInclude Include="windows\framework.h" />
     <ClInclude Include="windows\Resource.h" />
     <ClInclude Include="windows\targetver.h" />
+    <ClInclude Include="windows\WindowsDraw.h" />
+    <ClInclude Include="windows\WindowsFile.h" />
+    <ClInclude Include="windows\WindowsKeyboard.h" />
+    <ClInclude Include="windows\WindowsStart.h" />
+    <ClInclude Include="windows\WindowsTime.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

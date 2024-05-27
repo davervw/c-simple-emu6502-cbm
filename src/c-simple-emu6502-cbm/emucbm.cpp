@@ -3,11 +3,11 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
 // c-simple-emu-cbm (C Portable Version);
-// C64/6502 Emulator for M5Stack Cores
+// C64/6502 Unified Emulator for M5Stack/Teensy/ESP32 LCDs and Windows
 //
 // MIT License
 //
-// Copyright (c) 2023 by David R. Van Wagner
+// Copyright (c) 2024 by David R. Van Wagner
 // davevw.com
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -33,6 +33,12 @@
 #include "emucbm.h"
 #include "emud64.h"
 
+#ifdef _WINDOWS
+#include <memory.h>
+#include <string.h>
+#include <stdlib.h>
+#include "WindowsFile.h"
+#else // NOT _WINDOWS
 #include <FS.h>
 #ifdef ARDUINO_LILYGO_T_DISPLAY_S3
 #include "FFat.h"
@@ -40,10 +46,11 @@
 #include <SD.h>
 #include <SPI.h>
 #endif
+#endif // NOT _WINDOWS
 #include "config.h"
 
 // externs (globals)
-extern char* StartupPRG;
+extern const char* StartupPRG;
 
 static EmuD64* disks[4] = {NULL,NULL,NULL,NULL};
 

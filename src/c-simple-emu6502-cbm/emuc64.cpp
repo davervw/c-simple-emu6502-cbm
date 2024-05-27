@@ -3,11 +3,11 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
 // c-simple-emu-cbm (C Portable Version)
-// C64/6502 Emulator for M5Stack Cores
+// C64/6502 Unified Emulator for M5Stack/Teensy/ESP32 LCDs and Windows
 //
 // MIT License
 //
-// Copyright (c) 2023 by David R. Van Wagner
+// Copyright (c) 2024 by David R. Van Wagner
 // davevw.com
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -56,16 +56,28 @@
 
 #include "emuc64.h"
 #include "config.h"
+#ifdef _WINDOWS
+#include <string.h>
+#include <stdlib.h>
+#include <Windows.h>
+#include <stdio.h>
+#include "WindowsKeyboard.h"
+int static random(int max)
+{
+	return (long)max * rand() / RAND_MAX;
+}
+#else
 #include "cardkbdscan.h"
 #ifdef ARDUINO_TEENSY41
 #include "USBtoCBMkeyboard.h"
 USBtoCBMkeyboard usbkbd;
-#else
+#else // not ARDUINO_TEENSY41
 #include "ble_keyboard.h"
-#endif
+#endif // not ARDUINO_TEENSY41
+#endif // NOT _WINDOWS
 
 // externs (globals)
-extern char* StartupPRG;
+extern const char* StartupPRG;
 extern int main_go_num;
 
 // locals
@@ -80,10 +92,14 @@ EmuC64::EmuC64() : EmuCBM(new C64Memory())
   c64memory = (C64Memory*)memory;
 
   go_state = 0;
+
+  //trace = true;
+  //sixty_hz_irq = false;
 }
 
 EmuC64::~EmuC64()
 {
+	delete c64memory;
 }
 
 static void ReadKeyboard()
@@ -93,6 +109,24 @@ static void ReadKeyboard()
     64, 40, 43, 64, 1, 19, 32, 8,
     64, 35, 44, 7, 7, 2, 2, 64
   };
+
+#ifdef _WINDOWS
+  static const int scan_codes_limit = sizeof(scan_codes) / sizeof(*scan_codes);
+
+  WindowsKeyboard::get_scan_codes(scan_codes, scan_codes_limit);
+  for (int i = 0; i < scan_codes_limit; ++i)
+  {
+	  if (scan_codes[i] == 0x458) // C128 RESTORE, NO KEY
+		  scan_codes[i] = 0x440; // C64 RESTORE, NO KEY
+	  else if (scan_codes[i] >= 88)
+		  scan_codes[i] = 64;
+	  else if (scan_codes[i] > 64) {
+		  auto extra = scan_codes[i] - 64;
+		  scan_codes[i] = extras[extra];
+	  }
+  }
+  return;
+#else NOT _WINDOWS
 
 #ifdef ARDUINO_M5STACK_FIRE
   const String upString = "15,7,64";
@@ -181,6 +215,8 @@ static void ReadKeyboard()
   }
   while (dest < 16)
     scan_codes[dest++] = 64;
+
+#endif // NOT _WINDOWS
 }
 
 bool EmuC64::ExecutePatch()
@@ -189,9 +225,8 @@ bool EmuC64::ExecutePatch()
   
   int found_NMI = 0;
   for (int i=0; !found_NMI && i<16; ++i)
-    if (scan_codes[i] & 1024)
-      found_NMI = 1;
-  
+   if (scan_codes[i] & 1024)
+     found_NMI = 1;
   if (NMI)
   {
     if (!found_NMI)
@@ -208,7 +243,14 @@ bool EmuC64::ExecutePatch()
     PC = (ushort)(GetMemory(0xFFFA) + (GetMemory(0xFFFB) << 8)); // JMP(NMI)
     return true; // overriden, and PC changed, so caller should reloop before execution to allow breakpoint/trace/ExecutePatch/etc.
   }
-	else if (PC == 0xA474 || PC == LOAD_TRAP) // READY
+
+#ifdef _WINDOWS
+  static unsigned counter = 0;
+  if ((++counter & 0x0400) == 0)
+	  ((C64Memory*)memory)->vicii->CheckPaintFrame(timer_now);
+#endif
+
+	if (PC == 0xA474 || PC == LOAD_TRAP) // READY
 	{
 		if (startup_state == 0 && ((StartupPRG != 0 && strlen(StartupPRG) > 0) || PC == LOAD_TRAP))
 		{
@@ -317,6 +359,7 @@ bool EmuC64::ExecutePatch()
 			return true; // overriden, and PC changed, so caller should reloop before execution to allow breakpoint/trace/ExecutePatch/etc.
 		}
 	}
+#ifndef _WINDOWS
   else if (DRAW_TRAP == -1 && !c64memory->vicii->postponeDrawChar &&
     (PC == 0xE8EA // SCROLL SCREEN
     || PC == 0xE965 // INSERT BLANK LINE
@@ -336,6 +379,7 @@ bool EmuC64::ExecutePatch()
     c64memory->vicii->postponeDrawChar = false;
     c64memory->vicii->RedrawScreenEfficientlyAfterPostponed();
   }
+#endif // NOT _WINDOWS
 	else if (GetMemory(PC) == 0x6C && GetMemory((ushort)(PC + 1)) == 0x30 && GetMemory((ushort)(PC + 2)) == 0x03) // catch JMP(LOAD_VECTOR), redirect to jump table
 	{
 		CheckBypassSETLFS();
@@ -400,9 +444,10 @@ void EmuC64::CheckBypassSETNAM()
 	ushort name_addr = (ushort)(GetMemory(0xBB) | (GetMemory(0xBC) << 8));
 	static char name[256];
 	memset(name, 0, sizeof(name));
+	name[0] = 0; // make VS2022 C++ compiler warning go away about not null terminated even though redundant
 	for (int i = 0; i < name_len; ++i)
 		name[i] = GetMemory(name_addr + i);
-	if (FileName != 0 || strlen(FileName) != strlen(name) || memcmp(FileName, name, strlen(name)) != 0)
+	if (FileName == 0 || strlen(FileName) != strlen(name) || memcmp(FileName, name, strlen(name)) != 0)
 		FileName = name;
 }
 
@@ -453,10 +498,10 @@ EmuC64::C64Memory::C64Memory()
   kernal_rom[0xce9] = 34;  // double quote
   kernal_rom[0xcea] = 42;  // asterisk
 
-	for (unsigned i = 0; i < ram_size; ++i)
-		ram[i] = 0;
-	for (unsigned i = 0; i < color_nybles_size; ++i)
-		color_nybles[i] = 0;
+  for (unsigned i = 0; i < ram_size; ++i)
+	ram[i] = 0;
+  for (unsigned i = 0; i < color_nybles_size; ++i)
+	color_nybles[i] = 0;
   for (unsigned i = 0; i < io_size; ++i)
     io[i] = 0;
   
@@ -480,7 +525,7 @@ EmuC64::C64Memory::~C64Memory()
 
 byte EmuC64::C64Memory::read(ushort addr)
 {
-  if (addr <= ram_size - 1
+	if (addr <= ram_size - 1
       && (
         addr < basic_addr // always RAM
         || (addr >= open_addr && addr < open_addr + open_size) // always open RAM C000.CFFF

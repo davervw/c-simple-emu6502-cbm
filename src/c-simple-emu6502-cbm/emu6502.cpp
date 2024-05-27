@@ -3,11 +3,11 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
 // c-simple-emu-cbm (C Portable Version)
-// C64/6502 Emulator for M5Stack Cores
+// C64/6502 Unified Emulator for M5Stack/Teensy/ESP32 LCDs and Windows
 //
 // MIT License
 //
-// Copyright (c) 2023 by David R. Van Wagner
+// Copyright (c) 2024 by David R. Van Wagner
 // davevw.com
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -38,17 +38,7 @@
 
 #ifdef _WINDOWS
 #include <Windows.h>
-
-unsigned long micros()
-{
-	// derived from Google Generative AI: get application running time in microseconds c++ windows
-	LARGE_INTEGER now, freq;
-	QueryPerformanceFrequency(&freq);
-	QueryPerformanceCounter(&now);
-	LONGLONG elapsedMicroseconds = now.QuadPart * 1000000 / freq.QuadPart;
-	return (unsigned long)elapsedMicroseconds;
-}
-
+#include <WindowsTime.h>
 #else
 void strcpy_s(char* dest, size_t size, const char* src) { strncpy(dest, src, size); }
 void strcat_s(char* dest, size_t size, const char* src) { strncat(dest, src, size); }
@@ -72,12 +62,12 @@ Emu6502::Emu6502(Memory* mem)
 	trace = false;
 	step = false;
 	quit = false;
-	sixty_hz_irq = false;
+	sixty_hz_irq = true;
 }
 
 Emu6502::~Emu6502()
 {
-	delete memory;
+	//delete memory;
 }
 
 void Emu6502::ResetRun()
@@ -689,9 +679,10 @@ void Emu6502::Execute(ushort addr)
 				return;
 			bytes = 1;
 			bool breakpoint = false;
-			if (sixty_hz_irq && !I && (micros() - timer_then) >= interrupt_time) // IRQ
+			timer_now = micros();
+			if (sixty_hz_irq && !I && (timer_now - timer_then) >= interrupt_time) // IRQ
 			{
-				timer_then = micros(); // reset timer
+				timer_then = timer_now; // reset timer TODO: more accurate incremental time
 				Push(HI(PC));
 				Push(LO(PC));
 				int flags = (N ? 0x80 : 0)

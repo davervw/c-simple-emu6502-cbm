@@ -1,4 +1,4 @@
-// VDC8563 - 80 column video display chip on C128 (and VDC8568 on C128D)
+// WindowsDraw.h - UI handling for Windows
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -32,40 +32,34 @@
 
 #pragma once
 
-class VDC8563
-{
-private:
-	byte* registers;
-	byte* vdc_ram;
-	byte register_addr;
-	byte data;
-	bool ready = false;
+#include "framework.h"
+#include <d2d1.h>
+#pragma comment(lib, "d2d1.lib")
 
+class WindowsDraw {
 public:
-	VDC8563();
-	~VDC8563();
+	static bool Init(HWND hWnd);
+	static bool ReRenderTarget();
+	static bool CreateRenderTarget(int screenwidth, int screenheight, int borderwidth, int borderheight, bool& redrawRequiredSignal);
+	static void RenderPaint();
+	static void FailBox(const char* message);
+	static void BeginDraw();
+	static void EndDraw();
 
-	bool active = false;
+	static void DrawBorder(byte red, byte green, byte blue);
+	static void ClearScreen(byte red, byte green, byte blue);
+	static void DrawCharacter2Color(const byte* image, int x, int y, byte fg_red, byte fg_green, byte fg_blue, byte bg_red, byte bg_green, byte bg_blue);
 
-	byte GetAddressRegister();
-	void SetAddressRegister(byte value);
-	byte GetDataRegister();
-	void SetDataRegister(byte value);
-	void Activate();
-	void Deactivate();
-	int VDCColorToLCDColor(byte value);
-	void DrawChar(byte c, int col, int row, int fg, int bg, byte attrib);
-	void DrawChar(int offset);
-	void RedrawScreen();
-	// void BlinkCursor();
-	// void HideCursor();
-	// void ShowCursor();
-
-#ifdef _WINDOWS
-	void CheckPaintFrame(unsigned long micros_now);
-	bool needsPaintFrame;
-	unsigned long lastPaintFrame;
-	static const long paintFrameInterval = 1000000 / 60; // TODO: have LCDs employ this technique for more optimal screen refreshes (screen scrolling, and other high rate updates)
-	bool redrawRequiredSignal;
-#endif // _WINDOWS
+	static ID2D1Factory* factory2d;
+	static ID2D1HwndRenderTarget* render2d;
+	static RECT clientRect;
+	static ID2D1Bitmap* bitmap;
+	static float pixelWidth;
+	static float pixelHeight;
+	static int screenWidth;
+	static int screenHeight;
+	static int borderWidth;
+	static int borderHeight;
+	static bool *redrawRequiredSignal;
+	static HWND hWnd;
 };

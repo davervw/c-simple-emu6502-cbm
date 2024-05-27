@@ -49,7 +49,7 @@
 // MEMORY MAP:
 //   $0000-$03FF Low 1K RAM (199=reverse if non-zero, 646=foreground color)
 //   $0400-$0FFF (3K RAM expansion)
-//   $1000-$1DFF 3K RAM (for BASIC)
+//   $1000-$1DFF 3K RAM (for BASIC) [or alternate screen address]
 //   $1E00-$1FFF RAM (Screen characters)
 //   $2000-$7FFF (24K RAM expansion)
 //   $8000-$8FFF (Character ROM)
@@ -66,6 +66,9 @@
 #include "emuvic20.h"
 #include "vic.h"
 #include "config.h"
+#ifdef _WINDOWS
+#include "WindowsKeyboard.h"
+#else // NOT _WINDOWS
 #include "cardkbdscan.h"
 #ifdef ARDUINO_TEENSY41
 #include "USBtoCBMkeyboard.h"
@@ -73,13 +76,14 @@ extern USBtoCBMkeyboard usbkbd;
 #else
 #include "ble_keyboard.h"
 #endif
+#endif // NOT _WINDOWS
 
 // externs/globals
 extern const char* StartupPRG;
 extern int main_go_num;
 
 // array allows multiple keys/modifiers pressed at one time
-static int scan_codes[16] = { 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64 } ;
+static int scan_codes[16] = { 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64 };
 
 EmuVic20::EmuVic20(int ram_size) : EmuCBM(new Vic20Memory(ram_size * 1024))
 {
@@ -118,30 +122,37 @@ static int startup_state = 0;
 
 bool EmuVic20::ExecutePatch()
 {
-  static bool NMI = false;
-  
-  int found_NMI = 0;
-  for (int i=0; !found_NMI && i<16; ++i)
-    if (scan_codes[i] & 1024)
-      found_NMI = 1;
-  
-  if (NMI)
-  {
-    if (!found_NMI)
-      NMI = false; // reset when not pressed
-  }
-  else if (found_NMI) // newly pressed, detected edge
-  {
-    NMI = true; // set so won't trigger again until cleared
-    Push(HI(PC));
-    Push(LO(PC));
-    B = false; // only false on stack for NMI and IRQ
-    PHP();
-    B = true; // return to normal state
-    PC = (ushort)(GetMemory(0xFFFA) + (GetMemory(0xFFFB) << 8)); // JMP(NMI)
-    return true; // overriden, and PC changed, so caller should reloop before execution to allow breakpoint/trace/ExecutePatch/etc.
-  }
-	else if (PC == 0xC474 || PC == LOAD_TRAP) // READY
+	static bool NMI = false;
+
+	int found_NMI = 0;
+	for (int i = 0; !found_NMI && i < 16; ++i)
+		if (scan_codes[i] & 1024)
+			found_NMI = 1;
+
+	if (NMI)
+	{
+		if (!found_NMI)
+			NMI = false; // reset when not pressed
+	}
+	else if (found_NMI) // newly pressed, detected edge
+	{
+		NMI = true; // set so won't trigger again until cleared
+		Push(HI(PC));
+		Push(LO(PC));
+		B = false; // only false on stack for NMI and IRQ
+		PHP();
+		B = true; // return to normal state
+		PC = (ushort)(GetMemory(0xFFFA) + (GetMemory(0xFFFB) << 8)); // JMP(NMI)
+		return true; // overriden, and PC changed, so caller should reloop before execution to allow breakpoint/trace/ExecutePatch/etc.
+	}
+
+#ifdef _WINDOWS
+	static unsigned counter = 0;
+	if ((++counter & 0x0400) == 0)
+		((Vic20Memory*)memory)->vic->CheckPaintFrame(timer_now);
+#endif
+
+	if (PC == 0xC474 || PC == LOAD_TRAP) // READY
 	{
 		go_state = 0;
 
@@ -225,11 +236,11 @@ bool EmuVic20::ExecutePatch()
 			}
 			else
 			{
-        SetMemory(198, 4);
-        SetMemory(631, 'R');
-        SetMemory(632, 'U');
-        SetMemory(633, 'N');
-        SetMemory(634, '\r');
+				SetMemory(198, 4);
+				SetMemory(631, 'R');
+				SetMemory(632, 'U');
+				SetMemory(633, 'N');
+				SetMemory(634, '\r');
 				PC = 0xA47B; // skip READY message, but still set direct mode, and continue to MAIN
 			}
 			C = false; // signal success
@@ -260,17 +271,17 @@ bool EmuVic20::ExecutePatch()
 	}
 
 #ifdef ARDUINO_M5STACK_FIRE
-  static ushort counter = 0;
-  if (counter++ == 0) // infrequently check
-  {
-    if (digitalRead(37) == 0 && digitalRead(39) == 0) 
-    {
-      while (digitalRead(37) == 0 || digitalRead(39) == 0); // wait until depress
-      main_go_num = 64;
-      quit = true;
-      return true;
-    }
-  }
+	static ushort counter = 0;
+	if (counter++ == 0) // infrequently check
+	{
+		if (digitalRead(37) == 0 && digitalRead(39) == 0)
+		{
+			while (digitalRead(37) == 0 || digitalRead(39) == 0); // wait until depress
+			main_go_num = 64;
+			quit = true;
+			return true;
+		}
+	}
 #endif
 
 	return EmuCBM::ExecutePatch();
@@ -304,7 +315,7 @@ static const int basic_size = 0x2000;
 static const int kernal_addr = 0xE000;
 static const int kernal_size = 0x2000;
 
-EmuVic20::Vic20Memory::Vic20Memory(byte size)
+EmuVic20::Vic20Memory::Vic20Memory(int size)
 {
 	ram_banks = RamSizeToRamConfig(size);
 
@@ -326,7 +337,7 @@ EmuVic20::Vic20Memory::Vic20Memory(byte size)
 	EmuCBM::File_ReadAllBytes(basic_rom, basic_size, "/roms/vic20/basic");
 	EmuCBM::File_ReadAllBytes(kernal_rom, kernal_size, "/roms/vic20/kernal");
 
-  vic = new EmuVic(ram, io, &io[0x9600-io_addr], char_rom);
+	vic = new EmuVic(ram, io, char_rom);
 }
 
 EmuVic20::Vic20Memory::~Vic20Memory()
@@ -336,113 +347,138 @@ EmuVic20::Vic20Memory::~Vic20Memory()
 	delete[] char_rom;
 	delete[] basic_rom;
 	delete[] kernal_rom;
-  delete vic;
+	delete vic;
 }
 
 static void ReadKeyboard()
 {
-  // Vic-20, C64/128 share the same keyboard matrix
-  // but wiring on Vic-20 mixes up the lines, and the row/col to scan code math is different
-  // this code includes translation from a C64/128 scan code to a Vic-20 scan code
-  int toVic20Row[8] = {0, 1, 2, 7, 4, 5, 6, 3};
-  int toVic20Col[8] = {7, 1, 2, 3, 4, 5, 6, 0};
-  
-  static const byte extras[24] = { // Commodore 128 extra keys to 64 mappings
-    64, 27, 16, 64, 59, 11, 24, 56,
-    64, 40, 43, 64, 1, 19, 32, 8,
-    64, 35, 44, 7, 7, 2, 2, 64
-  };
+	// Vic-20, C64/128 share the same keyboard matrix
+	// but wiring on Vic-20 mixes up the lines, and the row/col to scan code math is different
+	// this code includes translation from a C64/128 scan code to a Vic-20 scan code
+	int toVic20Row[8] = { 0, 1, 2, 7, 4, 5, 6, 3 };
+	int toVic20Col[8] = { 7, 1, 2, 3, 4, 5, 6, 0 };
+
+	static const byte extras[24] = { // Commodore 128 extra keys to 64 mappings
+	  64, 27, 16, 64, 59, 11, 24, 56,
+	  64, 40, 43, 64, 1, 19, 32, 8,
+	  64, 35, 44, 7, 7, 2, 2, 64
+	};
 
 #ifdef ARDUINO_M5STACK_FIRE
-  const String upString = "15,7,64";
-  const String dnString = "7,64";
-  const String crString = "1,64";
-  const String runString = "15,63,88";
-  const String noString = "64";
-  static int lastUp = 1;
-  static int lastCr = 1;
-  static int lastDn = 1;
-  static int lastRun = 1;
+	const String upString = "15,7,64";
+	const String dnString = "7,64";
+	const String crString = "1,64";
+	const String runString = "15,63,88";
+	const String noString = "64";
+	static int lastUp = 1;
+	static int lastCr = 1;
+	static int lastDn = 1;
+	static int lastRun = 1;
 #endif
 
-  String s;
+#ifdef _WINDOWS
+	WindowsKeyboard::get_scan_codes(scan_codes, 16);
+	for (int i = 0; i < 16; ++i)
+	{
+		int scan = scan_codes[i];
+		int lobits = scan & 127;
+		if (lobits >= 64 && lobits < 88)
+		{
+			scan = extras[lobits - 64];
+			for (int j = 0; j < i; ++j)
+				if (scan_codes[j] == 25 || scan_codes[j] == 38)
+					scan_codes[j] = 64; // remove shift keys temporarily
+			if (lobits == 83 || lobits == 85)
+				scan_codes[i] = 38; // add shift for up or left
+		}
+		if (scan < 64)
+			scan = (toVic20Row[scan & 7] << 3) | toVic20Col[scan >> 3];
+		if (scan > 64)
+			scan = (scan & 0xFF80) | 0x40;
+		scan_codes[i] = scan;
+	}
+	return;
+#else // NOT _WINDOWS
+	String s;
 #ifndef ARDUINO_TEENSY41
-  ble_keyboard->ServiceConnection();
-  s = ble_keyboard->Read();
-  if (s.length() != 0)
-    ;
-  else 
+	ble_keyboard->ServiceConnection();
+	s = ble_keyboard->Read();
+	if (s.length() != 0)
+		;
+	else
 #endif  
-  if (CardKbd)
-    s = CardKbdScanRead();
+		if (CardKbd)
+			s = CardKbdScanRead();
 #ifndef ARDUINO_SUNTON_8048S070
 #ifndef ARDUINO_TEENSY41
 #ifndef ARDUINO_LILYGO_T_DISPLAY_S3
-  else if (Serial2.available())
-    s = Serial2.readString();
+		else if (Serial2.available())
+			s = Serial2.readString();
 #endif
 #endif
 #endif
-  else if (SerialDef.available())
-    s = SerialDef.readString();
+		else if (SerialDef.available())
+			s = SerialDef.readString();
 #ifdef ARDUINO_M5STACK_FIRE
-  else if (lastRun==0 && (lastRun=(digitalRead(39) & digitalRead(38)))==1)
-    s = noString;
-  else if (lastUp==0 && (lastUp=digitalRead(39))==1)
-    s = noString;
-  else if (lastCr==0 && (lastCr=digitalRead(38))==1)
-    s = noString;
-  else if (lastDn==0 && (lastDn=digitalRead(37))==1)
-    s = noString;
-  else if ((lastRun=(~(~digitalRead(39) & ~digitalRead(38))) & 1)==0)
-    s = runString;
-  else if ((lastUp=digitalRead(39))==0)
-    s = upString;
-  else if ((lastCr=digitalRead(38))==0)
-    s = crString;
-  else if ((lastDn=digitalRead(37))==0)
-    s = dnString;
+		else if (lastRun == 0 && (lastRun = (digitalRead(39) & digitalRead(38))) == 1)
+			s = noString;
+		else if (lastUp == 0 && (lastUp = digitalRead(39)) == 1)
+			s = noString;
+		else if (lastCr == 0 && (lastCr = digitalRead(38)) == 1)
+			s = noString;
+		else if (lastDn == 0 && (lastDn = digitalRead(37)) == 1)
+			s = noString;
+		else if ((lastRun = (~(~digitalRead(39) & ~digitalRead(38))) & 1) == 0)
+			s = runString;
+		else if ((lastUp = digitalRead(39)) == 0)
+			s = upString;
+		else if ((lastCr = digitalRead(38)) == 0)
+			s = crString;
+		else if ((lastDn = digitalRead(37)) == 0)
+			s = dnString;
 #endif    
 #ifdef ARDUINO_TEENSY41
-  else
-    s = usbkbd.Read();
+		else
+			s = usbkbd.Read();
 #endif
-  if (s.length() == 0)
-    return;
-  {
-    unsigned src = 0;
-    int dest = 0;
-    int scan = 0;
-    int len = 0;
-    while (src < s.length() && dest < 16) {
-      char c = s.charAt(src++);
-      if (c >= '0' && c <= '9') {
-        scan = scan * 10 + (c - '0');
-        ++len;
-      } else if (len > 0)
-      {
-        int lobits = scan & 127;
-        if (lobits >= 64 && lobits < 88)
-        {
-          scan = extras[lobits - 64];
-          for (int i=0; i<dest; ++i)
-            if (scan_codes[i] == 25 || scan_codes[i] == 38)
-              scan_codes[i] = 64; // remove shift keys temporarily
-          if (lobits == 83 || lobits == 85)
-              scan_codes[dest++] = 38; // add shift for up or left
-        }
-        if (scan < 64)
-          scan = (toVic20Row[scan & 7] << 3) | toVic20Col[scan >> 3];
-        if (scan > 64)
-          scan = (scan & 0xFF80) | 0x40;
-        scan_codes[dest++] = scan;
-        scan = 0;
-        len = 0;
-      }
-    }
-    while (dest < 16)
-      scan_codes[dest++] = 64;
-  }
+	if (s.length() == 0)
+		return;
+	{
+		unsigned src = 0;
+		int dest = 0;
+		int scan = 0;
+		int len = 0;
+		while (src < s.length() && dest < 16) {
+			char c = s.charAt(src++);
+			if (c >= '0' && c <= '9') {
+				scan = scan * 10 + (c - '0');
+				++len;
+			}
+			else if (len > 0)
+			{
+				int lobits = scan & 127;
+				if (lobits >= 64 && lobits < 88)
+				{
+					scan = extras[lobits - 64];
+					for (int i = 0; i < dest; ++i)
+						if (scan_codes[i] == 25 || scan_codes[i] == 38)
+							scan_codes[i] = 64; // remove shift keys temporarily
+					if (lobits == 83 || lobits == 85)
+						scan_codes[dest++] = 38; // add shift for up or left
+				}
+				if (scan < 64)
+					scan = (toVic20Row[scan & 7] << 3) | toVic20Col[scan >> 3];
+				if (scan > 64)
+					scan = (scan & 0xFF80) | 0x40;
+				scan_codes[dest++] = scan;
+				scan = 0;
+				len = 0;
+			}
+		}
+		while (dest < 16)
+			scan_codes[dest++] = 64;
+	}
+#endif // NOT _WINDOWS
 }
 
 byte EmuVic20::Vic20Memory::read(ushort addr)
@@ -462,33 +498,33 @@ byte EmuVic20::Vic20Memory::read(ushort addr)
 	else if (addr >= char_addr && addr < char_addr + char_size)
 		return char_rom[addr - char_addr];
 	else if (addr >= io_addr && addr < io_addr + io_size)
-  {
-    if (addr == 0x912F)
+	{
+		if (addr == 0x912F)
 			return 0xFF;
 		else if (addr == 0x911C)
 			return 0xFE;
 		else if (addr == 0x911F)
 			return 0x7E;
-    else if (addr == 0x9121)
-    {
-      ReadKeyboard();
-      byte value = 0xFF;
-      for (int i=0; i<16; ++i)
-      {
-        int scan_code = scan_codes[i] & 127; // remove any modifiers
-        if (scan_code < 64)
-        {     
-          int row = scan_code >> 3;
-          int col = scan_code & 7;
+		else if (addr == 0x9121)
+		{
+			ReadKeyboard();
+			byte value = 0xFF;
+			for (int i = 0; i < 16; ++i)
+			{
+				int scan_code = scan_codes[i] & 127; // remove any modifiers
+				if (scan_code < 64)
+				{
+					int row = scan_code >> 3;
+					int col = scan_code & 7;
 
-          if ((io[0x9120 - io_addr] & (1 << row)) == 0)
-            value &= ~(1 << col);
-        }
-      }
-      return value;
-    }
+					if ((io[0x9120 - io_addr] & (1 << row)) == 0)
+						value &= ~(1 << col);
+				}
+			}
+			return value;
+		}
 		return io[addr - io_addr];
-  }
+	}
 	else if (addr >= cart_addr && addr < basic_addr && ((ram_banks & 0x10) != 0))
 		return ram[addr];
 	else if (addr >= basic_addr && addr < basic_addr + basic_size)
@@ -516,9 +552,9 @@ void EmuVic20::Vic20Memory::write(ushort addr, byte value)
 		ram[addr] = value;
 	else if (addr >= ram4k_addr && addr < ram8k1_addr) {
 		ram[addr] = value;
-    if (addr >= 0x1E00 && addr < 0x1E00 + 22*23)
-      vic->DrawChar(addr - 0x1E00);
-  }
+		if (addr >= vic->video_ram_addr && addr < vic->video_ram_addr + 22 * 23) // TODO: check VIC IO for actual video memory address
+			vic->DrawChar(addr - vic->video_ram_addr);
+	}
 	else if (addr >= ram8k1_addr && addr < ram8k2_addr && ((ram_banks & 0x02) != 0))
 		ram[addr] = value;
 	else if (addr >= ram8k2_addr && addr < ram8k3_addr && ((ram_banks & 0x04) != 0))
@@ -527,16 +563,29 @@ void EmuVic20::Vic20Memory::write(ushort addr, byte value)
 		ram[addr] = value;
 	else if (addr >= io_addr && addr < io_addr + io_size)
 	{
-    io[addr - io_addr] = value;
+		if (addr == 0x9002)
+		{
+			if ((io[2] & 128) == (value & 128))
+				return;
+			io[addr - io_addr] = value;
+			vic->video_ram_addr = (value & 128) ? 0x1e00 : 0x1000;
+			vic->color_ram_addr = (value & 128) ? 0x9600 : 0x9400;
+			vic->color_nybles = &vic->io[vic->color_ram_addr - 0x9000];
+			vic->RedrawScreen();
+			return;
+		}
+		if (io[addr - io_addr] == value)
+			return; // optimize out no change
+		io[addr - io_addr] = value;
 		if (addr == 0x900F) // background/border/inverse
-    {
-      vic->DrawBorder(value);
-      vic->RedrawScreen();
-    }
+		{
+			vic->DrawBorder(value);
+			vic->RedrawScreen();
+		}
 		else if (addr == 0x9005) // includes graphics/lowercase switch
-      vic->RedrawScreen();
-    else if (addr >= 0x9600 && addr < 0x9600+22*23)
-      vic->DrawChar(addr - 0x9600);
+			vic->RedrawScreen();
+		else if (addr >= vic->color_ram_addr && addr < vic->color_ram_addr + 22 * 23)
+			vic->DrawChar(addr - vic->color_ram_addr);
 	}
 	else if (addr >= cart_addr && addr < basic_addr && ((ram_banks & 0x10) != 0))
 		ram[addr] = value;

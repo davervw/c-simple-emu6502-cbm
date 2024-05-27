@@ -5,7 +5,7 @@
 //
 // MIT License
 //
-// Copyright (c) 2023 by David R. Van Wagner
+// Copyright (c) 2024 by David R. Van Wagner
 // davevw.com
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -34,6 +34,15 @@
 // ported from EmuD64 class at https://github.com/davervw/ts-emu-c64/blob/master/c64-6502.ts
 // and added write capability
 
+#ifdef _WINDOWS
+#include <Windows.h>
+#include <string.h>
+#include <memory.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include "WindowsFile.h"
+#define snprintf sprintf_s
+#else // NOT _WINDOWS
 #include <FS.h>
 #ifdef ARDUINO_LILYGO_T_DISPLAY_S3
 #include "FFat.h"
@@ -41,13 +50,11 @@
 #include <SD.h>
 #include <SPI.h>
 #endif
+#endif
 #include "emud64.h"
 #include "config.h"
 
-//extern SDClass SD;
-
-//#define snprintf sprintf_s
-
+#ifndef _WINDOWS
 static void strcpy_s(char* dest, size_t size, const char* src)
 {
 	strncpy(dest, src, size);
@@ -57,7 +64,7 @@ static void strcat_s(char* dest, size_t size, const char* src)
 {
 	strncat(dest, src, size);
 }
-
+#endif
 static const int sectors_per_track[36/*n_tracks+1*/] =
 {
     0, // there is no track 0
@@ -151,9 +158,14 @@ void EmuD64::InitializeData(unsigned char* disk_name, unsigned char* id)
 
 static void show_exception(const char* message)
 {
+#ifdef _WINDOWS
+    OutputDebugStringA(message);
+    throw message;
+#else // NOT _WINDOWS
   while (!SerialDef); // wait for serial terminal connected
   SerialDef.println(message);
   while(1);
+#endif
 }
 
 int EmuD64::GetSectorOffset(int track, int sector)
@@ -693,7 +705,11 @@ static bool ReadFileByNameHandler(EmuD64* d64, EmuD64::DirStruct* dir, int n, bo
 
 void EmuD64::ReadFileByName(const char* filename, unsigned char* bytes, int& length)
 {
+#ifdef _WINDOWS
+    char* dupname = _strdup(filename);
+#else // NOT _WINDOWS
     char* dupname = strdup(filename);
+#endif
     void* context = dupname;
     WalkDirectory(ReadFileByNameHandler, context);
     if (context == dupname) // not found

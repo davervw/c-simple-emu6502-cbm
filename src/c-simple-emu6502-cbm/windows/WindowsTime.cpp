@@ -1,4 +1,4 @@
-// VDC8563 - 80 column video display chip on C128 (and VDC8568 on C128D)
+// WindowsTime.cpp - time methods for Arduino compatibility
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -30,42 +30,16 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#pragma once
-
-class VDC8563
-{
-private:
-	byte* registers;
-	byte* vdc_ram;
-	byte register_addr;
-	byte data;
-	bool ready = false;
-
-public:
-	VDC8563();
-	~VDC8563();
-
-	bool active = false;
-
-	byte GetAddressRegister();
-	void SetAddressRegister(byte value);
-	byte GetDataRegister();
-	void SetDataRegister(byte value);
-	void Activate();
-	void Deactivate();
-	int VDCColorToLCDColor(byte value);
-	void DrawChar(byte c, int col, int row, int fg, int bg, byte attrib);
-	void DrawChar(int offset);
-	void RedrawScreen();
-	// void BlinkCursor();
-	// void HideCursor();
-	// void ShowCursor();
-
 #ifdef _WINDOWS
-	void CheckPaintFrame(unsigned long micros_now);
-	bool needsPaintFrame;
-	unsigned long lastPaintFrame;
-	static const long paintFrameInterval = 1000000 / 60; // TODO: have LCDs employ this technique for more optimal screen refreshes (screen scrolling, and other high rate updates)
-	bool redrawRequiredSignal;
-#endif // _WINDOWS
-};
+#include <Windows.h>
+#include "WindowsTime.h"
+unsigned long micros()
+{
+	// derived from Google Generative AI: get application running time in microseconds c++ windows
+	LARGE_INTEGER now, freq;
+	QueryPerformanceFrequency(&freq);
+	QueryPerformanceCounter(&now);
+	LONGLONG elapsedMicroseconds = now.QuadPart * 1000000 / freq.QuadPart;
+	return (unsigned long)elapsedMicroseconds;
+}
+#endif

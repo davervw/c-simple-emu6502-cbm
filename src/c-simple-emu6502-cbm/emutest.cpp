@@ -7,7 +7,7 @@
 //
 // MIT License
 //
-// Copyright (c) 2023 by David R. Van Wagner
+// Copyright (c) 2024 by David R. Van Wagner
 // davevw.com
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -60,7 +60,7 @@ void wprintf(_Printf_format_string_ const char* fmt, Args... args)
 {
     char buffer[200]{};
     _snprintf_s(buffer, sizeof(buffer), fmt, args...);
-    OutputDebugStringA(buffer);
+    OutputDebugStringA(buffer); // TODO: move output of emutest to GUI, leverage minimum 6502/MC6850
 }
 #else
 #define PRINTF printf
@@ -73,6 +73,7 @@ EmuTest::EmuTest()
 	: Emu6502(new TestMemory("roms/test/6502test.bin"))
 {
     //trace = true;
+    sixty_hz_irq = false;
 }
 
 EmuTest::~EmuTest()
@@ -99,17 +100,17 @@ bool EmuTest::ExecutePatch()
     }
     if (GetMemory(PC) == 0xD0/*BNE*/ && !Z && GetMemory((ushort)(PC + 1)) == 0xFE)
     {
-        PRINTF("%04X Test FAIL\n", PC);
-        while(1) {} // loop forever
+        PRINTF("%04X Test FAIL\n", PC);  // TODO: exit with keystroke
+        while(1) {} // loop forever 
     }
     if ( GetMemory(PC) == 0x4C/*JMP*/
         && ((GetMemory((ushort)(PC + 1)) == (PC & 0xFF) && GetMemory((ushort)(PC + 2)) == (PC >> 8))
             || (GetMemory((ushort)(PC + 1)) == 0x00 && GetMemory((ushort)(PC + 2)) == 0x04) )
         )
     {
-        PRINTF("%04X COMPLETED SUCCESS\n", PC);
+        PRINTF("%04X COMPLETED SUCCESS\n", PC);  // TODO: exit with keystroke
         quit = true;
-        while(1) {} // loop forever
+        while(1) {} // loop forever 
     }
     if (GetMemory(0x200) != last_test)
     {
@@ -133,16 +134,7 @@ EmuTest::TestMemory::TestMemory(const char* filename)
     ram = new unsigned char[ram_size];
     memset(ram, 0, ram_size);
     memcpy(ram, rom, ram_size);
-#ifdef _WINDOWS
-    FILE* f = 0;
-    fopen_s(&f, filename, "rb");
-    if (f == 0)
-        return;
-    auto bytes = fread(ram, 1, ram_size, f);
-    fclose(f);
-#else
 	EmuCBM::File_ReadAllBytes(ram, ram_size, filename);
-#endif
 }
 
 EmuTest::TestMemory::~TestMemory()

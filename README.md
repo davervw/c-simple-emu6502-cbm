@@ -14,12 +14,14 @@ This unified version is a single common source code base supporting multiple tar
 | Sunton ESP32-804S070  | 7" GFX 800x480            | MicroSD | Arduino GFX driver      | ESP32-S3    | Yes | No       |
 | Teensy 4.1 with PSRAM | 2.8"-3.2" ILI9341 320x240 | MicroSD | or 3.5" ILI9488 480x320 | NXP i.MX RT | No  | Yes      |
 | LilyGo T-Display-S3   | 1.9" TFT_eSPI 320x170     | FFAT    | flash parition          | ESP32-S3    | Yes | No       |
+| Microsoft Windows     | Any" External monitor     | SSD/HD  | Direct2D, Visual Studio | CPU         | No  | Yes,etc. |
 
 ## Build instructions ##
 
 1. Clone repository, switch to branch unified
 2. Open src/c-simple-emu6502-cbm/c-simple-emu6502-cbm.ino with Arduino 2.x IDE
-3. Select compatible target in Adrudino 2.x IDE, build and deploy, should complain "Card Mount Failed" or similar
+3. Embedded?  Select compatible target in Adrudino 2.x IDE, build and deploy, should complain "Card Mount Failed" or similar
+   Windows? Select compatible target in Visual Studio 2022 IDE, build and deploy, needs roms folder in current directory
 4. Insert MicroSD with the following files (roms from Vice or similar, disk files optional), and reset; or [detailed instructions for LilyGo T-Display-S3 with FFAT partition](https://github.com/davervw/c-simple-emu6502-cbm/tree/lilygo-t-display-s3)
 
 ```

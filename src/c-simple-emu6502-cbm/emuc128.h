@@ -79,6 +79,8 @@ public:
 	byte* basic_hi_rom;
 	byte* char_rom;
 	byte* kernal_rom;
+	EmuVicII* vicii;
+	VDC8563* vdc;
 
 	static const int basic_lo_size = 0x4000;
 	static const int basic_hi_size = 0x4000;
@@ -88,8 +90,6 @@ public:
 private:
 	byte* ram;
 	byte* io;
-	VDC8563* vdc;
-  EmuVicII* vicii;
 
 private:
   void ReadKeyboard();

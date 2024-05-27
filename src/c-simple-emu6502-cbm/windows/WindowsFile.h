@@ -1,4 +1,4 @@
-// VDC8563 - 80 column video display chip on C128 (and VDC8568 on C128D)
+// WindowsFile.h - Arduino File compatibility layer for Windows
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -32,40 +32,25 @@
 
 #pragma once
 
-class VDC8563
+typedef enum { FILE_READ = 'r', FILE_WRITE = 'w' } FILEMODE;
+
+class File
 {
-private:
-	byte* registers;
-	byte* vdc_ram;
-	byte register_addr;
-	byte data;
-	bool ready = false;
-
+	int fd;
 public:
-	VDC8563();
-	~VDC8563();
-
-	bool active = false;
-
-	byte GetAddressRegister();
-	void SetAddressRegister(byte value);
-	byte GetDataRegister();
-	void SetDataRegister(byte value);
-	void Activate();
-	void Deactivate();
-	int VDCColorToLCDColor(byte value);
-	void DrawChar(byte c, int col, int row, int fg, int bg, byte attrib);
-	void DrawChar(int offset);
-	void RedrawScreen();
-	// void BlinkCursor();
-	// void HideCursor();
-	// void ShowCursor();
-
-#ifdef _WINDOWS
-	void CheckPaintFrame(unsigned long micros_now);
-	bool needsPaintFrame;
-	unsigned long lastPaintFrame;
-	static const long paintFrameInterval = 1000000 / 60; // TODO: have LCDs employ this technique for more optimal screen refreshes (screen scrolling, and other high rate updates)
-	bool redrawRequiredSignal;
-#endif // _WINDOWS
+	File(const char* filename, FILEMODE mode);
+	operator bool() const { return fd != -1; }
+	void read(unsigned char* buffer, int size);
+	void write(const unsigned char* buffer, int size);
+	void seek(int offset);
+	void close();
+	int size();
 };
+
+class FS
+{
+public:
+	File open(const char* filename, FILEMODE mode);
+};
+
+extern FS SD;

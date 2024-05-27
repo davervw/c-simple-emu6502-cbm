@@ -9,7 +9,7 @@ public:
 	class Vic20Memory : public Memory
 	{
 	public:
-		Vic20Memory(byte ram_banks);
+		Vic20Memory(int size);
 		virtual ~Vic20Memory();
 		byte read(ushort addr);
 		void write(ushort addr, byte value);

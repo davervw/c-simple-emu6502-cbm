@@ -1,4 +1,4 @@
-// VDC8563 - 80 column video display chip on C128 (and VDC8568 on C128D)
+// WindowsFile.cpp - Arduino File compatibility layer for Windows
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -30,42 +30,54 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#pragma once
-
-class VDC8563
-{
-private:
-	byte* registers;
-	byte* vdc_ram;
-	byte register_addr;
-	byte data;
-	bool ready = false;
-
-public:
-	VDC8563();
-	~VDC8563();
-
-	bool active = false;
-
-	byte GetAddressRegister();
-	void SetAddressRegister(byte value);
-	byte GetDataRegister();
-	void SetDataRegister(byte value);
-	void Activate();
-	void Deactivate();
-	int VDCColorToLCDColor(byte value);
-	void DrawChar(byte c, int col, int row, int fg, int bg, byte attrib);
-	void DrawChar(int offset);
-	void RedrawScreen();
-	// void BlinkCursor();
-	// void HideCursor();
-	// void ShowCursor();
-
 #ifdef _WINDOWS
-	void CheckPaintFrame(unsigned long micros_now);
-	bool needsPaintFrame;
-	unsigned long lastPaintFrame;
-	static const long paintFrameInterval = 1000000 / 60; // TODO: have LCDs employ this technique for more optimal screen refreshes (screen scrolling, and other high rate updates)
-	bool redrawRequiredSignal;
+#include "WindowsFile.h"
+#include <corecrt_io.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <sys/stat.h>
+
+
+File::File(const char* filename, FILEMODE mode)
+{
+	_sopen_s(& fd, filename, mode == FILE_READ ? _O_RDONLY | _O_BINARY : _O_RDWR | _O_CREAT | _O_BINARY, SH_DENYNO, _S_IREAD | _S_IWRITE);
+}
+
+void File::read(unsigned char* buffer, int size)
+{
+	auto bytes = _read(fd, buffer, size);
+}
+
+void File::write(const unsigned char* buffer, int size)
+{
+	_write(fd, buffer, size);
+}
+
+void File::seek(int offset)
+{
+	_lseek(fd, offset, SEEK_SET);
+}
+
+void File::close()
+{
+	_close(fd);
+	fd = -1;
+}
+
+int File::size()
+{
+	long save = _lseek(fd, 0, SEEK_CUR);
+	long size = _lseek(fd, 0, SEEK_END);
+	_lseek(fd, save, SEEK_SET);
+	return size;
+}
+
+File FS::open(const char* filename, FILEMODE mode)
+{
+	if (filename[0] == '/')
+		++filename;
+	return File(filename, mode);
+}
+
+FS SD;
 #endif // _WINDOWS
-};
