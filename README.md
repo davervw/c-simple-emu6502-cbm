@@ -64,8 +64,9 @@ The following branches have been consolidated into a single [Unified](https://gi
 * M5 branch branched from Teensy_LCD for M5FireIoT, M5Core2, M5CoreS3, with merges from cpp branch for maximum features
 * lilygo-t-display-s3 branch for LilyGo T-Display-S3
 * ESP32-8048S070-7inch branch for Sunton ESP32-8048S070
+* Microsoft Windows graphical version for desktops, laptops, tablets (requires Direct2D)
 
-Only CHRIN/CHROUT/READY(for startup program)/SETLFS/SETNAM/LOAD/SAVE are hooked for terminal version, so no, it won't run your favorite games, only maybe simple ASCII text adventures or such.  Sorry no PETSCII either (except LCD versions).   Some versions (Windows, Linux, Teensy, M5) with lots of RAM available also have D64 support for simple emulation of 1541 disk images so you can have a persistant collection of files that should be compatible with other emulators.
+Only CHRIN/CHROUT/READY(for startup program)/SETLFS/SETNAM/LOAD/SAVE are hooked for terminal version, so no, it won't run your favorite games, only maybe simple ASCII text adventures or such.  Sorry no PETSCII either (except LCD versions).   Some versions (Windows, Linux, Teensy, M5, etc.) with lots of RAM available also have D64 support for simple emulation of 1541 disk images so you can have a persistant collection of files that should be compatible with other emulators.
 
 ## Usage ##
 
