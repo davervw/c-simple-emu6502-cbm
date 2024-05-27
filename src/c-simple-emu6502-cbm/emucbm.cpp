@@ -280,15 +280,17 @@ bool EmuCBM::ExecuteJSR(ushort addr)
 	return true; // return value for ExecutePatch so will reloop execution to allow berakpoint/trace/ExecutePatch/etc.
 }
 
-void EmuCBM::File_ReadAllBytes(byte* bytes, int size, const char* filename)
+int EmuCBM::File_ReadAllBytes(byte* bytes, int size, const char* filename)
 {
 #ifdef ARDUINO_LILYGO_T_DISPLAY_S3
     File fp = FFat.open(filename, FILE_READ);
 #else
     File fp = SD.open(filename, FILE_READ);
 #endif    
-    if (!fp)
-      return;
-    fp.read(bytes, size);
+	if (!fp)
+		return 0;
+	int filesize = fp.size();
+	fp.read(bytes, size);
     fp.close();
+	return filesize;
 }

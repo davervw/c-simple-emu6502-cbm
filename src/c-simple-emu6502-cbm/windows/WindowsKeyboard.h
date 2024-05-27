@@ -35,6 +35,7 @@
 #include "framework.h"
 #include <string.h>
 #include <stdio.h>
+#include "../C128ScanCode.h"
 
 class WindowsKeyboard {
 public:

@@ -1,9 +1,11 @@
-// emutest.h - 6502 test emulator
+// emumin.h - Minimal 6502 platform
+//
+// variable RAM, variable ROM, memory mapped Motorola 8250 compatible UART
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
-// c-simple-emu-cbm (C Portable Version);
-// C64/6502 Unified Emulator for M5Stack/Teensy/ESP32 LCDs and Windows
+// c-simple-emu-cbm (C++ Portable Version)
+// C64/6502 Emulator for Microsoft Windows Console
 //
 // MIT License
 //
@@ -33,46 +35,57 @@
 #pragma once
 
 #include "emu6502.h"
+#include "mc6850.h"
 #include "terminal.h"
 
-class EmuTest : public Emu6502
+class EmuMinimum : public Emu6502
 {
-  class TestMemory : public Memory
-  {
-  public:
-    TestMemory(const char* filename);
-    ~TestMemory();
-    virtual byte read(ushort addr);
-    virtual void write(ushort addr, byte value);
-
-  private:
-    byte* ram;
-
-  private:
-    TestMemory(const TestMemory& other); // disabled
-    bool operator==(const TestMemory& other) const; // disabled
-  };
-
 public:
-  EmuTest();
-  virtual ~EmuTest();
+	EmuMinimum(const char* filename, ushort serialaddr);
+	virtual ~EmuMinimum();
 
 protected:
-  byte GetMemory(ushort addr);
-  void SetMemory(ushort addr, byte value);
-  bool ExecutePatch();
-  void Quit();
-
-  Terminal* terminal;
+	bool ExecutePatch();
 
 private:
-  inline void CheckPaintFrame(unsigned long timer_now)
-  {
-#ifdef _WINDOWS
-      static unsigned counter = 0;
-      if ((++counter & 0x0400) == 0)
-          terminal->CheckPaintFrame(timer_now);
-#endif // _WINDOWS
-  }
+	byte GetMemory(ushort addr);
+	void SetMemory(ushort addr, byte value);
+
+private:
+	EmuMinimum(const EmuMinimum& other); // disabled
+	bool operator==(const EmuMinimum& other) const; // disabled
 };
 
+class MinimumMemory : public Emu6502::Memory
+{
+public:
+	MinimumMemory(const char* filename, ushort serialaddr);
+	virtual ~MinimumMemory();
+	virtual byte read(ushort addr);
+	virtual void write(ushort addr, byte value);
+	unsigned getramsize();
+	unsigned getromsize();
+	MC6850* uart;
+	Terminal* terminal;
+
+private:
+	byte* ram;
+	ushort ramsize;
+	ushort romsize;
+	ushort romaddr;
+	ushort serialaddr;
+
+private:
+	MinimumMemory(const MinimumMemory& other); // disabled
+	bool operator==(const MinimumMemory& other) const; // disabled
+
+public:
+	inline void CheckPaintFrame(unsigned long timer_now)
+	{
+#ifdef _WINDOWS
+		static unsigned counter = 0;
+		if ((++counter & 0x0400) == 0)
+			terminal->CheckPaintFrame(timer_now);
+#endif // _WINDOWS
+	}
+};

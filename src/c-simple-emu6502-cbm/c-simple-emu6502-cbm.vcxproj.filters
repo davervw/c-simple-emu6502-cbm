@@ -31,6 +31,10 @@
     <ClCompile Include="emuvic20.cpp">
       <Filter>Includes</Filter>
     </ClCompile>
+    <ClCompile Include="emumin.cpp" />
+    <ClCompile Include="mc6850.cpp" />
+    <ClCompile Include="terminal.cpp" />
+    <ClCompile Include="ASCIIKeyboard.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="windows\framework.h">
@@ -63,7 +67,6 @@
     <ClInclude Include="vicii.h">
       <Filter>Includes</Filter>
     </ClInclude>
-    <ClInclude Include="emuvic20.h" />
     <ClInclude Include="windows\WindowsDraw.h">
       <Filter>Windows</Filter>
     </ClInclude>
@@ -86,6 +89,36 @@
       <Filter>Includes</Filter>
     </ClInclude>
     <ClInclude Include="vic.h">
+      <Filter>Includes</Filter>
+    </ClInclude>
+    <ClInclude Include="emuvic20.h">
+      <Filter>Includes</Filter>
+    </ClInclude>
+    <ClInclude Include="emumin.h">
+      <Filter>Includes</Filter>
+    </ClInclude>
+    <ClInclude Include="mc6850.h">
+      <Filter>Includes</Filter>
+    </ClInclude>
+    <ClInclude Include="terminal.h">
+      <Filter>Includes</Filter>
+    </ClInclude>
+    <ClInclude Include="dprintf.h">
+      <Filter>Includes</Filter>
+    </ClInclude>
+    <ClInclude Include="ASCIIKeyboard.h">
+      <Filter>Includes</Filter>
+    </ClInclude>
+    <ClInclude Include="ICharInput.h">
+      <Filter>Includes</Filter>
+    </ClInclude>
+    <ClInclude Include="ICharOutput.h">
+      <Filter>Includes</Filter>
+    </ClInclude>
+    <ClInclude Include="C128ScanCode.h">
+      <Filter>Includes</Filter>
+    </ClInclude>
+    <ClInclude Include="LCDDraw.h">
       <Filter>Includes</Filter>
     </ClInclude>
   </ItemGroup>

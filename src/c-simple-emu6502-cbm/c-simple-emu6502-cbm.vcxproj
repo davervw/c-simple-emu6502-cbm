@@ -134,13 +134,17 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="ASCIIKeyboard.cpp" />
     <ClCompile Include="emu6502.cpp" />
     <ClCompile Include="emuc128.cpp" />
     <ClCompile Include="emuc64.cpp" />
     <ClCompile Include="emucbm.cpp" />
     <ClCompile Include="emud64.cpp" />
+    <ClCompile Include="emumin.cpp" />
     <ClCompile Include="emutest.cpp" />
     <ClCompile Include="emuvic20.cpp" />
+    <ClCompile Include="mc6850.cpp" />
+    <ClCompile Include="terminal.cpp" />
     <ClCompile Include="vdc.cpp" />
     <ClCompile Include="vic.cpp" />
     <ClCompile Include="vicii.cpp" />
@@ -159,13 +163,22 @@
     <ResourceCompile Include="windows\c-simple-emu6502-cbm.rc" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ASCIIKeyboard.h" />
+    <ClInclude Include="C128ScanCode.h" />
+    <ClInclude Include="dprintf.h" />
     <ClInclude Include="emu6502.h" />
     <ClInclude Include="emuc128.h" />
     <ClInclude Include="emuc64.h" />
     <ClInclude Include="emucbm.h" />
     <ClInclude Include="emud64.h" />
+    <ClInclude Include="emumin.h" />
     <ClInclude Include="emutest.h" />
     <ClInclude Include="emuvic20.h" />
+    <ClInclude Include="ICharInput.h" />
+    <ClInclude Include="ICharOutput.h" />
+    <ClInclude Include="LCDDraw.h" />
+    <ClInclude Include="mc6850.h" />
+    <ClInclude Include="terminal.h" />
     <ClInclude Include="vdc.h" />
     <ClInclude Include="vic.h" />
     <ClInclude Include="vicii.h" />

@@ -19,5 +19,9 @@ roms/ted/
 roms/test/
 roms/vic20/
 roms/minimum/wozmon*
+roms/minimum/src/wozmon.asm
+!roms/minimum/testmin.bin
+!roms/minimum/src/testmin.asm
+!roms/minimum/src/build.sh
 *.swp
 disks/

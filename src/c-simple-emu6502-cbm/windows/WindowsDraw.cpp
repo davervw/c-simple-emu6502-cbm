@@ -152,17 +152,15 @@ void WindowsDraw::DrawCharacter2Color(const byte* image, int x, int y, byte fg_r
     );
 }
 
-// TODO: Synchronize BeginDraw, EndDraw with CreateRenderTarget Release, Create... to avoid conflicts, e.g. updating screen and resizing at same time
+// TODO: Synchronize BeginDraw, EndDraw with CreateRenderTarget Release, Create... to avoid conflicts, e.g. updating screen and resizing at same time ???
 
 void WindowsDraw::BeginDraw()
 {
-    //OutputDebugStringA("WindowsDraw::BeginDraw\n");
     render2d->BeginDraw();
 }
 
 void WindowsDraw::EndDraw()
 {
-    //OutputDebugStringA("WindowsDraw::EndDraw\n");
     render2d->EndDraw();
 }
 
@@ -206,9 +204,7 @@ void WindowsDraw::DrawBorder(byte red, byte green, byte blue)
 
 void WindowsDraw::ClearScreen(byte red, byte green, byte blue)
 {
-    render2d->BeginDraw();
     render2d->Clear(D2D1::ColorF(red/255.0f, green/255.0f, blue/255.0f, 1));
-    render2d->EndDraw();
 }
 
 void WindowsDraw::RenderPaint()

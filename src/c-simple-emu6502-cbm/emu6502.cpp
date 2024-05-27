@@ -63,11 +63,11 @@ Emu6502::Emu6502(Memory* mem)
 	step = false;
 	quit = false;
 	sixty_hz_irq = true;
+	timer_now = micros();
 }
 
 Emu6502::~Emu6502()
 {
-	//delete memory;
 }
 
 void Emu6502::ResetRun()

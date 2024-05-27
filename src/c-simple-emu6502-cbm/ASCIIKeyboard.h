@@ -1,8 +1,8 @@
-// emutest.h - 6502 test emulator
+// ASCIIKeyboard.h - receive keys from a keyboard as ASCII 0..127
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
-// c-simple-emu-cbm (C Portable Version);
+// c-simple-emu-cbm (C Portable Version)
 // C64/6502 Unified Emulator for M5Stack/Teensy/ESP32 LCDs and Windows
 //
 // MIT License
@@ -32,47 +32,18 @@
 
 #pragma once
 
-#include "emu6502.h"
-#include "terminal.h"
+#include "ICharInput.h"
 
-class EmuTest : public Emu6502
-{
-  class TestMemory : public Memory
-  {
-  public:
-    TestMemory(const char* filename);
-    ~TestMemory();
-    virtual byte read(ushort addr);
-    virtual void write(ushort addr, byte value);
-
-  private:
-    byte* ram;
-
-  private:
-    TestMemory(const TestMemory& other); // disabled
-    bool operator==(const TestMemory& other) const; // disabled
-  };
-
-public:
-  EmuTest();
-  virtual ~EmuTest();
-
-protected:
-  byte GetMemory(ushort addr);
-  void SetMemory(ushort addr, byte value);
-  bool ExecutePatch();
-  void Quit();
-
-  Terminal* terminal;
-
-private:
-  inline void CheckPaintFrame(unsigned long timer_now)
-  {
 #ifdef _WINDOWS
-      static unsigned counter = 0;
-      if ((++counter & 0x0400) == 0)
-          terminal->CheckPaintFrame(timer_now);
-#endif // _WINDOWS
-  }
-};
+#include <WindowsKeyboard.h>
+#else // NOT _WINDOWS
+#endif // NOT _WINDOWS
 
+class ASCIIKeyboard : ICharInput
+{
+public:
+	ASCIIKeyboard();
+	~ASCIIKeyboard();
+	virtual bool read(char& c);
+	virtual bool readWaiting();
+};

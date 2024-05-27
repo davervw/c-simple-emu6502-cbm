@@ -62,7 +62,9 @@ public:
 	// void ShowCursor();
 
 #ifdef _WINDOWS
+public:
 	void CheckPaintFrame(unsigned long micros_now);
+private:
 	bool needsPaintFrame;
 	unsigned long lastPaintFrame;
 	static const long paintFrameInterval = 1000000 / 60; // TODO: have LCDs employ this technique for more optimal screen refreshes (screen scrolling, and other high rate updates)

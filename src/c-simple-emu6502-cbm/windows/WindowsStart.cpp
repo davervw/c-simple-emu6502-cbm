@@ -36,6 +36,7 @@
 #include "../emuc64.h"
 #include "../emuvic20.h"
 #include "../emuc128.h"
+#include "../emumin.h"
 #include "WindowsStart.h"
 
 int main_go_num = 64;
@@ -52,7 +53,12 @@ void WindowsStart(HWND hWnd, bool& shuttingDown)
 		switch (main_go_num)
 		{
 			case 0: 
+				Terminal::crnlmode = Terminal::NEWLINE_ONLY;
 				system = new EmuTest(); 
+				break;
+			case 1:
+				Terminal::crnlmode = Terminal::NEWLINE_ONLY;
+				system = new EmuMinimum("roms/minimum/testmin.bin", 0xFFF8);
 				break;
 			case 20: 
 				system = new EmuVic20(40); 

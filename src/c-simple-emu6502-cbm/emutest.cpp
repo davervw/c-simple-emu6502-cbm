@@ -48,23 +48,14 @@
 #include <stdio.h>
 #include <string.h>
 
+#ifdef _WINDOWS
+#include "WindowsTime.h"
+#endif // NOT _WINDOWS
+
 extern const char* StartupPRG;
+extern int main_go_num;
 
 #include "emutest.h"
-
-#ifdef _WINDOWS
-#include <Windows.h>
-#define PRINTF wprintf
-template<class... Args> // https://stackoverflow.com/questions/1657883/variable-number-of-arguments-in-c
-void wprintf(_Printf_format_string_ const char* fmt, Args... args)
-{
-    char buffer[200]{};
-    _snprintf_s(buffer, sizeof(buffer), fmt, args...);
-    OutputDebugStringA(buffer); // TODO: move output of emutest to GUI, leverage minimum 6502/MC6850
-}
-#else
-#define PRINTF printf
-#endif
 
 static bool start = true;
 static int last_test = -1;
@@ -74,10 +65,14 @@ EmuTest::EmuTest()
 {
     //trace = true;
     sixty_hz_irq = false;
+    terminal = new Terminal();
+    start = true;
+    last_test = -1;
 }
 
 EmuTest::~EmuTest()
 {
+    delete terminal;
 }
 
 byte EmuTest::GetMemory(ushort addr)
@@ -98,27 +93,47 @@ bool EmuTest::ExecutePatch()
         start = false;
         return true;
     }
+    CheckPaintFrame(timer_now);
     if (GetMemory(PC) == 0xD0/*BNE*/ && !Z && GetMemory((ushort)(PC + 1)) == 0xFE)
     {
-        PRINTF("%04X Test FAIL\n", PC);  // TODO: exit with keystroke
-        while(1) {} // loop forever 
+        char buffer[200]{};
+        snprintf(buffer, sizeof(buffer), "%04X Test FAIL\n", PC);
+        terminal->write(buffer);
+        Quit();
+        return false;
     }
     if ( GetMemory(PC) == 0x4C/*JMP*/
         && ((GetMemory((ushort)(PC + 1)) == (PC & 0xFF) && GetMemory((ushort)(PC + 2)) == (PC >> 8))
             || (GetMemory((ushort)(PC + 1)) == 0x00 && GetMemory((ushort)(PC + 2)) == 0x04) )
         )
     {
-        PRINTF("%04X COMPLETED SUCCESS\n", PC);  // TODO: exit with keystroke
-        quit = true;
-        while(1) {} // loop forever 
+        char buffer[200]{};
+        snprintf(buffer, sizeof(buffer), "%04X COMPLETED SUCCESS\n", PC);
+        terminal->write(buffer);
+        Quit();
+        return false;
     }
     if (GetMemory(0x200) != last_test)
     {
         last_test = GetMemory(0x200);
-        PRINTF("%04X Starting test %02X\n", PC, last_test);
+        char buffer[200]{};
+        snprintf(buffer, sizeof(buffer), "%04X Starting test %02X\n", PC, last_test);  // TODO: move output of emutest to GUI, leverage minimum 6502/MC6850
+        terminal->write(buffer);
         return false;
     }
 	return false;
+}
+
+void EmuTest::Quit()
+{
+    char c;
+    while (terminal->read(c))
+        ; // clear buffer
+    terminal->write("Press a key...");
+    while (!terminal->readWaiting())
+        CheckPaintFrame(micros());
+    main_go_num = -1; // default
+    quit = true;
 }
 
 static const byte rom[64 * 1024] = {
