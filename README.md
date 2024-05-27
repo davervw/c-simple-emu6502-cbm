@@ -50,6 +50,7 @@ This portable version (master branch unless otherwise specified) has been tested
 * cygwin (gcc) x64
 * Ubuntu Linux (gcc) x64
 * Raspberry Pi 4 (gcc, Linux ARM)
+* Rock Pi S (Rockchip RK3308, gcc, Linux ARM)
 * NXP LPC1768 (ARM MBED): [forked](https://os.mbed.com/users/davervw/code/c-simple-emu6502-cbm/)
 * STM32F429 LCD (ARM MBED, note must rename ADC() method) [forked](https://os.mbed.com/users/davervw/code/C64-stm429_discovery/)
 * [Arduino branch](https://github.com/davervw/c-simple-emu6502-cbm/tree/arduino) from master
