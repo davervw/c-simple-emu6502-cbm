@@ -480,7 +480,7 @@ void EmuVic::CheckPaintFrame(unsigned long micros_now)
     {
         if (redrawRequiredSignal) {
             redrawRequiredSignal = false;
-            WindowsDraw::DrawBorder(0, 0, 0); // BLACK
+            DrawBorder(io[0xF]);
             RedrawScreen();
         }
         WindowsDraw::EndDraw(); // will paint anything pending
