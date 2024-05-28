@@ -143,6 +143,7 @@
     <ClCompile Include="emumin.cpp" />
     <ClCompile Include="emutest.cpp" />
     <ClCompile Include="emuvic20.cpp" />
+    <ClCompile Include="LCDDraw.cpp" />
     <ClCompile Include="mc6850.cpp" />
     <ClCompile Include="terminal.cpp" />
     <ClCompile Include="vdc.cpp" />
@@ -165,6 +166,7 @@
   <ItemGroup>
     <ClInclude Include="ASCIIKeyboard.h" />
     <ClInclude Include="C128ScanCode.h" />
+    <ClInclude Include="config.h" />
     <ClInclude Include="dprintf.h" />
     <ClInclude Include="emu6502.h" />
     <ClInclude Include="emuc128.h" />

@@ -61,7 +61,7 @@ static bool start = true;
 static int last_test = -1;
 
 EmuTest::EmuTest()
-	: Emu6502(new TestMemory("roms/test/6502test.bin"))
+	: Emu6502(new TestMemory("/roms/test/6502test.bin"))
 {
     //trace = true;
     sixty_hz_irq = false;

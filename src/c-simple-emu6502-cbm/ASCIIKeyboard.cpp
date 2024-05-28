@@ -33,8 +33,11 @@
 //#include "dprintf.h"
 #include "ASCIIKeyboard.h"
 #include "C128ScanCode.h"
+#ifndef _WINDOWS
+#include "config.h"
+#endif
 
-typedef enum {
+typedef enum _ShiftState {
 	None = 0,
 	Shift = 1,
 	Control = 2,
@@ -59,7 +62,7 @@ static const char scan_to_ascii[3][88] = {
 		'9', 'i', 'j', '0', 'm', 'k', 'o', 'n',
 		'+', 'p', 'l', '-', '.', ':', '@', ',',
 		'\\', '*', ';', -1, -1, '=', '^', '/',
-		'1', '_', -1, '2', ' ', -1, 'Q', 3,
+		'1', '_', -1, '2', ' ', -1, 'q', 3,
 		-1, '8', '5', '\t', '2', '4', '7', '1',
 		27, '+', '-', '\n', '\r', '6', '9', '3',
 		-1, '0', '*', -1, -1, -1, -1, 19,
@@ -104,11 +107,13 @@ ASCIIKeyboard::~ASCIIKeyboard()
 
 bool ASCIIKeyboard::read(char& c)
 {
+	c = 0;
 	if (!readWaiting())
 		return false;
 	c = buffer[buffer_head++];
 	if (buffer_head == buffer_count)
 		buffer_head = 0;
+  return true;
 }
 
 static void calculateShiftState()
@@ -155,6 +160,43 @@ void pollKeyboard()
 #ifdef _WINDOWS
 	WindowsKeyboard::get_scan_codes(scan_codes, scan_codes_count);
 #else
+// TODO: better match emuc128.cpp keyboard handling
+// TODO: support more platforms 
+// TODO: BLE for ESP32
+// TODO: USB for Teensy
+	bool caps = false;
+	String s;
+  // for (int i=0; i<scan_codes_count; ++i)
+  //   scan_codes[i] = 88;
+  if (Serial2.available())
+    s = Serial2.readString();
+  else if (SerialDef.available())
+	  s = SerialDef.readString();
+  if (s.length() == 0)
+	  return;
+  unsigned src = 0;
+  int dest = 0;
+  int scan = 0;
+  int len = 0;
+  while (src < s.length() && dest < 16) {
+	  char c = s.charAt(src++);
+	  if (c >= '0' && c <= '9') {
+		  scan = scan * 10 + (c - '0');
+		  ++len;
+	  }
+	  else if (len > 0)
+	  {
+		  if (scan & 128)
+			  caps = true;
+		  if (scan == 64 || scan > 88)
+			  scan = (scan & 0xFF80) | 88;
+		  scan_codes[dest++] = scan;
+		  scan = 0;
+		  len = 0;
+	  }
+  }
+  while (dest < scan_codes_count)
+	  scan_codes[dest++] = 88;
 #endif
 }
 
@@ -182,7 +224,6 @@ static void scanCodesToKeyboardBuffer()
 	calculateShiftState();
 	int scan_code = calculateScanCode();
 	if (scan_code != last_scan_code) {
-		//dprintf("%d %d\n", scan_code, shiftState);
 		last_scan_code = scan_code;
 		if (scan_code != SCAN_CODE_NO_KEY)
 			pushKey(scan_code);

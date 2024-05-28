@@ -36,7 +36,7 @@
 
 static int scan_codes[16] = { 88, 88, 88, 88, 88, 88, 88, 88, 88, 88, 88, 88, 88, 88, 88, 88 };
 
-typedef enum {
+typedef enum _WinShiftState {
 	NONE = 0,
 	ANYSHIFT = 1,
 	ANYCTRL = 2,
@@ -51,7 +51,7 @@ typedef enum {
 
 static WinShiftState shiftState = NONE;
 
-typedef struct {
+typedef struct _KeyMap {
 	WinShiftState state;
 	WPARAM vkey;
 	C128ScanCode code;

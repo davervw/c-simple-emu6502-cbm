@@ -7,7 +7,7 @@
 //
 // MIT License
 //
-// Copyright (c) 2023 by David R. Van Wagner
+// Copyright (c) 2024 by David R. Van Wagner
 // davevw.com
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -44,6 +44,7 @@
 #include "emuvic20.h"
 // #include "emupet.h"
 #include "emutest.h"
+#include "emumin.h"
 #include "emu6502.h"
 
 #ifdef ARDUINO_LILYGO_T_DISPLAY_S3
@@ -111,7 +112,7 @@ TFT_eSPI lcd;
 #endif
 
 #ifdef TEST6502 // see emutest.cpp
-int main_go_num = -1;
+int main_go_num = 0;
 #else
 int main_go_num = 64;
 #endif
@@ -232,8 +233,11 @@ void loop() {
     emu = new EmuVic20(5);
   // else if (main_go_num == 2001)
   //   emu = new EmuPET(32);
-  else if (main_go_num == -1)
+  else if (main_go_num == 0)
     emu = new EmuTest();
+  else if (main_go_num == 1)
+    emu = new EmuMinimum("/roms/minimum/wozmon.bin", 0xFFF8);
+//    emu = new EmuMinimum("/roms/minimum/testmin.bin", 0xFFF8);
   else
     emu = new EmuC64();
   emu->ResetRun();

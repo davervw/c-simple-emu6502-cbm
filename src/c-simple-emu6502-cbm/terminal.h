@@ -83,7 +83,7 @@ public:
 	virtual bool readWaiting();
 	void write(const char* s);
 
-	typedef enum {
+	typedef enum _CRNLMODE {
 		CARRIAGE_RETURN_AND_NEWLINE = 0,
 		CARRIAGE_RETURN_ONLY = 1, // treat as carriage return + newline
 		NEWLINE_ONLY = 2, // treat as carriage return + newline

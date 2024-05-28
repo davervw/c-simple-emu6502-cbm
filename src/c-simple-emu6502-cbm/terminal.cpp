@@ -51,7 +51,11 @@ Terminal::Terminal()
 {
 	keyboard = new ASCIIKeyboard();
 	chargen = new byte[128 * 8];
-	EmuCBM::File_ReadAllBytes(chargen, 128 * 8, "roms/minimum/asciifont.bin");
+	int read = EmuCBM::File_ReadAllBytes(chargen, 128 * 8, "/roms/minimum/asciifont.bin");
+#ifdef M5STACK
+  SerialDef.printf("read %d bytes of font file\n", read);
+  SerialDef.printf("%02X %02X %02X %02X %02X %02X %02X %02X\n", chargen[0], chargen[1], chargen[2], chargen[3], chargen[4], chargen[5], chargen[6], chargen[7]);
+#endif
 	videoBuffer = new char[rows * cols];
 	clearScreen();
 #ifdef _WINDOWS
@@ -60,6 +64,22 @@ Terminal::Terminal()
 	lastPaintFrame = micros();
 	WindowsDraw::CreateRenderTarget(cols*8, rows*8, 32, 16, redrawRequiredSignal);
 	WindowsDraw::BeginDraw();
+#else // NOT _WINDOWS
+#ifdef M5STACK
+  LCDDraw::CreateRenderTarget(cols*8, rows*8, 4, 8);
+#endif  
+#ifdef ARDUINO_SUNTON_8048S070
+  LCDDraw::CreateRenderTarget(cols*8, rows*8, 8, 16);
+#endif
+#ifdef ILI9341
+  LCDDraw::CreateRenderTarget(cols*8, rows*8, 4, 8);
+#endif    
+#ifdef ILI9488    
+  LCDDraw::CreateRenderTarget(cols*8, rows*8, 4, 8);
+#endif   
+#ifdef ARDUINO_LILYGO_T_DISPLAY_S3
+  LCDDraw::CreateRenderTarget(cols*8, rows*8, 4, 6);
+#endif
 #endif _WINDOWS  
 }
 
@@ -150,7 +170,7 @@ void Terminal::clearScreen()
 #ifdef _WINDOWS
 	redrawRequiredSignal = true;
 #else
-  LCDDraw::ClearScreen(0);  
+  LCDDraw::ClearAll(0);  
 #endif  
 }
 

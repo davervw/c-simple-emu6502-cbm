@@ -32,7 +32,7 @@
 
 #pragma once
 
-typedef enum { FILE_READ = 'r', FILE_WRITE = 'w' } FILEMODE;
+typedef enum _FILEMODE { FILE_READ = 'r', FILE_WRITE = 'w' } FILEMODE;
 
 class File
 {
