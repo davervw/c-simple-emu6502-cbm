@@ -19,7 +19,12 @@ roms/ted/
 roms/test/
 roms/vic20/
 roms/minimum/wozmon*
+roms/minimum/sweet16*
+roms/minimum/abasic*
+roms/minimum/apple.bin
 roms/minimum/src/wozmon.asm
+roms/minimum/src/abasic.asm
+roms/minimum/src/sweet16.asm
 !roms/minimum/testmin.bin
 !roms/minimum/src/testmin.asm
 !roms/minimum/src/build.sh
