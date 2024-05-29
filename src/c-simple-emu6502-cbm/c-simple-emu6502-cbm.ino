@@ -236,8 +236,7 @@ void loop() {
   else if (main_go_num == 0)
     emu = new EmuTest();
   else if (main_go_num == 1)
-    emu = new EmuMinimum("/roms/minimum/wozmon.bin", 0xFFF8);
-//    emu = new EmuMinimum("/roms/minimum/testmin.bin", 0xFFF8);
+    emu = new EmuMinimum("/roms/minimum/testmin.bin", 0xFFF8);
   else
     emu = new EmuC64();
   emu->ResetRun();
