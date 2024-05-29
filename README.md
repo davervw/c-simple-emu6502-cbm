@@ -2,7 +2,9 @@
 
 ![Unified models](media/models.jpg)
 
-This unified version is a single common source code base supporting multiple targets listed below.  The primary advantage to common source is sharing features between targets.  Features include rendering color text screen on LCD and supporting multiple models.  60 times a second IRQ implemented to blink cursor. Requires PSRAM plus SD (or FFAT partition) for support for roms and .D64/1541 floppy emulation.   GO 128, GO 20, and GO 64 commands switch back and forth between systems.  6502 and BASIC programs are supported, focused on text emulation.  Sorry, no sound, no graphics, no sprites, no joysticks, no games.  This is my emulator, my way.
+This unified version is a single common source code base supporting multiple targets listed below.  The primary advantage to common source is sharing features between targets.  Features include rendering color text screen on LCD and supporting multiple models.  60 times a second IRQ implemented to blink cursor. Requires PSRAM plus SD (or FFAT partition) for support for roms and .D64/1541 floppy emulation.   GO 128, GO 20, GO 64, and GO 1 commands switch back and forth between systems.  6502 and BASIC programs are supported, focused on text emulation.  Sorry, no sound, no graphics, no sprites, no joysticks, no games.  This is my emulator, my way.
+
+GO 1 is a minimum environment similar to an Apple 1, except using MC6850 UART (instead of MOS6551), and has no other hardware besides RAM, and the ROM you feed it (via code).  It has been known to run [wozmon](https://github.com/davervw/c-simple-emu6502-cbm/blob/master/roms/minimum/wozmon.bin) and [a1basic](https://github.com/jefftranter/6502/tree/master/asm/a1basic), both requiring minor porting to the MC6850.  The minimum environment is conveniently hooked up to a virtual terminal though, so you do have a screen and keyboard.
 
 ## Compatible hardware ##
 
@@ -57,5 +59,6 @@ See more description at blog entries:
 * [GO 128 enhancement for Commodore](https://techwithdave.davevw.com/2022/05/go.html)
 * [C128 model support added to simple 6502 Commodore emulator](https://techwithdave.davevw.com/2022/05/simplec128.html)
 * [C64 Emulator for Teensy 4.1](https://techwithdave.davevw.com/2021/02/c64-emulator-for-teensy-41-lcdusbsd.html)
+* [LCD version of 6502 emulators ported to Windows](https://techwithdave.davevw.com/2024/05/lcd-version-of-6502-emulators-ported-to.html)
 
 Open src/browser-keyscan-helper/index.html to run an adapter with instructions how to use a keyboard via serial from a desktop web browser (e.g. Chrome).
