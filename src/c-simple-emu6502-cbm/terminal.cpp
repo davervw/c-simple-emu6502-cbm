@@ -30,20 +30,40 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <memory.h>
 #include "ASCIIKeyboard.h"
 #include "emucbm.h"
 #include "terminal.h"
 
 #ifdef _WINDOWS
+#include <memory.h>
 #include "WindowsDraw.h"
 #include "WindowsTime.h"
-#else
+#else // NOT _WINDOWS
+#include "config.h"
 #include "LCDDraw.h"
-#endif // _WINDOWS
+#endif // NOT _WINDOWS
 
-const int rows = 25;
+
+#ifdef M5STACK
 const int cols = 40;
+const int rows = 30;
+#endif
+#ifdef _WINDOWS
+const int cols = 80;
+const int rows = 25;
+#endif
+#ifdef ILI9341
+const int cols = 40;
+const int rows = 25;
+#endif
+#ifdef ILI9488
+const int cols = 60;
+const int rows = 25;
+#endif
+#ifdef ARDUINO_SUNTON_8048S070
+const int cols = 80;
+const int rows = 25;
+#endif
 
 Terminal::CRNLMODE Terminal::crnlmode = NEWLINE_ONLY;
 
@@ -51,11 +71,7 @@ Terminal::Terminal()
 {
 	keyboard = new ASCIIKeyboard();
 	chargen = new byte[128 * 8];
-	int read = EmuCBM::File_ReadAllBytes(chargen, 128 * 8, "/roms/minimum/asciifont.bin");
-#ifdef M5STACK
-  SerialDef.printf("read %d bytes of font file\n", read);
-  SerialDef.printf("%02X %02X %02X %02X %02X %02X %02X %02X\n", chargen[0], chargen[1], chargen[2], chargen[3], chargen[4], chargen[5], chargen[6], chargen[7]);
-#endif
+	EmuCBM::File_ReadAllBytes(chargen, 128 * 8, "/roms/minimum/asciifont.bin");
 	videoBuffer = new char[rows * cols];
 	clearScreen();
 #ifdef _WINDOWS
@@ -75,12 +91,12 @@ Terminal::Terminal()
   LCDDraw::CreateRenderTarget(cols*8, rows*8, 4, 8);
 #endif    
 #ifdef ILI9488    
-  LCDDraw::CreateRenderTarget(cols*8, rows*8, 4, 8);
+  LCDDraw::CreateRenderTarget(cols*8, rows*8, 8, 12);
 #endif   
 #ifdef ARDUINO_LILYGO_T_DISPLAY_S3
   LCDDraw::CreateRenderTarget(cols*8, rows*8, 4, 6);
 #endif
-#endif _WINDOWS  
+#endif // _WINDOWS  
 }
 
 Terminal::~Terminal()

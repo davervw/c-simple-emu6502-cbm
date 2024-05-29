@@ -77,7 +77,7 @@ class Terminal : public ICharInput, public ICharOutput
 {
 public:
 	Terminal();
-	~Terminal();
+	virtual ~Terminal();
 	virtual void write(char c);
 	virtual bool read(char& c);
 	virtual bool readWaiting();

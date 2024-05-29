@@ -43,7 +43,7 @@ class ASCIIKeyboard : ICharInput
 {
 public:
 	ASCIIKeyboard();
-	~ASCIIKeyboard();
+	virtual ~ASCIIKeyboard();
 	virtual bool read(char& c);
 	virtual bool readWaiting();
 };

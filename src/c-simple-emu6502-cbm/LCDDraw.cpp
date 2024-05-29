@@ -56,6 +56,14 @@ bool LCDDraw::CreateRenderTarget(int screenwidth, int screenheight, int scalex, 
 	clientwidth = 320;
 	clientheight = 240;
 #endif
+#ifdef ILI9341
+	clientwidth = 320;
+	clientheight = 240;
+#endif
+#ifdef ILI9488
+	clientwidth = 480;
+	clientheight = 320;
+#endif
 
 	LCDDraw::screenwidth = screenwidth;
 	LCDDraw::screenheight = screenheight;
@@ -123,10 +131,11 @@ void LCDDraw::DrawCharacter2Color(byte* src, int col, int row, int fg, int bg)
 			gfx->drawPixel(x0 + col_i, y0 + row_i * 2 + 1, color);
 #endif      
 #ifdef M5STACK
-			// if (col_i & 1)
-			// 	M5.Lcd.drawPixel(x0 + col_i / 2, y0 + row_i, average_color(colors[col_i - 1], color));
-			// colors[col_i] = color;
-			M5.Lcd.drawPixel(x0 + col_i, y0 + row_i, color);
+			if (scalex == 4 && (col_i & 1)) {
+			  	M5.Lcd.drawPixel(x0 + col_i / 2, y0 + row_i, average_color(colors[col_i - 1], color));
+ 			    colors[col_i] = color;
+      } else if (scalex == 8)
+          M5.Lcd.drawPixel(x0 + col_i, y0 + row_i, color);
 #endif
 #ifdef ARDUINO_LILYGO_T_DISPLAY_S3
 			if (col_i & 1)
@@ -152,13 +161,19 @@ void LCDDraw::DrawCharacter2Color(byte* src, int col, int row, int fg, int bg)
 			colors[col_i] = color;
 #endif
 #ifdef ILI9488
-			if (col_i >= 2 && col_i <= 5)
-			{
+			if (scalex == 8)
+			{        
 				if (fill && (row_i & 1) == 1)
 					lcd.drawPixel(x0 + SCALEY(row_i) - 1, 479 - (y0 + col_i - 1), average_color(color, colors[col_i]));
 				lcd.drawPixel(x0 + SCALEY(row_i), 479 - (y0 + col_i - 1), color);
 			}
-			else if (col_i == 1 || col_i == 7)
+			else if (scalex == 6 && col_i >= 2 && col_i <= 5)
+			{        
+				if (fill && (row_i & 1) == 1)
+					lcd.drawPixel(x0 + SCALEY(row_i) - 1, 479 - (y0 + col_i - 1), average_color(color, colors[col_i]));
+				lcd.drawPixel(x0 + SCALEY(row_i), 479 - (y0 + col_i - 1), color);
+			}
+			else if (scalex == 6 && (col_i == 1 || col_i == 7))
 			{
 				int adj = (col_i == 7) ? 1 : 0;
 				int mid = average_color(color, colors[col_i - 1]);
@@ -235,7 +250,7 @@ void LCDDraw::DrawBorder(int color)
 		lcd.fillRect(clientheight - borderheight, 0, borderheight, clientwidth, color);
 #endif    
 #ifdef ILI9488    
-		lcd.fillRect(0, 0, borderheight, clientwidthcolor);
+		lcd.fillRect(0, 0, borderheight, clientwidth, color);
 		lcd.fillRect(clientheight - borderheight, 0, borderheight, clientwidth, color);
 #endif   
 #ifdef ARDUINO_LILYGO_T_DISPLAY_S3
@@ -257,7 +272,7 @@ void LCDDraw::DrawBorder(int color)
 		lcd.fillRect(clientheight - borderheight, 0, borderheight, clientwidth, color);
 #endif    
 #ifdef ILI9488    
-		lcd.fillRect(0, 0, borderheight, clientwidthcolor);
+		lcd.fillRect(0, 0, borderheight, clientwidth, color);
 		lcd.fillRect(clientheight - borderheight, 0, borderheight, clientwidth, color);
 #endif   
 #ifdef ARDUINO_LILYGO_T_DISPLAY_S3

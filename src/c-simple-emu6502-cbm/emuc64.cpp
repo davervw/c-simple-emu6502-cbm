@@ -126,7 +126,7 @@ static void ReadKeyboard()
 	  }
   }
   return;
-#else NOT _WINDOWS
+#else // NOT _WINDOWS
 
 #ifdef ARDUINO_M5STACK_FIRE
   const String upString = "15,7,64";

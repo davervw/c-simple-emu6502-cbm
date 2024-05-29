@@ -33,13 +33,13 @@
 #pragma once
 
 // Current resolutions supported:
-//                                        vdc/ term  vic ii         vic
-//                                        640  200  320  200     176   184
-// ARDUINO_SUNTON_8048S070      800x480    1x   2x   2x  2x       4x     2x
-// ARDUINO_LILYGO_T_DISPLAY_S3	320x170   .5x .75x   1x .75x   1.75x 0.875x
-// M5STACK                      320x240   .5x   1x   1x    1x  1.75x     1x
-// ILI9341                      320x240R  .5x   1x   1x    1x  1.75x     1x
-// ILI9488                      480x320R 1.5x 1.5x  1.5x 1.5x   2.5x   1.5x
+//                                         vdc/ term  vic ii         vic
+//                                         640  200  320  200     176   184
+// ARDUINO_SUNTON_8048S070      800x480     1x   2x   2x  2x       4x     2x
+// ARDUINO_LILYGO_T_DISPLAY_S3	320x170    .5x .75x   1x .75x   1.75x 0.875x
+// M5STACK                      320x240    .5x   1x   1x    1x  1.75x     1x
+// ILI9341                      320x240R   .5x   1x   1x    1x  1.75x     1x
+// ILI9488                      480x320R 0.75x 1.5x  1.5x 1.5x   2.5x   1.5x
 
 /// scale of 8 pixels
 //   .5x = 4   color average adjacent pixels

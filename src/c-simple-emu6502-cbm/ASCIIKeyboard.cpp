@@ -35,7 +35,14 @@
 #include "C128ScanCode.h"
 #ifndef _WINDOWS
 #include "config.h"
-#endif
+#include "cardkbdscan.h"
+#ifdef ARDUINO_TEENSY41
+#include "USBtoCBMkeyboard.h"
+extern USBtoCBMkeyboard usbkbd;
+#else
+#include "ble_keyboard.h"
+#endif // ARUDINO_TEENSY
+#endif // NOT _WINDOWS
 
 typedef enum _ShiftState {
 	None = 0,
@@ -55,43 +62,43 @@ static ShiftState shiftState = ShiftState::None;
 
 static const char scan_to_ascii[3][88] = {
 	{
-		127, '\r', -1, -1, -1, -1, -1, -1,
-		'3', 'w', 'a', '4', 'z', 's', 'e', -1,
+		127, '\r', '\xff', '\xff', '\xff', '\xff', '\xff', '\xff',
+		'3', 'w', 'a', '4', 'z', 's', 'e', '\xff',
 		'5', 'r', 'd', '6', 'c', 'f', 't', 'x',
 		'7', 'y', 'g', '8', 'b', 'h', 'u', 'v',
 		'9', 'i', 'j', '0', 'm', 'k', 'o', 'n',
 		'+', 'p', 'l', '-', '.', ':', '@', ',',
-		'\\', '*', ';', -1, -1, '=', '^', '/',
-		'1', '_', -1, '2', ' ', -1, 'q', 3,
-		-1, '8', '5', '\t', '2', '4', '7', '1',
+		'\\', '*', ';', '\xff', '\xff', '=', '^', '/',
+		'1', '_', '\xff', '2', ' ', '\xff', 'q', 3,
+		'\xff', '8', '5', '\t', '2', '4', '7', '1',
 		27, '+', '-', '\n', '\r', '6', '9', '3',
-		-1, '0', '*', -1, -1, -1, -1, 19,
+		'\xff', '0', '*', '\xff', '\xff', '\xff', '\xff', 19,
 	},
 	{
-		127, '\r', -1, -1, -1, -1, -1, -1,
-		'#', 'W', 'A', '$', 'Z', 'S', 'E', -1,
+		127, '\r', '\xff', '\xff', '\xff', '\xff', '\xff', '\xff',
+		'#', 'W', 'A', '$', 'Z', 'S', 'E', '\xff',
 		'%', 'R', 'D', '&', 'C', 'F', 'T', 'X',
 		'\'', 'Y', 'G', '(', 'B', 'H', 'U', 'V',
 		')', 'I', 'J', '(', 'M', 'K', 'O', 'N',
 		'+', 'P', 'L', '-', '>', '[', '@', '<',
-		'\\', '*', ']', -1, -1, '=', '^', '?',
-		'!', '_', -1, '"', ' ', -1, 'Q', 3,
-		-1, '*', '%', '\t', '2', '4', '7', '1',
+		'\\', '*', ']', '\xff', '\xff', '=', '^', '?',
+		'!', '_', '\xff', '"', ' ', '\xff', 'Q', 3,
+		'\xff', '*', '%', '\t', '2', '4', '7', '1',
 		27, '+', '-', '\n', '\r', '6', '9', '3',
-		-1, '0', '*', -1, -1, -1, -1, 19,
+		'\xff', '0', '*', '\xff', '\xff', '\xff', '\xff', 19,
 	},
 	{
-		127, 13, -1, -1, -1, -1, -1, -1,
-		-1, 23, 1, -1, 26, 19, 5, -1,
-		-1, 18, 4, -1, 3, 6, 20, 24,
-		-1, 25, 7, -1, 2, 8, 21, 22,
-		-1, 9, 10, -1, 13, 11, 15, 14,
-		-1, 16, 12, -1, -1, -1, 0, -1,
-		-1, -1, -1, -1, -1, -1, -1, -1,
-		-1, -1, -1, 0, -1, -1, 17, -1,
-		-1, -1, -1, -1, -1, -1, -1, -1,
-		-1, -1, -1, -1, -1, -1, -1, -1,
-		-1, -1, -1, -1, -1, -1, -1, -1,
+		127, 13, '\xff', '\xff', '\xff', '\xff', '\xff', '\xff',
+		'\xff', 23, 1, '\xff', 26, 19, 5, '\xff',
+		'\xff', 18, 4, '\xff', 3, 6, 20, 24,
+		'\xff', 25, 7, '\xff', 2, 8, 21, 22,
+		'\xff', 9, 10, '\xff', 13, 11, 15, 14,
+		'\xff', 16, 12, '\xff', '\xff', '\xff', 0, '\xff',
+		'\xff', '\xff', '\xff', '\xff', '\xff', '\xff', '\xff', '\xff',
+		'\xff', '\xff', '\xff', 0, '\xff', '\xff', 17, '\xff',
+		'\xff', '\xff', '\xff', '\xff', '\xff', '\xff', '\xff', '\xff',
+		'\xff', '\xff', '\xff', '\xff', '\xff', '\xff', '\xff', '\xff',
+		'\xff', '\xff', '\xff', '\xff', '\xff', '\xff', '\xff', '\xff',
 	}
 };
 
@@ -147,33 +154,41 @@ static int calculateScanCode()
 	return counter;
 }
 
-static bool keyPressed()
-{
-	for (int i = 0; i < scan_codes_count; ++i)
-		if (scan_codes[i] != SCAN_CODE_NO_KEY)
-			return true;
-	return false;
-}
+static bool caps = false;
 
 void pollKeyboard()
 {
 #ifdef _WINDOWS
 	WindowsKeyboard::get_scan_codes(scan_codes, scan_codes_count);
 #else
-// TODO: better match emuc128.cpp keyboard handling
-// TODO: support more platforms 
-// TODO: BLE for ESP32
 // TODO: USB for Teensy
-	bool caps = false;
-	String s;
-  // for (int i=0; i<scan_codes_count; ++i)
-  //   scan_codes[i] = 88;
-  if (Serial2.available())
+  String s;
+#ifndef ARDUINO_TEENSY41
+  ble_keyboard->ServiceConnection();
+  s = ble_keyboard->Read();
+  if (s.length() != 0)
+    ;
+  else 
+#endif
+  if (CardKbd)
+    s = CardKbdScanRead();
+#ifndef ARDUINO_SUNTON_8048S070
+#ifndef ARDUINO_TEENSY41
+#ifndef ARDUINO_LILYGO_T_DISPLAY_S3
+  else if (Serial2.available())
     s = Serial2.readString();
+#endif
+#endif
+#endif
   else if (SerialDef.available())
-	  s = SerialDef.readString();
+    s = SerialDef.readString();
+#ifdef ARDUINO_TEENSY41
+  else
+    s = usbkbd.Read();
+#endif
   if (s.length() == 0)
 	  return;
+  caps = false;
   unsigned src = 0;
   int dest = 0;
   int scan = 0;
@@ -202,7 +217,7 @@ void pollKeyboard()
 
 static void pushKey(int scan_code)
 {
-	char ascii = -1;
+	char ascii = '\xff';
 	if (shiftState == 0)
 		ascii = scan_to_ascii[0][scan_code];
 	else if (shiftState & ShiftState::Shift)
@@ -213,6 +228,8 @@ static void pushKey(int scan_code)
 		return;
 	if ((buffer_tail + 1) % buffer_count == buffer_head)
 		return;
+  if (caps && ascii >= 'a' && ascii <= 'z')
+    ascii = ascii - 'a' + 'A';
 	buffer[buffer_tail] = ascii;
 	if (++buffer_tail == buffer_count)
 		buffer_tail = 0;

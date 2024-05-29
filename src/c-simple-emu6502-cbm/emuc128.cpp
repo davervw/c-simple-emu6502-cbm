@@ -538,7 +538,7 @@ void C128Memory::ReadKeyboard()
   }
   while (dest < 16)
     scan_codes[dest++] = 88;
-#endif NOT _WINDOWS
+#endif // NOT _WINDOWS
   
   ram[1] = (ram[2] & 0xBF) | (caps ? 0 : 0x40);
 }

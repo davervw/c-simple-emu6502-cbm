@@ -34,9 +34,6 @@
 #include "ICharInput.h"
 #include "ICharOutput.h"
 
-static byte readbyte;
-static byte readbyte_count = 0;
-
 MC6850::MC6850(ICharInput* input, ICharOutput* output)
 {
 	this->input = input;
