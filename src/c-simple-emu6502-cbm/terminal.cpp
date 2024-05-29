@@ -43,7 +43,7 @@
 #endif // _WINDOWS
 
 const int rows = 25;
-const int cols = 80;
+const int cols = 40;
 
 Terminal::CRNLMODE Terminal::crnlmode = NEWLINE_ONLY;
 
@@ -66,7 +66,7 @@ Terminal::Terminal()
 	WindowsDraw::BeginDraw();
 #else // NOT _WINDOWS
 #ifdef M5STACK
-  LCDDraw::CreateRenderTarget(cols*8, rows*8, 4, 8);
+  LCDDraw::CreateRenderTarget(cols*8, rows*8, 8, 8);
 #endif  
 #ifdef ARDUINO_SUNTON_8048S070
   LCDDraw::CreateRenderTarget(cols*8, rows*8, 8, 16);
@@ -140,8 +140,9 @@ void Terminal::write_internal(char c)
   LCDDraw::DrawCharacter2Color(image, x, y, 0xFFFF, 0x0000);
 #endif // NOT _WINDOWS  
 	if (++x == cols) {
-		backspace();
+		x = 0;
 		newline();
+		carriagereturn();
 	}
 }
 

@@ -123,9 +123,10 @@ void LCDDraw::DrawCharacter2Color(byte* src, int col, int row, int fg, int bg)
 			gfx->drawPixel(x0 + col_i, y0 + row_i * 2 + 1, color);
 #endif      
 #ifdef M5STACK
-			if (col_i & 1)
-				M5.Lcd.drawPixel(x0 + col_i / 2, y0 + row_i, average_color(colors[col_i - 1], color));
-			colors[col_i] = color;
+			// if (col_i & 1)
+			// 	M5.Lcd.drawPixel(x0 + col_i / 2, y0 + row_i, average_color(colors[col_i - 1], color));
+			// colors[col_i] = color;
+			M5.Lcd.drawPixel(x0 + col_i, y0 + row_i, color);
 #endif
 #ifdef ARDUINO_LILYGO_T_DISPLAY_S3
 			if (col_i & 1)
