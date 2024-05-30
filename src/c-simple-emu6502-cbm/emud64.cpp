@@ -1140,7 +1140,27 @@ void EmuD64::FlushDisk()
 #else
         File fp = SD.open(filename_d64, FILE_WRITE);
 #endif        
-        if (fp.size() == 0) // in case couldn't open file, create file
+        if (!fp) // unable to create file, try to create folder
+        {
+            const char* p = strrchr(filename_d64, '/');
+            if (p == 0)
+                return;
+            auto len = p - filename_d64;
+            char* path = new char[len + 1];
+            if (path == 0)
+                return;
+            memcpy(path, filename_d64, len);
+            path[len] = 0;
+            bool success = SD.mkdir(path);
+            delete[] path;
+            if (!success)
+                return;
+            fp = SD.open(filename_d64, FILE_WRITE); // try again
+            if (!fp)
+                return;
+        }
+        
+        if (fp.size() == 0) // in case this is a brand new file
         {
             for (int i = 1; i <= n_tracks; ++i)
                 track_dirty[i] = true;

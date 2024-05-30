@@ -51,6 +51,7 @@ class FS
 {
 public:
 	File open(const char* filename, FILEMODE mode);
+	bool mkdir(const char* path);
 };
 
 extern FS SD;

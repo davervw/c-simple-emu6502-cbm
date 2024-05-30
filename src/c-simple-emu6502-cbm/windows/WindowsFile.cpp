@@ -31,6 +31,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #ifdef _WINDOWS
+#include "framework.h"
 #include "WindowsFile.h"
 #include <corecrt_io.h>
 #include <fcntl.h>
@@ -77,6 +78,15 @@ File FS::open(const char* filename, FILEMODE mode)
 	if (filename[0] == '/')
 		++filename;
 	return File(filename, mode);
+}
+
+bool FS::mkdir(const char* path)
+{
+	if (path == 0)
+		return false;
+	if (*path == '/')
+		++path;
+	return CreateDirectoryA(path, NULL);
 }
 
 FS SD;
