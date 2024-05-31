@@ -1151,11 +1151,19 @@ void EmuD64::FlushDisk()
                 return;
             memcpy(path, filename_d64, len);
             path[len] = 0;
+#ifdef ARDUINO_LILYGO_T_DISPLAY_S3
+            bool success = FFat.mkdir(path);
+#else
             bool success = SD.mkdir(path);
+#endif            
             delete[] path;
             if (!success)
                 return;
+#ifdef ARDUINO_LILYGO_T_DISPLAY_S3
+            fp = FFat.open(filename_d64, FILE_WRITE); // try again
+#else
             fp = SD.open(filename_d64, FILE_WRITE); // try again
+#endif        
             if (!fp)
                 return;
         }

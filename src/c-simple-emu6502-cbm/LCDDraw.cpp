@@ -64,6 +64,10 @@ bool LCDDraw::CreateRenderTarget(int screenwidth, int screenheight, int scalex, 
 	clientwidth = 480;
 	clientheight = 320;
 #endif
+#ifdef ARDUINO_LILYGO_T_DISPLAY_S3
+	clientwidth = 320;
+	clientheight = 170;
+#endif
 
 	LCDDraw::screenwidth = screenwidth;
 	LCDDraw::screenheight = screenheight;
@@ -138,7 +142,7 @@ void LCDDraw::DrawCharacter2Color(byte* src, int col, int row, int fg, int bg)
           M5.Lcd.drawPixel(x0 + col_i, y0 + row_i, color);
 #endif
 #ifdef ARDUINO_LILYGO_T_DISPLAY_S3
-			if (col_i & 1)
+			if (scalex == 4 && (col_i & 1))
 			{
 				int mid = average_color(last_color, color);
 				if (row_i > 1 && row_i < 6)
@@ -151,6 +155,19 @@ void LCDDraw::DrawCharacter2Color(byte* src, int col, int row, int fg, int bg)
 				}
 				else
 					colors[col_i / 2] = mid;
+			}
+			else if (scalex == 8)
+			{
+				if (row_i > 1 && row_i < 6)
+					lcd.drawPixel(x0 + col_i, y0 + row_i - 1, color);
+				else if (row_i == 1 || row_i == 7)
+				{
+					int adj = (row_i == 7) ? 2 : 1;
+					int mid = average_color(color, colors[col_i]);
+					lcd.drawPixel(x0 + col_i, y0 + row_i - adj, mid);
+				}
+				else
+					colors[col_i] = color;
 			}
 			else
 				last_color = color;

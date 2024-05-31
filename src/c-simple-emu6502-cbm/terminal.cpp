@@ -60,6 +60,10 @@ const int rows = 25;
 const int cols = 60;
 const int rows = 25;
 #endif
+#ifdef ARDUINO_LILYGO_T_DISPLAY_S3
+const int cols = 40;
+const int rows = 25;
+#endif
 #ifdef ARDUINO_SUNTON_8048S070
 const int cols = 80;
 const int rows = 25;
@@ -94,7 +98,7 @@ Terminal::Terminal()
   LCDDraw::CreateRenderTarget(cols*8, rows*8, 8, 12);
 #endif   
 #ifdef ARDUINO_LILYGO_T_DISPLAY_S3
-  LCDDraw::CreateRenderTarget(cols*8, rows*8, 4, 6);
+  LCDDraw::CreateRenderTarget(cols*8, rows*8, 8, 6);
 #endif
 #endif // _WINDOWS  
 }
