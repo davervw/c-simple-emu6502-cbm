@@ -46,20 +46,27 @@ GO 4
 
 This portable version (master branch unless otherwise specified) has been tested with:
 
+### Console terminal versions ###
+
 * Microsoft Windows 11 (Visual Studio 2022) x64
 * cygwin (gcc) x64
 * Ubuntu Linux (gcc) x64
 * Raspberry Pi 4 (gcc, Linux ARM)
 * Rock Pi S (Rockchip RK3308, gcc, Linux ARM)
 * NXP LPC1768 (ARM MBED): [forked](https://os.mbed.com/users/davervw/code/c-simple-emu6502-cbm/)
-* STM32F429 LCD (ARM MBED, note must rename ADC() method) [forked](https://os.mbed.com/users/davervw/code/C64-stm429_discovery/)
 * [Arduino branch](https://github.com/davervw/c-simple-emu6502-cbm/tree/arduino) from master
+
+### LCD versions ###
+
+* STM32F429 LCD (ARM MBED, note must rename ADC() method) [forked](https://os.mbed.com/users/davervw/code/C64-stm429_discovery/)
 * [M5_core branch](https://github.com/davervw/c-simple-emu6502-cbm/tree/m5_core) original M5 Core support (no PSRAM RAM)
 * [m5-atom-s3 branch](https://github.com/davervw/c-simple-emu6502-cbm/tree/m5_atom_s3) for M5 Atom S3
 * [m5stick-c branch](https://github.com/davervw/c-simple-emu6502-cbm/tree/m5stickc) for M5Stick-C
 * [m5-stamp-s3 branch](https://github.com/davervw/c-simple-emu6502-cbm/tree/m5_stamp_s3) for M5 Stamp-S3
 
-The following branches have been consolidated into a single [Unified](https://github.com/davervw/c-simple-emu6502-cbm/tree/unified) branch for improved sharing of code and features.  It is recommended to follow the unified branch instead of individual branches.
+### [Unified](https://github.com/davervw/c-simple-emu6502-cbm/tree/unified) (LCD / Graphical) ###
+
+The following branches and targets have been consolidated into a single [Unified](https://github.com/davervw/c-simple-emu6502-cbm/tree/unified) branch for improved sharing of code and features.  It is recommended to follow the unified branch instead of individual branches.
 
 * Teensy_LCD branch from Arduino, keyboard mapping from STM32
 * M5 branch branched from Teensy_LCD for M5FireIoT, M5Core2, M5CoreS3, with merges from cpp branch for maximum features
@@ -67,7 +74,10 @@ The following branches have been consolidated into a single [Unified](https://gi
 * ESP32-8048S070-7inch branch for Sunton ESP32-8048S070
 * Microsoft Windows graphical version for desktops, laptops, tablets (requires Direct2D)
 
-Only CHRIN/CHROUT/READY(for startup program)/SETLFS/SETNAM/LOAD/SAVE are hooked for terminal version, so no, it won't run your favorite games, only maybe simple ASCII text adventures or such.  Sorry no PETSCII either (except LCD versions).   Some versions (Windows, Linux, Teensy, M5, etc.) with lots of RAM available also have D64 support for simple emulation of 1541 disk images so you can have a persistant collection of files that should be compatible with other emulators.
+### Limitations ###
+
+* Terminal console versions only hook the CHRIN/CHROUT/READY(for startup program)/SETLFS/SETNAM/LOAD/SAVE kernal routines, so no, it won't run your favorite games, only maybe simple ASCII text adventures or such.  Sorry no PETSCII either (except LCD versions, or if you [add PETSCII font to Windows](https://style64.org/c64-truetype)).   
+* Some versions (Windows, Linux, Teensy, M5, etc.) with lots of RAM available also have D64 support for simple emulation of 1541 disk images so you can have a persistant collection of files that should be compatible with other emulators.
 
 ## Usage ##
 
