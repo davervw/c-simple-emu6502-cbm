@@ -1,4 +1,4 @@
-# Commodore 64, 128, Vic-20 text LCD emulator *Unified* #
+# Commodore 64, 128, Vic-20, minimum 6502/MC6850 text LCD emulator *Unified* #
 
 ![Unified models](media/models.jpg)
 
