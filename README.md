@@ -2,6 +2,10 @@
 
 Here is a simple Commodore 64/128 and 6502 Emulator I wrote from scratch, ported to C++ from my C# [simple-emu-c64](https://github.com/davervw/simple-emu-c64) project.  Runs in a text console window.  Optionally can specify a binary Commodore program to load, BASIC programs will auto-run.   Requires Commodore ROMs (not included) present in the roms folder.   More details may be relevant from the [simple-emu-c64](https://github.com/davervw/simple-emu-c64) project.
 
+>
+> TLDR; This is the terminal version, fast-forward to [Unified](https://github.com/davervw/c-simple-emu6502-cbm/blob/master/README.md#unified-lcd--graphical) to see a graphical version
+>
+
 ```
 roms/c128/basichi
 roms/c128/basiclo
