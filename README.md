@@ -48,6 +48,8 @@ Notes:
 * M5 Fire has three physical buttons that act as cursor up/down and Enter (also left two does Shift-Run, and outer left/right switch to next emulator).
 * Supporting different LCD resolutions different than Commodore supported has been an exercise in upscaling and downscaling.
 * VDC 8563/8568 text emulation is included in the Commodore 128 emulator only.  Use GRAPHIC 5 command to switch to the 80 column text screen.   GRAPHIC 0 will return to the 40 column screen.
+* There is no fast mode of C128.   The emulator runs flat out as much as it can all the time.  No effort has been made to be cycle accurate.
+* This emulator does not have a C64 within C128 mode implemented.  GO 64 will switch to a strict 64 only mode.  None of the C128 hardware will be present in 64 mode.  No VDC, no fast mode, no extended keyboard scan codes (extended keys are translated to C64 scan codes though for convenience).
 
 See more description at blog entries:
 
