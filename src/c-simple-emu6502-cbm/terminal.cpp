@@ -65,8 +65,8 @@ const int cols = 40;
 const int rows = 25;
 #endif
 #ifdef ARDUINO_SUNTON_8048S070
-const int cols = 80;
-const int rows = 25;
+const int cols = 100;
+const int rows = 30;
 #endif
 
 Terminal::CRNLMODE Terminal::crnlmode = NEWLINE_ONLY;

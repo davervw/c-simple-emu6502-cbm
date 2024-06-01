@@ -68,6 +68,10 @@ bool LCDDraw::CreateRenderTarget(int screenwidth, int screenheight, int scalex, 
 	clientwidth = 320;
 	clientheight = 170;
 #endif
+#ifdef ARDUINO_SUNTON_8048S070
+  clientwidth = 800;
+  clientheight = 480;
+#endif
 
 	LCDDraw::screenwidth = screenwidth;
 	LCDDraw::screenheight = screenheight;

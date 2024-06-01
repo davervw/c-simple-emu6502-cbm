@@ -40,6 +40,10 @@
 #define M5STACK
 #endif
 ////////////////////////////
+// In case Sunton board is not defined, use selection of ESP32S3 Dev Module instead
+#ifdef ARDUINO_ESP32S3_DEV
+#define ARDUINO_SUNTON_8048S070
+#endif
 #ifdef ARDUINO_SUNTON_8048S070
 #include <Arduino.h>
 #include <Arduino_GFX_Library.h>
