@@ -691,8 +691,14 @@ void C128Memory::write(ushort addr, byte value)
                 return;
               }
               ram[addr128k] = value;
-              if (addr128k >= 1024 && addr128k < 2024)
-                vicii->DrawChar(addr128k-1024);
+              if (addr128k >= 1024 && addr128k < 2024) {
+                  vicii->DrawChar(addr128k - 1024);
+                  return;
+              }
+              if (addr128k == 0xA2C) { // workaround: this ram mirror set by KERNAL for VICII scanline IRQ handler to transfer to D018
+                  io[0xd018 - io_addr] = value;
+                  vicii->UpdateAddresses();
+              }
             }
         }
     }
