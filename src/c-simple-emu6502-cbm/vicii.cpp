@@ -30,8 +30,6 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "dprintf.h"
-
 #include "vicii.h"
 #include "config.h"
 
@@ -125,7 +123,6 @@ void EmuVicII::UpdateAddresses()
     if (new_video_addr != video_addr || new_chargen_addr != chargen_addr) {
         video_addr = new_video_addr;
         chargen_addr = new_chargen_addr;
-        dprintf("video_addr=%04X\n", video_addr);
         RedrawScreen(); // upper to lower or lower to upper
     }
 }
