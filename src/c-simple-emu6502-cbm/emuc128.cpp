@@ -589,6 +589,8 @@ byte C128Memory::read(ushort addr)
             return vdc->GetAddressRegister();
         else if (addr == 0xD601)
             return vdc->GetDataRegister();
+        else if (addr == 0xDD00)
+            return (io[addr - io_addr] & 3) | 0xFC; // VICII bank is bits 0,1, others assumed are inputs, force all high including DATA/CLK
 
         return io[addr - io_addr];
     }
@@ -618,10 +620,43 @@ void C128Memory::write(ushort addr, byte value)
         io[mmu_addr - io_addr] = io[mmu_addr - io_addr + 4];
     else if (IsIO(addr))
     {
-        if (addr == 0xDC00 || addr == 0xD02F) // keyboard scan write
+        if (addr == 0xD02F) // keyboard scan write
         {
-          io[addr - io_addr] = value;
-        } 
+            io[addr - io_addr] = value;
+        }
+        else if (addr == 0xDC00) // CIA#1 Data Port Register A
+        {
+            io[addr - io_addr] = (byte)((io[addr - io_addr] & ~io[addr + 2 - io_addr]) | (value & io[addr + 2 - io_addr]));
+        }
+        else if (addr == 0xDC01) // CIA#1 Data Port Register B
+        {
+            io[addr - io_addr] = (byte)((io[addr - io_addr] & ~io[addr + 2 - io_addr]) | (value & io[addr + 2 - io_addr]));
+        }
+        else if (addr == 0xDC02) // CIA#1 Data Direction Register A
+        {
+            io[addr - io_addr] = value;
+        }
+        else if (addr == 0xDC03) // CIA#1 Data Direction Register B
+        {
+            io[addr - io_addr] = value;
+        }
+        else if (addr == 0xDD00) // CIA#2 Data Port Register A
+        {
+            io[addr - io_addr] = (byte)((io[addr - io_addr] & ~io[addr + 2 - io_addr]) | (value & io[addr + 2 - io_addr]));
+            vicii->UpdateAddresses();
+        }
+        else if (addr == 0xDD01) // CIA#2 Data Port Register B
+        {
+            io[addr - io_addr] = (byte)((io[addr - io_addr] & ~io[addr + 2 - io_addr]) | (value & io[addr + 2 - io_addr]));
+        }
+        else if (addr == 0xDD02) // CIA#2 Data Direction Register A
+        {
+            io[addr - io_addr] = value;
+        }
+        else if (addr == 0xDD03) // CIA#2 Data Direction Register B
+        {
+            io[addr - io_addr] = value;
+        }
         else if (addr == 0xD021) // background
         {
             io[addr - io_addr] = (byte)((value & 0xF) | 0xF0); // store value so can be retrieved
