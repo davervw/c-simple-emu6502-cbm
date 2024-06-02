@@ -45,22 +45,24 @@ EmuVicII::EmuVicII(byte* vram, byte* vio, byte* vcolor_nybles, byte* vchargen)
     io = vio;
     color_nybles = vcolor_nybles;
     chargen = vchargen;
-    old_video = new byte[1000];
-    old_color = new byte[1000];
     postponeDrawChar = false;
     active = true;
     border = 0;
     video_addr = 0x0400;
     chargen_addr = 0xD000;
 
+#ifndef _WINDOWS
+    old_video = new byte[1000];
+    old_color = new byte[1000];
     memset(old_video, 32, 1000);
     memset(old_color, 0, 1000);
+#endif // NOT _WINDOWS
 
 #ifdef _WINDOWS
     if (!WindowsDraw::CreateRenderTarget(320, 200, 32, 32, redrawRequiredSignal))
         throw "CreateRenderTarget failed";
     WindowsDraw::BeginDraw();
-    unsigned long last_refresh = micros();
+    lastPaintFrame = micros();
     needsPaintFrame = false;
 #endif
 
@@ -78,11 +80,12 @@ EmuVicII::EmuVicII(byte* vram, byte* vio, byte* vcolor_nybles, byte* vchargen)
 
 EmuVicII::~EmuVicII()
 {
-    delete[] old_video;
-    delete[] old_color;
 #ifdef _WINDOWS
     WindowsDraw::EndDraw();
-#endif
+#else // NOT _WINDOWS
+    delete[] old_video;
+    delete[] old_color;
+#endif // NOT _WINDOWS
 }
 
 void EmuVicII::Activate()
@@ -112,9 +115,9 @@ void EmuVicII::Deactivate()
 
 void EmuVicII::UpdateAddresses()
 {
-    int chargen_1k_offset = io[0x18] & 0xE;
-    int video_1k_offset = io[0x18] >> 4;
-    int vicii_bank = ~io[0xD00] & 3;
+    ushort chargen_1k_offset = io[0x18] & 0xE;
+    ushort video_1k_offset = io[0x18] >> 4;
+    ushort vicii_bank = ~io[0xD00] & 3;
     ushort new_video_addr = vicii_bank * 0x4000 + video_1k_offset * 0x0400;
     ushort new_chargen_addr = ((chargen_1k_offset == 4 || chargen_1k_offset == 6) ? 3 : vicii_bank) * 0x4000 + chargen_1k_offset * 0x0400;
     if (new_video_addr != video_addr || new_chargen_addr != chargen_addr) {
@@ -438,6 +441,7 @@ void EmuVicII::RedrawScreen()
 #endif  
     }
 
+#ifndef _WINDOWS
 void EmuVicII::RedrawScreenEfficientlyAfterPostponed()
 {
 #ifdef M5STACK
@@ -463,6 +467,7 @@ void EmuVicII::RedrawScreenEfficientlyAfterPostponed()
     M5.Lcd.endWrite();
 #endif
     }
+#endif // NOT _WINDOWS
 
 void EmuVicII::DrawBorder(byte value)
 {
@@ -503,8 +508,10 @@ void EmuVicII::DrawBorder(byte value)
 #endif
 }
 
+#ifndef _WINDOWS
 void EmuVicII::SaveOldVideoAndColor()
 {
     memcpy(&old_video[0], &ram[video_addr], 1000);
     memcpy(&old_color[0], &color_nybles[0], 1000);
 }
+#endif // NOT _WINDOWS

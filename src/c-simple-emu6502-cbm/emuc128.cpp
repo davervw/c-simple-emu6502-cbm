@@ -669,7 +669,7 @@ void C128Memory::write(ushort addr, byte value)
         }
         else if (addr == 0xD018) // character set (upper/lower/etc.)
         {
-            io[addr - io_addr] = (byte)((value & 0xF) | 0xF0); // store value so can be retrieved
+            io[addr - io_addr] = value & 0xFE;
         }
         else if (IsColor(addr))
         {
@@ -726,8 +726,8 @@ void C128Memory::write(ushort addr, byte value)
                 return;
               }
               ram[addr128k] = value;
-              if (addr128k >= 1024 && addr128k < 2024) {
-                  vicii->DrawChar(addr128k - 1024);
+              if (addr128k >= vicii->video_addr && addr128k < vicii->video_addr+1000) {
+                  vicii->DrawChar(addr128k - vicii->video_addr);
                   return;
               }
               if (addr128k == 0xA2C) { // workaround: this ram mirror set by KERNAL for VICII scanline IRQ handler to transfer to D018

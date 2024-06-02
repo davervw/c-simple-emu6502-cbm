@@ -596,8 +596,8 @@ void EmuC64::C64Memory::write(ushort addr, byte value)
         if (changedRequiresUpdate)
         {
             ram[addr] = value;
-            if (addr >= 1024 && addr < 2024)
-                vicii->DrawChar(addr - 1024);
+            if (addr >= vicii->video_addr && addr < vicii->video_addr+1000)
+                vicii->DrawChar(addr - vicii->video_addr);
         }
     }
     else if (addr == 0xD018) // VIC-II Chip Memory Control Register
@@ -622,7 +622,7 @@ void EmuC64::C64Memory::write(ushort addr, byte value)
         if (colorChange)
         {
             color_nybles[offset] = value;
-            char charAtOffset = ram[1024 + offset];
+            char charAtOffset = ram[vicii->video_addr + offset];
             bool isBlank = (charAtOffset == ' ' || charAtOffset == 96);
             bool requiresRedraw = !isBlank;
             if (requiresRedraw)

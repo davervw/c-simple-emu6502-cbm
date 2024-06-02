@@ -43,9 +43,11 @@ public:
   void DrawChar(byte c, int col, int row, int fg, int bg);
   void DrawChar(int offset);
   void RedrawScreen();
-  void RedrawScreenEfficientlyAfterPostponed();
   void DrawBorder(byte value);
+#ifndef _WINDOWS
+  void RedrawScreenEfficientlyAfterPostponed();
   void SaveOldVideoAndColor();
+#endif // NOT _WINDOWS
   void Activate();
   void Deactivate();
   void UpdateAddresses();
@@ -62,8 +64,10 @@ public:
   byte* io;
   byte* color_nybles;
   byte* chargen;
+#ifndef _WINDOWS
   byte* old_video;
   byte* old_color;
+#endif // NOT _WINDOWS
   bool postponeDrawChar;
   bool active;
   byte border;
