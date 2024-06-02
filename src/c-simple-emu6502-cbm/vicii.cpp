@@ -30,6 +30,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+#include "dprintf.h"
+
 #include "vicii.h"
 #include "config.h"
 
@@ -119,10 +121,11 @@ void EmuVicII::UpdateAddresses()
     ushort video_1k_offset = io[0x18] >> 4;
     ushort vicii_bank = ~io[0xD00] & 3;
     ushort new_video_addr = vicii_bank * 0x4000 + video_1k_offset * 0x0400;
-    ushort new_chargen_addr = ((chargen_1k_offset == 4 || chargen_1k_offset == 6) ? 3 : vicii_bank) * 0x4000 + chargen_1k_offset * 0x0400;
+    ushort new_chargen_addr = ((~vicii_bank & 1) && (chargen_1k_offset == 4 || chargen_1k_offset == 6) ? 3 : vicii_bank) * 0x4000 + chargen_1k_offset * 0x0400;
     if (new_video_addr != video_addr || new_chargen_addr != chargen_addr) {
         video_addr = new_video_addr;
         chargen_addr = new_chargen_addr;
+        dprintf("video_addr=%04X\n", video_addr);
         RedrawScreen(); // upper to lower or lower to upper
     }
 }
