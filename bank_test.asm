@@ -1,10 +1,14 @@
-; bank_test.asm
+; bank_test.asm - Commodore 64 memory bank test chart
+; Copyright (c) 2020 by David R. Van Wagner
+; Open Source - MIT LICENSE
 ;
+; github.com/davervw
+; blog.davevw.com
+; x.com/davervw
 
 start=$c000 ; machine language org
 chrout=$ffd2
 
-; "hires ml"
 * = start
         sei
         jsr disp_header
