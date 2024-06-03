@@ -1,7 +1,7 @@
 # LilyGo T-Display-S3 #
 
 >
-> *TLDR; This is an outdated version, fast-forward to [Unified](https://github.com/davervw/c-simple-emu6502-cbm/blob/master/README.md#unified-lcd--graphical) to see the latest changes*
+> *TLDR; This is an outdated version, fast-forward to [Unified](https://github.com/davervw/c-simple-emu6502-cbm/tree/unified#unified---commodore-and-minimal-6502-emulator-for-various-targets) to see the latest changes*
 >
 > but the [instruction steps](https://github.com/davervw/c-simple-emu6502-cbm/tree/lilygo-t-display-s3?tab=readme-ov-file#instructions) below are awesome.
 >
