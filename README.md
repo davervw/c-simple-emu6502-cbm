@@ -1,5 +1,11 @@
 # LilyGo T-Display-S3 #
 
+>
+> *TLDR; This is an outdated version, fast-forward to [Unified](https://github.com/davervw/c-simple-emu6502-cbm/blob/master/README.md#unified-lcd--graphical) to see the latest changes*
+>
+> but the [instruction steps](https://github.com/davervw/c-simple-emu6502-cbm/edit/lilygo-t-display-s3/README.md#instructions) below are awesome.
+>
+
 Another simple C64 emulator port for [LilyGo T-Display-S3](https://www.lilygo.cc/products/t-display-s3)
 
 ![](t-display-s3.jpg)
@@ -7,6 +13,8 @@ Another simple C64 emulator port for [LilyGo T-Display-S3](https://www.lilygo.cc
 ![BLE keyboard example](ble.jpg)
 
 Supports browser-keyscan-helper (see included folder) for connecting via USB Serial to PC, use Chrome browser for keyboard entry
+
+## Instructions ##
 
 Here are the full steps to get the project going, including enabling typing from Chrome browser.
 
