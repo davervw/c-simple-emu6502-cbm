@@ -1,7 +1,7 @@
 # Teensy C64 #
 
 >
-> *TLDR; This is an outdated version, fast-forward to [Unified](https://github.com/davervw/c-simple-emu6502-cbm/blob/master/README.md#unified-lcd--graphical) to see the latest changes*
+> *TLDR; This is an outdated version, fast-forward to [Unified](https://github.com/davervw/c-simple-emu6502-cbm/tree/unified#unified---commodore-and-minimal-6502-emulator-for-various-targets) to see the latest changes*
 >
 
 Here is a simple Commodore 64 and 6502 Emulator I wrote from scratch, ported to C and C++ from my C# [simple-emu-c64](https://github.com/davervw/simple-emu-c64) project, and portions ported from my [STMF429Discovery](https://techwithdave.davevw.com/2020/04/commodore-64-for-stm32f429-discovery.html) project.  Requires USB host port for USB keyboard.
