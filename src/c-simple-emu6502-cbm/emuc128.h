@@ -73,6 +73,7 @@ public:
 	bool IsColor(ushort addr);
 	bool IsIO(ushort addr);
 	bool IsRam(int& addr, bool isWrite);
+	void WaitKeysReleased();
 
 public:
 	byte* basic_lo_rom;

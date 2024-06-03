@@ -102,6 +102,8 @@ static const char scan_to_ascii[3][88] = {
 	}
 };
 
+static void waitKeysReleased();
+
 ASCIIKeyboard::ASCIIKeyboard()
 {
 	buffer_head = 0;
@@ -110,6 +112,7 @@ ASCIIKeyboard::ASCIIKeyboard()
 
 ASCIIKeyboard::~ASCIIKeyboard()
 {
+	waitKeysReleased();
 }
 
 bool ASCIIKeyboard::read(char& c)
@@ -251,4 +254,14 @@ bool ASCIIKeyboard::readWaiting()
 {
 	scanCodesToKeyboardBuffer();
 	return (buffer_head != buffer_tail);
+}
+
+static void waitKeysReleased()
+{
+	int scan_code;
+	do {
+		pollKeyboard();
+		calculateShiftState();
+		scan_code = calculateScanCode();
+	} while (scan_code != SCAN_CODE_NO_KEY);
 }

@@ -100,6 +100,7 @@ EmuC128::EmuC128()
 
 EmuC128::~EmuC128()
 {
+    delete memory;
 }
 
 static int startup_state = 0;
@@ -448,6 +449,8 @@ C128Memory::~C128Memory()
 
     delete vdc;
     delete vicii;
+
+    WaitKeysReleased();
 }
 
 void C128Memory::ReadKeyboard()
@@ -846,4 +849,16 @@ byte EmuC128::GetMemory(ushort addr)
 void EmuC128::SetMemory(ushort addr, byte value)
 {
     memory->write(addr, value);
+}
+
+void C128Memory::WaitKeysReleased()
+{
+    bool keypressed;
+    do {
+        keypressed = false;
+        ReadKeyboard();
+        for (int i = 0; !keypressed && i < 16; ++i)
+            if ((scan_codes[i] & 127) != 88)
+                keypressed = true;
+    } while (keypressed);
 }

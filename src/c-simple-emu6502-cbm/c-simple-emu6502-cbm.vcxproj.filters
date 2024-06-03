@@ -28,14 +28,12 @@
     <ClCompile Include="windows\WindowsTime.cpp">
       <Filter>Windows</Filter>
     </ClCompile>
-    <ClCompile Include="emuvic20.cpp">
-      <Filter>Includes</Filter>
-    </ClCompile>
     <ClCompile Include="emumin.cpp" />
     <ClCompile Include="mc6850.cpp" />
     <ClCompile Include="terminal.cpp" />
     <ClCompile Include="ASCIIKeyboard.cpp" />
     <ClCompile Include="LCDDraw.cpp" />
+    <ClCompile Include="emuvic20.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="windows\framework.h">

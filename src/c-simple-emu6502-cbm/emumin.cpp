@@ -54,6 +54,7 @@ EmuMinimum::EmuMinimum(const char* filename, ushort serialaddr)
 
 EmuMinimum::~EmuMinimum()
 {
+	delete memory;
 }
 
 bool EmuMinimum::ExecutePatch()

@@ -84,6 +84,7 @@ extern int main_go_num;
 
 // array allows multiple keys/modifiers pressed at one time
 static int scan_codes[16] = { 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64 };
+static void waitKeysReleased();
 
 EmuVic20::EmuVic20(int ram_size) : EmuCBM(new Vic20Memory(ram_size * 1024))
 {
@@ -91,6 +92,8 @@ EmuVic20::EmuVic20(int ram_size) : EmuCBM(new Vic20Memory(ram_size * 1024))
 
 EmuVic20::~EmuVic20()
 {
+	delete memory;
+	waitKeysReleased();
 }
 
 static byte RamSizeToRamConfig(int ram_size)
@@ -591,34 +594,14 @@ void EmuVic20::Vic20Memory::write(ushort addr, byte value)
 		ram[addr] = value;
 }
 
-
-/*static void ApplyColor()
+static void waitKeysReleased()
 {
-	CBM_Console.Reverse = (this[199] != 0) ^ ((this[0x900F] & 0x8) == 1);
-	if (CBM_Console.Color)
-	{
-		if (CBM_Console.Reverse && CBM_Console.Encoding != CBM_Console.CBMEncoding.petscii)
-		{
-			Console.ForegroundColor = ToConsoleColor(this[0x900F] >> 4);
-			Console.BackgroundColor = ToConsoleColor(this[646]);
-		}
-		else
-		{
-			Console.ForegroundColor = ToConsoleColor(this[646]);
-			Console.BackgroundColor = ToConsoleColor(this[0x900F] >> 4);
-		}
-	}
-	else
-	{
-		if (CBM_Console.Reverse && CBM_Console.Encoding != CBM_Console.CBMEncoding.petscii)
-		{
-			Console.BackgroundColor = startup_fg;
-			Console.ForegroundColor = startup_bg;
-		}
-		else
-		{
-			Console.ForegroundColor = startup_fg;
-			Console.BackgroundColor = startup_bg;
-		}
-	}
-}*/
+	bool keypressed;
+	do {
+		keypressed = false;
+		ReadKeyboard();
+		for (int i = 0; !keypressed && i < 16; ++i)
+			if ((scan_codes[i] & 127) != 64)
+				keypressed = true;
+	} while (keypressed);
+}

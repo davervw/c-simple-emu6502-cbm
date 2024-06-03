@@ -86,6 +86,7 @@ static int DRAW_TRAP = -1;
 
 // array allows multiple keys/modifiers pressed at one time
 static int scan_codes[16] = { 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64 };
+static void waitKeysReleased();
 
 EmuC64::EmuC64() : EmuCBM(new C64Memory())
 {
@@ -100,6 +101,7 @@ EmuC64::EmuC64() : EmuCBM(new C64Memory())
 EmuC64::~EmuC64()
 {
     delete c64memory;
+    waitKeysReleased();
 }
 
 static void ReadKeyboard()
@@ -666,4 +668,16 @@ void EmuC64::C64Memory::write(ushort addr, byte value)
     {
         io[addr - io_addr] = value;
     }
+}
+
+static void waitKeysReleased()
+{
+    bool keypressed;
+    do {
+        keypressed = false;
+        ReadKeyboard();
+        for (int i = 0; !keypressed && i < 16; ++i)
+            if ((scan_codes[i] & 127) != 64)
+                keypressed = true;
+    } while (keypressed);
 }

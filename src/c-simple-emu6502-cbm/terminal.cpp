@@ -43,7 +43,6 @@
 #include "LCDDraw.h"
 #endif // NOT _WINDOWS
 
-
 #ifdef M5STACK
 const int cols = 40;
 const int rows = 30;
