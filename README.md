@@ -1,5 +1,9 @@
 # M5Core C64 with GO 128 #
 
+>
+> *TLDR; This is an outdated version, fast-forward to [Unified](https://github.com/davervw/c-simple-emu6502-cbm/tree/unified#unified---commodore-and-minimal-6502-emulator-for-various-targets) to see the latest changes*
+>
+
 ![GO 128](media/c128_on_m5.png)
 
 Features include rendering full color screen on M5Core LCD and supporting multiple Core models with a define change in M5Core.h.  60 times a second IRQ implemented to blink cursor. Requires SD support for roms and .D64/1541 floppy emulation, tested with Core2 and CoreS3 (must change defines in local M5Core.h).   GO 128 and GO 64 switch back and forth.
