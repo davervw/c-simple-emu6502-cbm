@@ -10,4 +10,4 @@ This is a static snapshot of the m5 project supporting an M5Stick-C without SD/D
 
 Open browser-keyscan-helper/index.html to run an adapter with instructions how to use a keyboard via serial from a desktop web browser (e.g. Chrome). 
 
-Better yet, use this model assisting as a BLE keyboard for a higher resolution model
+Better yet, use this model assisting as a [BLE keyboard](https://github.com/davervw/c-simple-emu6502-cbm/tree/unified/src/BLE_commodore_keyboard_server) for a higher resolution model
