@@ -34,6 +34,8 @@
 #include "emucbm.h"
 #include "terminal.h"
 
+//#include "dprintf.h"
+
 #ifdef _WINDOWS
 #include <memory.h>
 #include "WindowsDraw.h"
@@ -113,6 +115,7 @@ Terminal::~Terminal()
 
 void Terminal::write(char c)
 {
+	//dprintf("terminal.write %02X\n", c);
 	write_internal(' ');
 	backspace();
 	write_internal(c);
@@ -122,7 +125,7 @@ void Terminal::write(char c)
 
 void Terminal::write_internal(char c)
 {
-	if (c < 0)
+	if (c & 0x80)
 		return;
 	if (c == '\r')
 	{
@@ -145,10 +148,12 @@ void Terminal::write_internal(char c)
 		backspace();
 		return;
 	}
-	else if (c == 12) {
-		clearScreen();
+	else if (c == 11) {
+		upline();
 		return;
 	}
+	else if (c == 12)
+		c = ' '; // TODO: cursor right // TODO: option for clearscreen?
 	byte* image = &chargen[c * 8];
 	videoBuffer[y * cols + x] = c;
 #ifdef _WINDOWS
@@ -167,7 +172,10 @@ void Terminal::write_internal(char c)
 
 bool Terminal::read(char& c)
 {
-	return keyboard->read(c);
+	bool result = keyboard->read(c);
+	//if (result)
+	//	dprintf("Terminal.read %02X\n", c);
+	return result;
 }
 
 bool Terminal::readWaiting()
@@ -212,6 +220,12 @@ void Terminal::newline()
 		scrollup();
 		y = rows - 1;
 	}
+}
+
+void Terminal::upline()
+{
+	if (y > 0)
+		--y;
 }
 
 void Terminal::scrollup()

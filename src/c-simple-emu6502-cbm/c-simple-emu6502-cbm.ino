@@ -233,11 +233,13 @@ void loop() {
     emu = new EmuVic20(5);
   // else if (main_go_num == 2001)
   //   emu = new EmuPET(32);
-  else if (main_go_num == 0)
+  else if (main_go_num == 0) {
+    Terminal::crnlmode = Terminal::NEWLINE_ONLY;
     emu = new EmuTest();
-  else if (main_go_num == 1)
+  } else if (main_go_num == 1) {
+    Terminal::crnlmode = Terminal::CARRIAGE_RETURN_ONLY;
     emu = new EmuMinimum("/roms/minimum/testmin.bin", 0xFFF8);
-  else
+  } else
     emu = new EmuC64();
   emu->ResetRun();
   delete emu;

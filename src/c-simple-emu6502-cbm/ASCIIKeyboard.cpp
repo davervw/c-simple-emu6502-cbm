@@ -31,6 +31,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 //#include "dprintf.h"
+
 #include "ASCIIKeyboard.h"
 #include "C128ScanCode.h"
 #ifndef _WINDOWS
@@ -91,18 +92,18 @@ static const char scan_to_ascii[4][88] = {
 	{
 		127, 13, '\xff', '\xff', '\xff', '\xff', '\xff', '\xff',
 		'\xff', 23, 1, '\xff', 26, 19, 5, '\xff',
-		'\xff', 18, 4, '\xff', 3, 6, 20, 24,
+		'\xff', 18, 4, 30, 3, 6, 20, 24,
 		'\xff', 25, 7, '\xff', 2, 8, 21, 22,
 		'\xff', 9, 10, '\xff', 13, 11, 15, 14,
-		'\xff', 16, 12, '\xff', '\xff', '\xff', 0, '\xff',
-		'\xff', '\xff', '\xff', '\xff', '\xff', '\xff', '\xff', '\xff',
-		'\xff', '\xff', '\xff', 0, '\xff', '\xff', 17, '\xff',
+		'\xff', 16, 12, 31, '\xff', 27, 0, '\xff',
+		28, '\xff', 29, 12, '\xff', '\xff', 30, 127,
+		'\xff', 31, '\xff', 0, '\xff', '\xff', 17, '\xff',
 		'\xff', '\xff', '\xff', '\xff', '\xff', '\xff', '\xff', '\xff',
 		'\xff', '\xff', '\xff', '\xff', '\xff', '\xff', '\xff', '\xff',
 		'\xff', '\xff', '\xff', '\xff', '\xff', '\xff', '\xff', '\xff',
 	},
 	{
-		'\xff', '\xff', '\xff', '\xff', '\xff', '\xff', '\xff', '\xff',
+		'\xff', 13, '\xff', '\xff', '\xff', '\xff', '\xff', '\xff',
 		'\xff', '}', '\xff', '\xff', '\xff', '\xff', '~', '\xff',
 		'\xff', '`', '\xff', '\xff', '\xff', '\xff', '\xff', '\xff',
 		'\xff', '\xff', '\xff', '\xff', '\xff', '\xff', '\xff', '\xff',
@@ -240,19 +241,20 @@ static void pushKey(int scan_code)
 	char ascii = '\xff';
 	if (shiftState == ShiftState::None)
 		ascii = scan_to_ascii[0][scan_code];
-	else if (shiftState == ShiftState::Shift)
+	else if ((shiftState & ShiftState::Shift) && !(shiftState & (ShiftState::Control|ShiftState::Commodore)))
 		ascii = scan_to_ascii[1][scan_code];
-	else if (shiftState == ShiftState::Control)
+	else if (shiftState & ShiftState::Control)
 		ascii = scan_to_ascii[2][scan_code];
-	else if (shiftState == ShiftState::Commodore)
+	else if (shiftState & ShiftState::Commodore)
 		ascii = scan_to_ascii[3][scan_code];
-	if (ascii < 0)
+	if (ascii & 0x80)
 		return;
 	if ((buffer_tail + 1) % buffer_count == buffer_head)
 		return;
-  if (caps && ascii >= 'a' && ascii <= 'z')
-    ascii = ascii - 'a' + 'A';
+	if (caps && ascii >= 'a' && ascii <= 'z')
+		ascii = ascii - 'a' + 'A';
 	buffer[buffer_tail] = ascii;
+	//dprintf("ASCIIKeyboard.pushKey %02X\n", ascii);
 	if (++buffer_tail == buffer_count)
 		buffer_tail = 0;
 }

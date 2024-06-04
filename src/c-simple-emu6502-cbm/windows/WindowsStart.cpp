@@ -57,7 +57,7 @@ void WindowsStart(HWND hWnd, bool& shuttingDown)
 				system = new EmuTest(); 
 				break;
 			case 1:
-				Terminal::crnlmode = Terminal::NEWLINE_ONLY;
+				Terminal::crnlmode = Terminal::CARRIAGE_RETURN_ONLY;
 				system = new EmuMinimum("/roms/minimum/testmin.bin", 0xFFF8);
 				break;
 			case 20: 

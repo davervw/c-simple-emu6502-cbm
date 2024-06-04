@@ -101,6 +101,7 @@ private:
 	void home();
 	void carriagereturn();
 	void newline();
+	void upline();
 	void backspace();
 	void scrollup();
 	void write_internal(char c);

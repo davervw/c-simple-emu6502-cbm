@@ -30,6 +30,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+//#include "dprintf.h"
+
 #include "mc6850.h"
 #include "ICharInput.h"
 #include "ICharOutput.h"
@@ -58,8 +60,10 @@ byte MC6850::read_data()
 		|| control.mode == MODE::b7o2
 		)
 		data = data & 0x7F; // TODO: parity
-	if (hasdata)
+	if (hasdata) {
+		//dprintf("MC6850.read_data %02X\n", data);
 		clear_receive_data_register_full();
+	}
 
 	// standardize backspace so firmware can be consistent
 	if (data == 0x7F)
@@ -70,6 +74,8 @@ byte MC6850::read_data()
 
 void MC6850::write_data(byte value)
 {
+	//dprintf("MC6850.write_data %02X\n", value);
+
 	if (control.clk == CLOCK::RESET)
 		return; // require configuration
 
@@ -82,12 +88,7 @@ void MC6850::write_data(byte value)
 		value &= 0x7F;
 	}
 
-	if (value == '\n')
-		output->write('\r'); // insert carriage return before newline
-	if (value >= ' ' || value == '\r' || value == '\n' || value == 8 || value == 7) // skip most other control codes
-		output->write(value);
-	if (value == '\r')
-		output->write('\n'); // add newline after carriage return
+	output->write(value);
 
 	clear_irq();
 	clear_transmit_data_register_empty();
