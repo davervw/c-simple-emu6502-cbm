@@ -119,13 +119,16 @@ static KeyMap WindowsToC128[] = { // TODO: handle SHIFT, etc. cases for key comb
 	{ NONE, VK_OEM_MINUS, SCAN_CODE_MINUS },
 	{ NONE, '.' + 0x90, SCAN_CODE_PERIOD},
 	//{ NONE, VK_OEM_1, SCAN_CODE_COLON },
+	{ ANYSHIFT, VK_OEM_4 , C128ScanCode(SCAN_CODE_Q | SCAN_CODE_FLAG_FORCE_COMMODORE | SCAN_CODE_FLAG_FORCE_NOSHIFT) },
 	{ NONE, VK_OEM_4 , C128ScanCode(SCAN_CODE_COLON | SCAN_CODE_FLAG_FORCE_SHIFT) },
 	//{ NONE, VK_NUMPAD2, SCAN_CODE_AT },
 	{ NONE, ',' + 0x90, SCAN_CODE_COMMA },
+	{ ANYSHIFT, VK_OEM_5 , C128ScanCode(SCAN_CODE_MINUS | SCAN_CODE_FLAG_FORCE_COMMODORE | SCAN_CODE_FLAG_FORCE_NOSHIFT) },
 	{ NONE, VK_OEM_5, SCAN_CODE_POUND },
 	//{ NONE, '*', SCAN_CODE_ASTERISK },
 	{ ANYSHIFT, VK_OEM_1, C128ScanCode(SCAN_CODE_COLON | SCAN_CODE_FLAG_FORCE_NOSHIFT) },
 	{ NONE, VK_OEM_1, SCAN_CODE_SEMICOLON },
+	{ ANYSHIFT, VK_OEM_6, C128ScanCode(SCAN_CODE_W | SCAN_CODE_FLAG_FORCE_COMMODORE | SCAN_CODE_FLAG_FORCE_NOSHIFT) },
 	{ NONE, VK_OEM_6, C128ScanCode(SCAN_CODE_SEMICOLON | SCAN_CODE_FLAG_FORCE_SHIFT) },
 	{ NONE, VK_HOME, SCAN_CODE_HOME },
 	{ NONE, VK_RSHIFT, SCAN_CODE_RSHIFT },
@@ -170,7 +173,9 @@ static KeyMap WindowsToC128[] = { // TODO: handle SHIFT, etc. cases for key comb
 	{ NONE, VK_RIGHT, SCAN_CODE_CURSOR_RIGHT },
 	{ NONE, VK_SCROLL, SCAN_CODE_NO_SCROLL },
 	{ NONE, VK_PAUSE, SCAN_CODE_NO_SCROLL },
-	{ NONE, VK_PRIOR, (C128ScanCode)(SCAN_CODE_NO_KEY | SCAN_CODE_FLAG_RESTORE) }
+	{ NONE, VK_PRIOR, (C128ScanCode)(SCAN_CODE_NO_KEY | SCAN_CODE_FLAG_RESTORE) },
+	{ ANYSHIFT, VK_OEM_3, (C128ScanCode)(SCAN_CODE_E | SCAN_CODE_FLAG_FORCE_COMMODORE | SCAN_CODE_FLAG_FORCE_NOSHIFT) },
+	{ NONE, VK_OEM_3, (C128ScanCode)(SCAN_CODE_R | SCAN_CODE_FLAG_FORCE_COMMODORE) },
 };
 
 static C128ScanCode find_scan_code_by_windows_key(WPARAM key, LPARAM lParam)
@@ -178,7 +183,9 @@ static C128ScanCode find_scan_code_by_windows_key(WPARAM key, LPARAM lParam)
 	const int limit = sizeof(WindowsToC128) / sizeof(*WindowsToC128);
 	for (int i = 0; i < limit; ++i) {
 		if ((WindowsToC128[i].state & shiftState) == WindowsToC128[i].state && WindowsToC128[i].vkey == key) {
-			return WindowsToC128[i].code;
+			C128ScanCode code = WindowsToC128[i].code;
+			//{ wchar_t buffer[80]{}; _snwprintf_s(buffer, sizeof(buffer), _T("code %04X\n"), code); OutputDebugStringW(buffer); }
+			return code;
 		}
 	}
 	return SCAN_CODE_NO_KEY;
@@ -188,6 +195,9 @@ void static append_scan_code(C128ScanCode code)
 {
 	static const int limit = sizeof(scan_codes) / sizeof(*scan_codes) - 1; // reserve one for shift
 
+	bool forceCommodore = ((int)code & (int)C128ScanCode::SCAN_CODE_FLAG_FORCE_COMMODORE) != 0;
+	if (forceCommodore)
+		code = (C128ScanCode)(code ^ (int)C128ScanCode::SCAN_CODE_FLAG_FORCE_COMMODORE);
 	bool forceShift = ((int)code & (int)C128ScanCode::SCAN_CODE_FLAG_FORCE_SHIFT) != 0;
 	if (forceShift)
 		code = (C128ScanCode)(code ^ (int)C128ScanCode::SCAN_CODE_FLAG_FORCE_SHIFT);
@@ -205,11 +215,13 @@ void static append_scan_code(C128ScanCode code)
 		++i;
 	if (i < limit && scan_codes[i] == SCAN_CODE_NO_KEY) {
 		scan_codes[i] = code;
-		//{wchar_t buffer[80]{};_snwprintf_s(buffer, sizeof(buffer), _T("scan code %04X\n"), code);OutputDebugStringW(buffer);}
+		//{wchar_t buffer[80]{};_snwprintf_s(buffer, sizeof(buffer), _T("scan code %04X %d%d%d\n"), code, forceCommodore, forceShift, forceUnshift);OutputDebugStringW(buffer);}
 		if (forceShift)
 			scan_codes[limit] = SCAN_CODE_LSHIFT;
 		if (forceUnshift && (scan_codes[0] == SCAN_CODE_LSHIFT || scan_codes[0] == SCAN_CODE_RSHIFT))
 			scan_codes[0] = SCAN_CODE_NO_KEY;
+		if (forceCommodore)
+			scan_codes[limit] = SCAN_CODE_COMMODORE;
 	}
 }
 
@@ -217,6 +229,9 @@ void static release_scan_code(C128ScanCode code)
 {
 	static const int limit = sizeof(scan_codes) / sizeof(*scan_codes) - 1;
 
+	bool forceCommodore = ((int)code & (int)C128ScanCode::SCAN_CODE_FLAG_FORCE_COMMODORE) != 0;
+	if (forceCommodore)
+		code = (C128ScanCode)(code ^ (int)SCAN_CODE_FLAG_FORCE_COMMODORE);
 	bool forceShift = ((int)code & (int)SCAN_CODE_FLAG_FORCE_SHIFT) != 0;
 	if (forceShift)
 		code = (C128ScanCode)(code ^ (int)SCAN_CODE_FLAG_FORCE_SHIFT);
@@ -229,7 +244,7 @@ void static release_scan_code(C128ScanCode code)
 		++i;
 	if (i < limit) {
 		scan_codes[i] = SCAN_CODE_NO_KEY;
-		if (forceShift)
+		if (forceShift || forceCommodore)
 			scan_codes[limit] = SCAN_CODE_NO_KEY;
 		if (forceUnshift && (shiftState & ANYSHIFT)) // push shift back into buffer
 		{

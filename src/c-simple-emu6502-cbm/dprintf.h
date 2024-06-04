@@ -44,5 +44,5 @@ void wprintf(_Printf_format_string_ const char* fmt, Args... args)
 	OutputDebugStringA(buffer);
 }
 #else
-#define PRINTF printf
+#define dprintf printf
 #endif

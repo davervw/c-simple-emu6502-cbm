@@ -48,6 +48,7 @@ typedef enum _ShiftState {
 	None = 0,
 	Shift = 1,
 	Control = 2,
+	Commodore = 4,
 } ShiftState;
 
 static const int buffer_count = 10;
@@ -60,7 +61,7 @@ static int scan_codes[scan_codes_count];
 static int last_scan_code;
 static ShiftState shiftState = ShiftState::None;
 
-static const char scan_to_ascii[3][88] = {
+static const char scan_to_ascii[4][88] = {
 	{
 		127, '\r', '\xff', '\xff', '\xff', '\xff', '\xff', '\xff',
 		'3', 'w', 'a', '4', 'z', 's', 'e', '\xff',
@@ -96,6 +97,19 @@ static const char scan_to_ascii[3][88] = {
 		'\xff', 16, 12, '\xff', '\xff', '\xff', 0, '\xff',
 		'\xff', '\xff', '\xff', '\xff', '\xff', '\xff', '\xff', '\xff',
 		'\xff', '\xff', '\xff', 0, '\xff', '\xff', 17, '\xff',
+		'\xff', '\xff', '\xff', '\xff', '\xff', '\xff', '\xff', '\xff',
+		'\xff', '\xff', '\xff', '\xff', '\xff', '\xff', '\xff', '\xff',
+		'\xff', '\xff', '\xff', '\xff', '\xff', '\xff', '\xff', '\xff',
+	},
+	{
+		'\xff', '\xff', '\xff', '\xff', '\xff', '\xff', '\xff', '\xff',
+		'\xff', '}', '\xff', '\xff', '\xff', '\xff', '~', '\xff',
+		'\xff', '`', '\xff', '\xff', '\xff', '\xff', '\xff', '\xff',
+		'\xff', '\xff', '\xff', '\xff', '\xff', '\xff', '\xff', '\xff',
+		'\xff', '\xff', '\xff', '\xff', '\xff', '\xff', '\xff', '\xff',
+		'\xff', '\xff', '\xff', '|', '\xff', '\xff', '\xff', '\xff',
+		'\xff', '\xff', '\xff', '\xff', '\xff', '\xff', '\xff', '\xff',
+		'\xff', '\xff', '\xff', '\xff', '\xff', '\xff', '{', '\xff',
 		'\xff', '\xff', '\xff', '\xff', '\xff', '\xff', '\xff', '\xff',
 		'\xff', '\xff', '\xff', '\xff', '\xff', '\xff', '\xff', '\xff',
 		'\xff', '\xff', '\xff', '\xff', '\xff', '\xff', '\xff', '\xff',
@@ -135,6 +149,8 @@ static void calculateShiftState()
 			shiftState = ShiftState(shiftState | ShiftState::Shift);
 		if (scan_code == SCAN_CODE_CTRL)
 			shiftState = ShiftState(shiftState | ShiftState::Control);
+		if (scan_code == SCAN_CODE_COMMODORE)
+			shiftState = ShiftState(shiftState | ShiftState::Commodore);
 	}
 }
 
@@ -145,7 +161,7 @@ static int calculateScanCode()
 	while (!found && counter < 88) {
 		for (int i = 0; i < scan_codes_count; ++i) {
 			int scan_code = scan_codes[i];
-			if (scan_code == counter && scan_code != SCAN_CODE_LSHIFT && scan_code != SCAN_CODE_RSHIFT && scan_code != SCAN_CODE_CTRL)
+			if (scan_code == counter && scan_code != SCAN_CODE_LSHIFT && scan_code != SCAN_CODE_RSHIFT && scan_code != SCAN_CODE_CTRL && scan_code != SCAN_CODE_COMMODORE)
 			{
 				found = true;
 				break;
@@ -154,6 +170,7 @@ static int calculateScanCode()
 		if (!found)
 			++counter;
 	}
+	//if (counter != 88) dprintf("scan code %d\n", counter);
 	return counter;
 }
 
@@ -221,12 +238,14 @@ void pollKeyboard()
 static void pushKey(int scan_code)
 {
 	char ascii = '\xff';
-	if (shiftState == 0)
+	if (shiftState == ShiftState::None)
 		ascii = scan_to_ascii[0][scan_code];
-	else if (shiftState & ShiftState::Shift)
+	else if (shiftState == ShiftState::Shift)
 		ascii = scan_to_ascii[1][scan_code];
-	else if (shiftState & ShiftState::Control)
+	else if (shiftState == ShiftState::Control)
 		ascii = scan_to_ascii[2][scan_code];
+	else if (shiftState == ShiftState::Commodore)
+		ascii = scan_to_ascii[3][scan_code];
 	if (ascii < 0)
 		return;
 	if ((buffer_tail + 1) % buffer_count == buffer_head)
