@@ -74,7 +74,7 @@ EmuCBM::~EmuCBM()
 {
 }
 
-EmuD64* EmuCBM::GetDisk()
+EmuD64* EmuCBM::GetDisk() const
 {
   if (FileDev == 0 || FileDev == 1)
     return disks[0];

@@ -39,7 +39,7 @@
 #include "../emumin.h"
 #include "WindowsStart.h"
 
-int main_go_num = 64;
+int main_go_num = 1;
 const char* StartupPRG = 0;
 HWND hWnd;
 
@@ -58,7 +58,7 @@ void WindowsStart(HWND hWnd, bool& shuttingDown)
 				break;
 			case 1:
 				Terminal::crnlmode = Terminal::CARRIAGE_RETURN_ONLY;
-				system = new EmuMinimum("/roms/minimum/testmin.bin", 0xFFF8);
+				system = new EmuMinimum(0xFFF8);
 				break;
 			case 20: 
 				system = new EmuVic20(40); 

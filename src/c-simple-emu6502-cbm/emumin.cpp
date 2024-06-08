@@ -33,7 +33,20 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "emucbm.h"
-//#include "dprintf.h"
+#include "dprintf.h"
+
+#ifdef _WINDOWS
+#include "WindowsFile.h"
+#include "WindowsTime.h"
+#else // NOT _WINDOWS
+#include "config.h"
+#include <FS.h>
+#ifdef ARDUINO_LILYGO_T_DISPLAY_S3
+#include "FFat.h"
+#else // NOT ARDUINO_LILYGO_T_DISPLAY_S3
+#include <SD.h>
+#endif // NOT ARDUINO_LILYGO_T_DISPLAY_S3
+#endif // NOT _WINDOWS
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -43,8 +56,10 @@
 
 extern int main_go_num;
 
-EmuMinimum::EmuMinimum(const char* filename, ushort serialaddr)
-	: Emu6502(new MinimumMemory(filename, serialaddr))
+static const char* getFilename(Terminal* terminal);
+
+EmuMinimum::EmuMinimum(ushort serialaddr) // TODO: prompt for ROM filename from list
+	: Emu6502(new MinimumMemory(serialaddr))
 {
 	//dprintf("RAM=%d ROM=%d\r\n", ((MinimumMemory*)memory)->getramsize(), ((MinimumMemory*)memory)->getromsize());
 	//trace = true;
@@ -75,10 +90,11 @@ void EmuMinimum::SetMemory(ushort addr, byte value)
 	memory->write(addr, value);
 }
 
-MinimumMemory::MinimumMemory(const char* filename, ushort serialaddr)
+MinimumMemory::MinimumMemory(ushort serialaddr)
 {
 	terminal = new Terminal();
 	uart = new MC6850(terminal, terminal);
+	const char* filename = getFilename(terminal);
 	this->ramsize = ramsize;
 	this->romsize = romsize;
 	this->serialaddr = serialaddr;
@@ -123,12 +139,104 @@ void MinimumMemory::write(ushort addr, byte value)
 		main_go_num = value;
 }
 
-unsigned MinimumMemory::getramsize()
+unsigned MinimumMemory::getramsize() const
 {
 	return ramsize;
 }
 
-unsigned MinimumMemory::getromsize()
+unsigned MinimumMemory::getromsize() const
 {
 	return romsize;
+}
+
+static bool isBin(const char* name)
+{
+	if (name == 0)
+		return false;
+	auto len = strlen(name);
+	if (len < 4)
+		return false;
+	return 
+#ifdef _WINDOWS
+		_strcmpi(name + len - 4, ".bin") == 0;
+#else
+		String(name + len - 4).equalsIgnoreCase(String(".bin"));
+#endif
+}
+
+static const char* getFilename(Terminal* terminal)
+{
+	const char* chosenFilename = "/roms/minimum/testmin.bin";
+
+	File dir = SD.open("/roms/minimum");
+	if (!dir)
+		return chosenFilename;
+	File entry = dir.openNextFile();
+	int i = 0;
+	while (entry)
+	{
+		if (!entry.isDirectory() && isBin(entry.name())) {
+			char buffer[80];      
+			snprintf(buffer, sizeof(buffer), "%d. %s %d(%X) bytes\r", ++i, entry.name(), entry.size(), entry.size());
+			dprintf("%s", buffer);
+			terminal->write(buffer);
+#ifdef _WINDOWS      
+			terminal->CheckPaintFrame(micros());
+#endif      
+		}
+		entry.close();
+		entry = dir.openNextFile();
+	}
+	dir.close();
+
+	if (i == 0)
+		return chosenFilename;
+
+	terminal->write("Choice? ");
+
+	int n = 0;
+	while (true) {
+		char c;
+		if (!terminal->read(c)) {
+#ifdef _WINDOWS      
+			terminal->CheckPaintFrame(micros());
+#endif
+			continue;
+		}
+		n = 0;
+		if (c >= '1' && c <= '9')
+			n = c - '0';
+		if (c == '0')
+			n = 10;
+		if (n >= 1 && n <= i) {
+			terminal->write(c);
+			terminal->write('\r');
+			break;
+		}
+	}
+
+	const char* dirname = "/roms/minimum";
+	dir = SD.open(dirname);
+	if (!dir)
+		return chosenFilename;
+	entry = dir.openNextFile();
+	i = 0;
+	bool found = false;
+	while (entry && !found)
+	{
+		if (!entry.isDirectory() && isBin(entry.name()) && ++i == n) {
+			static char buffer[80];
+			snprintf(buffer, sizeof(buffer), "%s/%s", dirname, entry.name());
+			chosenFilename = buffer;
+			found = true;
+		}
+		entry.close();
+		entry = dir.openNextFile();
+	}
+	dir.close();
+
+	terminal->write('\r');
+	terminal->write(chosenFilename);
+	terminal->write('\r');
+	return chosenFilename;
 }

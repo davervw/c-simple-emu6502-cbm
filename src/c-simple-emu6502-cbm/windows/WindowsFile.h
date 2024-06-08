@@ -32,25 +32,39 @@
 
 #pragma once
 
+#include "framework.h"
+
 typedef enum _FILEMODE { FILE_READ = 'r', FILE_WRITE = 'w' } FILEMODE;
 
 class File
 {
+private:
 	int fd;
+	char* _name;
+	LPWIN32_FIND_DATAA findFileData;
+	HANDLE hFind;
+	bool firstFile;
+	bool closed;
+
 public:
-	File(const char* filename, FILEMODE mode);
-	operator bool() const { return fd != -1; }
+	File(const char* filename, FILEMODE mode = FILE_READ);
+	~File();
+	operator bool() const { return fd != -1 || hFind != INVALID_HANDLE_VALUE; }
 	void read(unsigned char* buffer, int size);
 	void write(const unsigned char* buffer, int size);
 	void seek(int offset);
 	void close();
 	int size();
+	const char* name();
+
+	bool isDirectory(void) const;
+	File openNextFile();
 };
 
 class FS
 {
 public:
-	File open(const char* filename, FILEMODE mode);
+	File open(const char* filename, FILEMODE mode = FILE_READ);
 	bool mkdir(const char* path);
 };
 

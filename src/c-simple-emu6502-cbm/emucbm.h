@@ -52,7 +52,7 @@ protected:
   ushort FileAddr;
 
 protected:
-  EmuD64* GetDisk();
+  EmuD64* GetDisk() const;
   byte* OpenRead(const char* filename, int* p_ret_file_len);
   bool FileLoad(byte* p_err);
   bool FileSave(const char* filename, ushort addr1, ushort addr2);
