@@ -39,11 +39,11 @@
 #include "../emumin.h"
 #include "WindowsStart.h"
 
-int main_go_num = 1;
+int main_go_num = 64;
 const char* StartupPRG = 0;
 HWND hWnd;
 
-void WindowsStart(HWND hWnd, bool& shuttingDown)
+void WindowsStart(HWND hWnd, bool& shuttingDown) // TODO: common start for Windows and Arduino
 {
 	::hWnd = hWnd;
 
