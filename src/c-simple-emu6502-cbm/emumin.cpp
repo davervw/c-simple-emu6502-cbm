@@ -248,7 +248,9 @@ static char* getFilename(Terminal* terminal)
 
     unsigned long start = micros();
     while (true) {
+#ifdef _WINDOWS
         terminal->CheckPaintFrame(micros());
+#endif
         delay(20);
         if ((micros() - start) >= 2000000)
             break;
