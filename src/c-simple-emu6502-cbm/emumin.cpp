@@ -33,7 +33,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "emucbm.h"
-#include "dprintf.h"
+//#include "dprintf.h"
 
 #ifdef _WINDOWS
 #include "WindowsFile.h"
@@ -56,187 +56,185 @@
 
 extern int main_go_num;
 
-static const char* getFilename(Terminal* terminal);
+static char* getFilename(Terminal* terminal);
 
 EmuMinimum::EmuMinimum(ushort serialaddr) // TODO: prompt for ROM filename from list
-	: Emu6502(new MinimumMemory(serialaddr))
+    : Emu6502(new MinimumMemory(serialaddr))
 {
-	//dprintf("RAM=%d ROM=%d\r\n", ((MinimumMemory*)memory)->getramsize(), ((MinimumMemory*)memory)->getromsize());
-	//trace = true;
-	sixty_hz_irq = false;
-	main_go_num = -1;
+    //dprintf("RAM=%d ROM=%d\r\n", ((MinimumMemory*)memory)->getramsize(), ((MinimumMemory*)memory)->getromsize());
+    //trace = true;
+    sixty_hz_irq = false;
+    main_go_num = -1;
 }
 
 EmuMinimum::~EmuMinimum()
 {
-	delete memory;
+    delete memory;
 }
 
 bool EmuMinimum::ExecutePatch()
 {
-	if (main_go_num >= 0)
-		quit = true;
-	((MinimumMemory*)memory)->CheckPaintFrame(timer_now);
-	return false;
+    if (main_go_num >= 0)
+        quit = true;
+    ((MinimumMemory*)memory)->CheckPaintFrame(timer_now);
+    return false;
 }
 
 byte EmuMinimum::GetMemory(ushort addr)
 {
-	return memory->read(addr);
+    return memory->read(addr);
 }
 
 void EmuMinimum::SetMemory(ushort addr, byte value)
 {
-	memory->write(addr, value);
+    memory->write(addr, value);
 }
 
 MinimumMemory::MinimumMemory(ushort serialaddr)
 {
-	terminal = new Terminal();
-	uart = new MC6850(terminal, terminal);
-	const char* filename = getFilename(terminal);
-	this->ramsize = ramsize;
-	this->romsize = romsize;
-	this->serialaddr = serialaddr;
-	unsigned maxram = 0x10000;
-	ram = new unsigned char[maxram]; // allocate full 64K
-	memset(ram, 0, maxram);
-	romsize = EmuCBM::File_ReadAllBytes(ram, maxram, filename);
-	romaddr = (ushort)(0x10000 - romsize); // rom loads from end of memory, assumes sized correctly
+    terminal = new Terminal();
+    uart = new MC6850(terminal, terminal);
+    this->serialaddr = serialaddr;
+    unsigned maxram = 0x10000;
+    ram = new unsigned char[maxram]; // allocate full 64K
+    memset(ram, 0, maxram);
+    char* filename = getFilename(terminal);
+    romsize = EmuCBM::File_ReadAllBytes(ram, maxram, filename);
+    filename = 0;
+    romaddr = (ushort)(0x10000 - romsize); // rom loads from end of memory, assumes sized correctly
 #ifdef WINDOWS
-	memmove_s(&ram[romaddr], romsize, ram, romsize);
+    memmove_s(&ram[romaddr], romsize, ram, romsize);
 #else
-	memmove(&ram[romaddr], ram, romsize);
+    memmove(&ram[romaddr], ram, romsize);
 #endif
-	ramsize = romaddr;
-	memset(ram, 0, ramsize);
+    ramsize = romaddr;
+    memset(ram, 0, ramsize);
 }
 
 MinimumMemory::~MinimumMemory()
 {
-	delete[] ram;
-	delete terminal;
+    delete[] ram;
+    delete terminal;
 }
 
 byte MinimumMemory::read(ushort addr)
 {
-	if (addr == serialaddr)
-		return uart->read_data();
-	if (addr == serialaddr + 1)
-		return uart->read_status();
-	return ram[addr];
+    if (addr == serialaddr)
+        return uart->read_data();
+    if (addr == serialaddr + 1)
+        return uart->read_status();
+    return ram[addr];
 }
 
 void MinimumMemory::write(ushort addr, byte value)
 {
-	if (addr == serialaddr)
-		uart->write_data(value);
-	else if (addr == serialaddr + 1)
-		uart->write_control(value);
-	else if (addr < ramsize)
-		ram[addr] = value;
-	else if (addr == 0xFFFF)
-		main_go_num = value;
+    if (addr == serialaddr)
+        uart->write_data(value);
+    else if (addr == serialaddr + 1)
+        uart->write_control(value);
+    else if (addr < ramsize)
+        ram[addr] = value;
+    else if (addr == 0xFFFF)
+        main_go_num = value;
 }
 
 unsigned MinimumMemory::getramsize() const
 {
-	return ramsize;
+    return ramsize;
 }
 
 unsigned MinimumMemory::getromsize() const
 {
-	return romsize;
+    return romsize;
 }
 
 static bool isBin(const char* name)
 {
-	if (name == 0)
-		return false;
-	auto len = strlen(name);
-	if (len < 4)
-		return false;
-	return 
+    if (name == 0)
+        return false;
+    auto len = strlen(name);
 #ifdef _WINDOWS
-		_strcmpi(name + len - 4, ".bin") == 0;
+    if (_strcmpi(name, "asciifont.bin") == 0)
 #else
-		String(name + len - 4).equalsIgnoreCase(String(".bin"));
+    if (String(name).equalsIgnoreCase("asciifont.bin"))
+#endif
+        return false;
+    if (len < 4)
+        return false;
+#ifdef _WINDOWS
+    return _strcmpi(name + len - 4, ".bin") == 0;
+#else
+    return String(name + len - 4).equalsIgnoreCase(String(".bin"));
 #endif
 }
 
-static const char* getFilename(Terminal* terminal)
+static char* getFilename(Terminal* terminal)
 {
-	const char* chosenFilename = "/roms/minimum/testmin.bin";
+    static char chosenFilename[80];
+    snprintf(chosenFilename, sizeof(chosenFilename), "%s", "/roms/minimum/testmin.bin");
+    char* dirFilenames[10]{};
+    int i;
 
-	File dir = SD.open("/roms/minimum");
-	if (!dir)
-		return chosenFilename;
-	File entry = dir.openNextFile();
-	int i = 0;
-	while (entry)
-	{
-		if (!entry.isDirectory() && isBin(entry.name())) {
-			char buffer[80];      
-			snprintf(buffer, sizeof(buffer), "%d. %s %d(%X) bytes\r", ++i, entry.name(), entry.size(), entry.size());
-			dprintf("%s", buffer);
-			terminal->write(buffer);
+    for (i = 0; i < 10; ++i)
+        dirFilenames[i] = 0;
+    const char* directoryPath = "/roms/minimum";
+    File dir = SD.open(directoryPath);
+    if (!dir)
+        return chosenFilename;
+    File entry = dir.openNextFile();
+    i = 0;
+    while (entry && i < 9)
+    {
+        if (!entry.isDirectory() && isBin(entry.name())) {
+            char buffer[80];      
+            snprintf(buffer, sizeof(buffer), "%d. %s %d(%X) bytes\r", ++i, entry.name(), entry.size(), entry.size());
+            terminal->write(buffer);
+
+            snprintf(buffer, sizeof(buffer), "%s/%s", directoryPath, entry.name());
 #ifdef _WINDOWS      
-			terminal->CheckPaintFrame(micros());
+            dirFilenames[i] = _strdup(buffer);
+            terminal->CheckPaintFrame(micros());
+#else
+            dirFilenames[i] = strdup(buffer);
 #endif      
-		}
-		entry.close();
-		entry = dir.openNextFile();
-	}
-	dir.close();
+        }
+        entry.close();
+        entry = dir.openNextFile();
+    }
+    dir.close();
 
-	if (i == 0)
-		return chosenFilename;
+    if (i == 0)
+        return chosenFilename;
 
-	terminal->write("Choice? ");
+    terminal->write("Choice? ");
 
-	int n = 0;
-	while (true) {
-		char c;
-		if (!terminal->read(c)) {
+    int n = 0;
+    while (true) {
+        char c;
+        if (!terminal->read(c)) {
 #ifdef _WINDOWS      
-			terminal->CheckPaintFrame(micros());
+            terminal->CheckPaintFrame(micros());
 #endif
-			continue;
-		}
-		n = 0;
-		if (c >= '1' && c <= '9')
-			n = c - '0';
-		if (c == '0')
-			n = 10;
-		if (n >= 1 && n <= i) {
-			terminal->write(c);
-			terminal->write('\r');
-			break;
-		}
-	}
+            continue;
+        }
+        n = 0;
+        if (c >= '1' && c <= '9')
+            n = c - '0';
+        if (c == '0')
+            n = 10;
+        if (n >= 1 && n <= i) {
+            terminal->write(c);
+            terminal->write('\r');
+            break;
+        }
+    }
+    snprintf(chosenFilename, sizeof(chosenFilename), "%s", dirFilenames[n]);
 
-	const char* dirname = "/roms/minimum";
-	dir = SD.open(dirname);
-	if (!dir)
-		return chosenFilename;
-	entry = dir.openNextFile();
-	i = 0;
-	bool found = false;
-	while (entry && !found)
-	{
-		if (!entry.isDirectory() && isBin(entry.name()) && ++i == n) {
-			static char buffer[80];
-			snprintf(buffer, sizeof(buffer), "%s/%s", dirname, entry.name());
-			chosenFilename = buffer;
-			found = true;
-		}
-		entry.close();
-		entry = dir.openNextFile();
-	}
-	dir.close();
+    for (i = 0; i < 10; ++i)
+        free(dirFilenames[i]);
 
-	terminal->write('\r');
-	terminal->write(chosenFilename);
-	terminal->write('\r');
-	return chosenFilename;
+    terminal->write('\r');
+    terminal->write(chosenFilename);
+    terminal->write('\r');
+    return chosenFilename;
 }
