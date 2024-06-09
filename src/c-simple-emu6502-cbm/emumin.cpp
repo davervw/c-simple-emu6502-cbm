@@ -236,5 +236,15 @@ static char* getFilename(Terminal* terminal)
     terminal->write('\r');
     terminal->write(chosenFilename);
     terminal->write('\r');
+
+    unsigned long start = micros();
+    while (true) {
+        terminal->CheckPaintFrame(micros());
+        delay(20);
+        if ((micros() - start) >= 2000000)
+            break;
+    }
+    terminal->clearScreen();
+
     return chosenFilename;
 }

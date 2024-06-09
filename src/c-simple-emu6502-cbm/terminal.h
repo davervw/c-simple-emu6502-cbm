@@ -82,6 +82,7 @@ public:
 	virtual bool read(char& c);
 	virtual bool readWaiting();
 	void write(const char* s);
+	void clearScreen();
 
 	typedef enum _CRNLMODE {
 		CARRIAGE_RETURN_AND_NEWLINE = 0,
@@ -97,7 +98,6 @@ private:
 	byte* chargen;
 	char* videoBuffer;
 
-	void clearScreen();
 	void home();
 	void carriagereturn();
 	void newline();

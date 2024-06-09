@@ -42,4 +42,8 @@ unsigned long micros()
 	LONGLONG elapsedMicroseconds = now.QuadPart * 1000000 / freq.QuadPart;
 	return (unsigned long)elapsedMicroseconds;
 }
+void delay(uint32_t ms)
+{
+	Sleep(ms);
+}
 #endif

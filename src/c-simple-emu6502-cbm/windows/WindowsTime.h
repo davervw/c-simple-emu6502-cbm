@@ -32,5 +32,7 @@
 
 #pragma once
 #ifdef _WINDOWS
+#include <cstdint>
 unsigned long micros();
+void delay(uint32_t ms);
 #endif // _WINDOWS
