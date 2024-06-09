@@ -186,7 +186,7 @@ static char* getFilename(Terminal* terminal)
     while (entry && i < 9)
     {
         if (!entry.isDirectory() && isBin(entry.name())) {
-            char buffer[80];      
+            char buffer[80];
             snprintf(buffer, sizeof(buffer), "%d. %s %d(%X) bytes\r", ++i, entry.name(), entry.size(), entry.size());
             terminal->write(buffer);
 
@@ -203,8 +203,17 @@ static char* getFilename(Terminal* terminal)
     }
     dir.close();
 
-    if (i == 0)
-        return chosenFilename;
+    bool foundNone = (i == 0);
+    if (foundNone)
+        return chosenFilename; // note: probably won't work if didn't find any filenames
+
+    bool foundOnlyOne = (i == 1);
+    if (foundOnlyOne) {
+        snprintf(chosenFilename, sizeof(chosenFilename), "%s", dirFilenames[1]);
+        free(dirFilenames[1]);
+        terminal->clearScreen();
+        return chosenFilename; // no choice, no pause
+    }
 
     terminal->write("Choice? ");
 
