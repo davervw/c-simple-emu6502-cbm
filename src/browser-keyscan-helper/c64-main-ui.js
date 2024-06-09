@@ -194,6 +194,11 @@ let keyDictionary = {
     'F6': { scan: 6, shift: 1 },
     'F7': { scan: 3 },
     'F8': { scan: 3, shift: 1 },
+    '{': { scan: 62, shift: 0, commodore: 1 },
+    '}': { scan: 9, shift: 0, commodore: 1 },
+    '~': { scan: 14, shift: 0, commodore: 1 },
+    '`': { scan: 17, shift: 0, commodore: 1 },
+    '|': { scan: 43, shift: 0, commodore: 1 }, // Commodore+Minus
 };
 let keys = [];
 let last_keys = "";
@@ -309,6 +314,10 @@ function C64keyEventEx(event) {
                 && keys.indexOf(keyDictionary['ShiftRight'].scan) < 0)
                 keys.push(keyDictionary['ShiftLeft'].scan);
             break;
+    }
+    if ((key === null || key === void 0 ? void 0 : key.commodore) === 1) {
+        if (keys.indexOf(keyDictionary['AltLeft'].scan) < 0)
+            keys.push(keyDictionary['AltLeft'].scan);
     }
     // log it
     // let date = new Date();
