@@ -46,6 +46,7 @@ int WindowsDraw::borderWidth = 0;
 int WindowsDraw::borderHeight = 0;
 bool* WindowsDraw::redrawRequiredSignal;
 HWND WindowsDraw::hWnd = 0;
+byte* WindowsDraw::raw = 0;
 
 bool WindowsDraw::ReRenderTarget()
 {
@@ -60,6 +61,11 @@ bool WindowsDraw::CreateRenderTarget(int screenwidth, int screenheight, int bord
     WindowsDraw::borderHeight = borderheight;
     WindowsDraw::redrawRequiredSignal = &redrawRequiredSignal;
     redrawRequiredSignal = false;
+
+    if (raw != 0) {
+        delete[] raw;
+        raw = 0;
+    }
 
     if (render2d != 0) {
         render2d->Release();
@@ -92,7 +98,7 @@ bool WindowsDraw::CreateRenderTarget(int screenwidth, int screenheight, int bord
     bitmapProps.dpiX = 0;
     bitmapProps.dpiY = 0;
     bitmapProps.pixelFormat = pixelFormat;
-    result = render2d->CreateBitmap(D2D1::SizeU(8, 8), bitmapProps, &bitmap); // TODO: allocate bitmap for entire screen containing objects (maybe not borders)
+    result = render2d->CreateBitmap(D2D1::SizeU(screenWidth, screenHeight), bitmapProps, &bitmap); // TODO: allocate bitmap for entire screen containing objects (maybe not borders)
     if (result != S_OK) {
         OutputDebugStringA("CreateBitmap failed\n");
         return false;
@@ -101,6 +107,12 @@ bool WindowsDraw::CreateRenderTarget(int screenwidth, int screenheight, int bord
 	pixelWidth = (clientRect.right - clientRect.left) / ((float)screenWidth + borderWidth * 2);
 	pixelHeight = (clientRect.bottom - clientRect.top) / ((float)screenHeight + borderHeight * 2);
 
+    auto rawSize = screenWidth * screenHeight * 4;
+    raw = new byte[rawSize];
+    if (raw == 0)
+        return false;
+    memset(raw, 0, rawSize);
+
     //render2d->SetAntialiasMode(D2D1_ANTIALIAS_MODE_ALIASED); // TODO: disable antialias if possible
 
     return true;
@@ -108,14 +120,12 @@ bool WindowsDraw::CreateRenderTarget(int screenwidth, int screenheight, int bord
 
 void WindowsDraw::DrawCharacter2Color(const byte* image, int x, int y, byte fg_red, byte fg_green, byte fg_blue, byte bg_red, byte bg_green, byte bg_blue)
 {
-    static byte raw[8 * 8 * 4]{};
-
     const unsigned char* p = image;
     for (int pixely = 0; pixely < 8; ++pixely) {
         byte value = 0;
         int pixelx = 0;
         for (byte bit = 128; bit != 0; bit >>= 1) {
-            int i = pixely * 8 * 4 + pixelx * 4;
+			int i = (y * 8 + pixely) * screenWidth * 4 + (x * 8 + pixelx) * 4;
             if (*p & bit) {
                 value |= bit;
                 raw[i + 0] = fg_red;
@@ -133,23 +143,6 @@ void WindowsDraw::DrawCharacter2Color(const byte* image, int x, int y, byte fg_r
         }
         ++p;
     }
-
-    auto bitmapRect = D2D1::RectU(0, 0, 8, 8);
-    HRESULT result = bitmap->CopyFromMemory(&bitmapRect, raw, 8 * 4);
-    if (result != S_OK)
-        return;
-
-    float left = clientRect.left + (borderWidth + x * 8) * pixelWidth - 0.5f;
-    float right = left + 8 * pixelWidth - 0.5f;
-    float top = clientRect.top + (borderHeight + y * 8) * pixelHeight - 0.5f;
-    float bottom = top + 8 * pixelHeight - 0.5f;
-    render2d->DrawBitmap(
-        bitmap,
-        D2D1::RectF(left, top, right, bottom),
-        1.0,
-        D2D1_BITMAP_INTERPOLATION_MODE_LINEAR,
-        D2D1::RectF(0.0f, 0.0f, 8.0f, 8.0f)
-    );
 }
 
 // TODO: Synchronize BeginDraw, EndDraw with CreateRenderTarget Release, Create... to avoid conflicts, e.g. updating screen and resizing at same time ???
@@ -161,6 +154,23 @@ void WindowsDraw::BeginDraw()
 
 void WindowsDraw::EndDraw()
 {
+    auto bitmapRect = D2D1::RectU(0, 0, screenWidth, screenHeight);
+    HRESULT result = bitmap->CopyFromMemory(&bitmapRect, raw, screenWidth * 4);
+    if (result != S_OK)
+        return;
+
+    float left = clientRect.left + borderWidth * pixelWidth;
+    float right = left + screenWidth * pixelWidth;
+    float top = clientRect.top + borderHeight * pixelHeight;
+    float bottom = top + screenHeight * pixelHeight;
+    render2d->DrawBitmap(
+        bitmap,
+        D2D1::RectF(left, top, right, bottom),
+        1.0,
+        D2D1_BITMAP_INTERPOLATION_MODE_LINEAR,
+        D2D1::RectF(0.0f, 0.0f, screenWidth, screenHeight)
+    );
+
     render2d->EndDraw();
 }
 

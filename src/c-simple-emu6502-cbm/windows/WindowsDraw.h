@@ -62,4 +62,5 @@ public:
 	static int borderHeight;
 	static bool *redrawRequiredSignal;
 	static HWND hWnd;
+	static byte* raw;
 };
