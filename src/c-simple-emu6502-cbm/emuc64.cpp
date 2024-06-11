@@ -62,6 +62,7 @@
 #include <Windows.h>
 #include <stdio.h>
 #include "WindowsKeyboard.h"
+#include "WindowsTime.h"
 int static random(int max)
 {
     return (long)max * rand() / RAND_MAX;
@@ -679,5 +680,6 @@ static void waitKeysReleased()
         for (int i = 0; !keypressed && i < 16; ++i)
             if ((scan_codes[i] & 127) != 64)
                 keypressed = true;
+        delay(20);
     } while (keypressed);
 }

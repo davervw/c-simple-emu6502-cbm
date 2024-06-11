@@ -68,6 +68,7 @@
 #include "config.h"
 #ifdef _WINDOWS
 #include "WindowsKeyboard.h"
+#include "WindowsTime.h"
 #else // NOT _WINDOWS
 #include "cardkbdscan.h"
 #ifdef ARDUINO_TEENSY41
@@ -603,5 +604,6 @@ static void waitKeysReleased()
 		for (int i = 0; !keypressed && i < 16; ++i)
 			if ((scan_codes[i] & 127) != 64)
 				keypressed = true;
+		delay(20);
 	} while (keypressed);
 }

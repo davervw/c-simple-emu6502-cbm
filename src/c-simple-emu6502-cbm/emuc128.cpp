@@ -70,6 +70,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+#include "dprintf.h"
+
 #include "emuc128.h"
 #include "config.h"
 #ifdef _WINDOWS
@@ -860,5 +862,6 @@ void C128Memory::WaitKeysReleased()
         for (int i = 0; !keypressed && i < 16; ++i)
             if ((scan_codes[i] & 127) != 88)
                 keypressed = true;
+        delay(20);
     } while (keypressed);
 }

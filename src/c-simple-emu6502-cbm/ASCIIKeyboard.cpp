@@ -34,7 +34,9 @@
 
 #include "ASCIIKeyboard.h"
 #include "C128ScanCode.h"
-#ifndef _WINDOWS
+#ifdef _WINDOWS
+#include "WindowsTime.h"
+#else // NOT _WINDOWS
 #include "config.h"
 #include "cardkbdscan.h"
 #ifdef ARDUINO_TEENSY41
@@ -284,5 +286,6 @@ static void waitKeysReleased()
 		pollKeyboard();
 		calculateShiftState();
 		scan_code = calculateScanCode();
+		delay(20);
 	} while (scan_code != SCAN_CODE_NO_KEY);
 }
