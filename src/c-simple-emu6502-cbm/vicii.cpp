@@ -243,23 +243,23 @@ int EmuVicII::C64ColorToLCDColor(byte value)
 #ifdef _WINDOWS
     case 0: return 0x0000; // BLACK
     case 1: return 0xFFFF; // WHITE
-    case 2: return 0xF800; // RED
+    case 2: return 0xE000; // RED
     case 3: return 0x07FF; // CYAN
-    case 4: return 0x8118; // DARKMAGENTA OR PURPLE
-    case 5: return 0x0400; // DARKGREEN
-    case 6: return 0x0018; // BLUE
+    case 4: return 0xA018; // DARKMAGENTA OR PURPLE
+    case 5: return 0x0780; // DARKGREEN
+    case 6: return 0x001C; // BLUE
     case 7: return 0xFFE0; // YELLOW
     case 8: return 0xFCC0; // ORANGE
     case 9: return 0x8283; // BROWN
     case 10: return 0xFC10; // PINK OR LT RED
-    case 11: return 0x8410; // DARKGREY
-    case 12: return 0x0208; // DARKCYAN
+    case 11: return 0x9492; // DARKGREY
+    case 12: return 0x0377; // DARKCYAN
     case 13: return 0xBFF7; // LIGHTGREEN
     case 14: return 0x841F; // LIGHTBLUE
-    case 15: return 0x4208; // LIGHTGREY
+    case 15: return 0xBDF7; // LIGHTGREY
 #endif
     default: return 0;
-}
+    }
 }
 
 #ifdef ILI9488  
