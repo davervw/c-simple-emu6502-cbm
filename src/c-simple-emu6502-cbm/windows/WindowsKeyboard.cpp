@@ -176,6 +176,7 @@ static KeyMap WindowsToC128[] = { // TODO: handle SHIFT, etc. cases for key comb
 	{ NONE, VK_PRIOR, (C128ScanCode)(SCAN_CODE_NO_KEY | SCAN_CODE_FLAG_RESTORE) },
 	{ ANYSHIFT, VK_OEM_3, (C128ScanCode)(SCAN_CODE_E | SCAN_CODE_FLAG_FORCE_COMMODORE | SCAN_CODE_FLAG_FORCE_NOSHIFT) },
 	{ NONE, VK_OEM_3, (C128ScanCode)(SCAN_CODE_R | SCAN_CODE_FLAG_FORCE_COMMODORE) },
+	{ NONE, VK_CLEAR, SCAN_CODE_EQUALS }
 };
 
 static C128ScanCode find_scan_code_by_windows_key(WPARAM key, LPARAM lParam)
