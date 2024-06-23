@@ -198,7 +198,8 @@ let keyDictionary = {
     '}': { scan: 9, shift: 0, commodore: 1 },
     '~': { scan: 14, shift: 0, commodore: 1 },
     '`': { scan: 17, shift: 0, commodore: 1 },
-    '|': { scan: 43, shift: 0, commodore: 1 }, // Commodore+Minus
+    '|': { scan: 43, shift: 0, commodore: 1 },
+    'Clear': { scan: 53, shift: 0 },
 };
 let keys = [];
 let last_keys = "";
@@ -294,6 +295,7 @@ function C64keyEvent(event) {
 function C64keyEventEx(event) {
     let i;
     let scan = 64;
+    //console.log(`key=${event.key}`);
     let key = keyDictionary[event.key];
     if (key == null)
         key = keyDictionary[event.code];

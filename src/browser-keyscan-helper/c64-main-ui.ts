@@ -193,6 +193,7 @@ let keyDictionary: { [key: string]: any } = {
     '~': { scan: 14, shift: 0, commodore: 1 }, // Commodore+E
     '`': { scan: 17, shift: 0, commodore: 1 }, // Commodore+R
     '|': { scan: 43, shift: 0, commodore: 1 }, // Commodore+Minus
+    'Clear': { scan: 53, shift: 0 },
 };
 
 let keys: number[] = [];
@@ -296,6 +297,7 @@ function C64keyEvent(event: KeyboardEvent): boolean {
 function C64keyEventEx(event: KeyboardEvent): boolean {
   let i: number;
   let scan: number = 64;
+  //console.log(`key=${event.key}`);
   let key: any = keyDictionary[event.key];
   if (key == null)
     key = keyDictionary[event.code];
