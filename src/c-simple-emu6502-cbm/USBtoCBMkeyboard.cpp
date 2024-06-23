@@ -33,6 +33,7 @@
 #include "config.h"
 #ifdef ARDUINO_TEENSY41
 #include "USBtoCBMkeyboard.h"
+#include "C128ScanCode.h"
 
 static USBHost myusb;
 static USBHub hub1(myusb);
@@ -44,32 +45,33 @@ static KeyboardController keyboard1(myusb);
 static int scan_codes[9] = { 64, 64, 64, 64, 64, 64, 64, 64, 64 } ;
 
 // USB key code to C64 keyboard scan code, plus shift modifiers
-// +256 means to apply L.Shift
-// -512 means to take away Shift
-// +1024 means to apply RESTORE
+// +1024 means to apply RESTORE (SCAN_CODE_FLAG_RESTORE)
+// +2048 means to apply L.Shift (SCAN_CODE_FLAG_FORCE_SHIFT)
+// +4096 means to take away Shift (SCAN_CODE_FLAG_FORCE_NOSHIFT)
+// +8192 means to apply Commodore (SCAN_CODE_FLAG_FORCE_COMMODORE)
 static int usb_to_c64[2][100] = {
 { // normal/other modifier
   64, 64, 64, 64, 10, 28, 20, 18, 14, 21, // na, na, na, na, a, b, c, d, e, f
   26, 29, 33, 34, 37, 42, 36, 39, 38, 41, // g, h, i, j, k, l, m, n, o, p,
   62, 17, 13, 22, 30, 31, 9, 23, 25, 12, // q, r, s, t, u, v, w, x, y, z
   56, 59, 8, 11, 16, 19, 24, 27, 32, 35, // 1, 2, 3, 4, 5, 6, 7, 8, 9, 0
-  1, 63, 0, 58, 60, 43, 53, 256+45, 256+50, 48, // RET, STOP, DEL, CTRL, SPC, -, =, [, ], £
-  64, 50, 256+24, 64, 47, 44, 55, 64, 4, 256+4, // na, ;, ', na, ,, ., /, na, f1, f2
-  5, 256+5, 6, 256+6, 3, 256+3, 64, 64, 64, 64, // f3, f4, f5, f6, f7, f8, na, na, na, na
-  1024, 64, 63, 256+0, 51, 1024, 0, 64, 64, 2, // RESTORE, na, STOP, INS, HM, RESTORE, DEL, na, na, RT
-  256+2, 7, 256+7, 64, 55, 49, 43, 40, 1, 56, // LT, DN, UP, na, /, *, -, +, ENTER, 1
+  1, 63, 0, 58, 60, 43, 53, 2048+45, 2048+50, 48, // RET, STOP, DEL, CTRL, SPC, -, =, [, ], £
+  64, 50, 2048+24, 8192+17, 47, 44, 55, 64, 4, 2048+4, // na, ;, ', `, ,, ., /, na, f1, f2
+  5, 2048+5, 6, 2048+6, 3, 2048+3, 64, 64, 64, 64, // f3, f4, f5, f6, f7, f8, na, na, na, na
+  1024, 64, 63, 2048+0, 51, 1024, 0, 64, 64, 2, // RESTORE, na, STOP, INS, HM, RESTORE, DEL, na, na, RT
+  2048+2, 7, 2048+7, 64, 55, 49, 43, 40, 1, 56, // LT, DN, UP, na, /, *, -, +, ENTER, 1
   59, 8, 11, 16, 19, 24, 27, 32, 35, 44 // 2, 3, 4, 5, 6, 7, 8, 9, 0, . (keypad)
 },
 { // shift modifier
   64, 64, 64, 64, 10, 28, 20, 18, 14, 21, // na, na, na, na, a, b, c, d, e, f
   26, 29, 33, 34, 37, 42, 36, 39, 38, 41, // g, h, i, j, k, l, m, n, o, p,
   62, 17, 13, 22, 30, 31, 9, 23, 25, 12, // q, r, s, t, u, v, w, x, y, z
-  56, 512+46, 8, 11, 16, 512+54, 19, 512+49, 27, 32, // !, @, #, $, %, ^, &, *, (, )
-  1, 63, 0, 58, 60, 512+57, 512+40, 256+45, 256+50, 48, // RET, STOP, DEL, CTRL, SPC, L.Arrow, +, [, ], £
-  64, 512+45, 256+59, 64, 47, 44, 55, 64, 4, 256+4, // na, :, ", na, ,, ., /, na, f1, f2
-  5, 256+5, 6, 256+6, 3, 256+3, 64, 64, 64, 64, // f3, f4, f5, f6, f7, f8, na, na, na, na
-  1024, 64, 63, 256+0, 51, 1024, 0, 64, 64, 2, // RESTORE, na, STOP, INS, HM, RESTORE, DEL, na, na, RT
-  256+2, 7, 256+7, 64, 55, 49, 43, 40, 1, 56, // LT, DN, UP, na, /, *, -, +, ENTER, 1
+  56, 4096+46, 8, 11, 16, 4096+54, 19, 4096+49, 27, 32, // !, @, #, $, %, ^, &, *, (, )
+  1, 63, 0, 58, 60, 4096+57, 4096+40, 4096+8192+62, 4096+8192+9, 4096+8192+43, // RET, STOP, DEL, CTRL, SPC, L.Arrow, +, {, }, |
+  64, 4096+45, 2048+59, 8192+14, 47, 44, 55, 64, 4, 2048+4, // na, :, ", ~, ,, ., /, na, f1, f2
+  5, 2048+5, 6, 2048+6, 3, 2048+3, 64, 64, 64, 64, // f3, f4, f5, f6, f7, f8, na, na, na, na
+  1024, 64, 63, 2048+0, 51, 1024, 0, 64, 64, 2, // RESTORE, na, STOP, INS, HM, RESTORE, DEL, na, na, RT
+  2048+2, 7, 2048+7, 64, 55, 49, 43, 40, 1, 56, // LT, DN, UP, na, /, *, -, +, ENTER, 1
   59, 8, 11, 16, 19, 24, 27, 32, 35, 44 // 2, 3, 4, 5, 6, 7, 8, 9, 0, . (keypad)
 }
 };
@@ -117,17 +119,17 @@ static void onKeyData(uint8_t len, uint8_t* data)
   if (len == 8)
   { 
     if ((data[0] & 0x11) != 0) // PC Ctrl => Commodore
-      scan_codes[6] = 61; // usb hid buffer supports 6 simultaneous keys, put modifier in next available slot
+      scan_codes[6] = SCAN_CODE_COMMODORE; // usb hid buffer supports 6 simultaneous keys, put modifier in next available slot
     else
       scan_codes[6] = 64;
       
     if ((data[0] & 2) != 0) // LShift
-      scan_codes[7] = 15; // usb hid buffer supports 6 simultaneous keys, put modifier in next available slot
+      scan_codes[7] = SCAN_CODE_LSHIFT; // usb hid buffer supports 6 simultaneous keys, put modifier in next available slot
     else
       scan_codes[7] = 64;
       
     if ((data[0] & 0x20) != 0) // RShift
-      scan_codes[8] = 52; // usb hid buffer supports 6 simultaneous keys, put modifier in next available slot
+      scan_codes[8] = SCAN_CODE_RSHIFT; // usb hid buffer supports 6 simultaneous keys, put modifier in next available slot
     else
       scan_codes[8] = 64;
 
@@ -136,13 +138,15 @@ static void onKeyData(uint8_t len, uint8_t* data)
       if (data[i+2] < 100)
       {
         scan_codes[i] = usb_to_c64[((data[0] & 0x22) != 0) ? 1 : 0][data[i+2]]; // Normal vs. Shift
-        if ((scan_codes[i] & 256) != 0)
-          scan_codes[7] = 15; // LShift
-        if (i==0 && (scan_codes[i] & 512) != 0) // remove shift flag works only if key is first non-modifier pressed
+        if ((scan_codes[i] & SCAN_CODE_FLAG_FORCE_SHIFT) != 0)
+          scan_codes[7] = SCAN_CODE_LSHIFT;
+        if (i==0 && (scan_codes[i] & SCAN_CODE_FLAG_FORCE_NOSHIFT) != 0) // remove shift flag works only if key is first non-modifier pressed
         {
           scan_codes[7] = 64; // No LShift
           scan_codes[8] = 64; // No RShift
         }
+        if ((scan_codes[i] & SCAN_CODE_FLAG_FORCE_COMMODORE) != 0)
+          scan_codes[7] = SCAN_CODE_COMMODORE;
         // if (scan_codes[i] != 64)
         // {
         //    SerialDef.printf("[%d] %d ", i, scan_codes[i]);
@@ -158,6 +162,7 @@ static void onKeyData(uint8_t len, uint8_t* data)
 // place key into kbd_data indexes 2..7, or update modifier at index 0
 static void onKbdRawPress(uint8_t key)
 {
+  //Serial.printf("raw=%02X\n", key);
   if (key == 0x68)
     kbd_data[0] |= lshift;
   else if (key == 0x6c)
@@ -208,11 +213,17 @@ static void onKbdRawRelease(uint8_t key)
   onKeyData(8, &kbd_data[0]);
 }
 
+// void onKbdExtrasPress(uint32_t top, uint16_t code)
+// {
+//   Serial.printf("extras: %08X %04X\n", top, code);
+// }
+
 USBtoCBMkeyboard::USBtoCBMkeyboard()
 {
   myusb.begin();
   keyboard1.attachRawPress(onKbdRawPress);
   keyboard1.attachRawRelease(onKbdRawRelease);
+  // keyboard1.attachExtrasPress(onKbdExtrasPress);
 }
 
 static String lastkeys;
@@ -222,10 +233,7 @@ String USBtoCBMkeyboard::Read()
   String s = "";
   for (int i = 0; i < 9; ++i)
   {
-    if (scan_codes[i] & 256)
-      scan_codes[i]^=256;
-    if (scan_codes[i] & 512)
-      scan_codes[i]^=512;
+    scan_codes[i] &= ~(SCAN_CODE_FLAG_FORCE_SHIFT | SCAN_CODE_FLAG_FORCE_NOSHIFT | SCAN_CODE_FLAG_FORCE_COMMODORE);
     if (scan_codes[i] == 64)
       continue;
     char buffer[8];
