@@ -39,17 +39,20 @@ static USBHost myusb;
 static USBHub hub1(myusb);
 static USBHub hub2(myusb);
 static KeyboardController keyboard1(myusb);
-//static USBDriver *drivers[] = {&hub1, &hub2, &keyboard1};
+static int countUnmappedKeysPressed = 0;
+static int countUnmappedKeysReleased = 0;
 
 // array allows multiple keys/modifiers pressed at one time
 static int scan_codes[9] = { 64, 64, 64, 64, 64, 64, 64, 64, 64 } ;
+
+static const int LIMITKEYS = 110; // include F18 but not F19
 
 // USB key code to C64 keyboard scan code, plus shift modifiers
 // +1024 means to apply RESTORE (SCAN_CODE_FLAG_RESTORE)
 // +2048 means to apply L.Shift (SCAN_CODE_FLAG_FORCE_SHIFT)
 // +4096 means to take away Shift (SCAN_CODE_FLAG_FORCE_NOSHIFT)
 // +8192 means to apply Commodore (SCAN_CODE_FLAG_FORCE_COMMODORE)
-static int usb_to_c64[2][100] = {
+static int usb_to_c64[2][LIMITKEYS] = {
 { // normal/other modifier
   64, 64, 64, 64, 10, 28, 20, 18, 14, 21, // na, na, na, na, a, b, c, d, e, f
   26, 29, 33, 34, 37, 42, 36, 39, 38, 41, // g, h, i, j, k, l, m, n, o, p,
@@ -60,7 +63,8 @@ static int usb_to_c64[2][100] = {
   5, 2048+5, 6, 2048+6, 3, 2048+3, 64, 64, 64, 64, // f3, f4, f5, f6, f7, f8, na, na, na, na
   1024, 64, 63, 2048+0, 51, 1024, 0, 64, 64, 2, // RESTORE, na, STOP, INS, HM, RESTORE, DEL, na, na, RT
   2048+2, 7, 2048+7, 64, 55, 49, 43, 40, 1, 56, // LT, DN, UP, na, /, *, -, +, ENTER, 1
-  59, 8, 11, 16, 19, 24, 27, 32, 35, 44 // 2, 3, 4, 5, 6, 7, 8, 9, 0, . (keypad)
+  59, 8, 11, 16, 19, 24, 27, 32, 35, 44, // 2, 3, 4, 5, 6, 7, 8, 9, 0, . (keypad)
+  64, 64, 64, 53, 64, 64, 64, 64, 64, 64 // na, na, na, = (keypad), na, na, na, na, na, na
 },
 { // shift modifier
   64, 64, 64, 64, 10, 28, 20, 18, 14, 21, // na, na, na, na, a, b, c, d, e, f
@@ -72,7 +76,8 @@ static int usb_to_c64[2][100] = {
   5, 2048+5, 6, 2048+6, 3, 2048+3, 64, 64, 64, 64, // f3, f4, f5, f6, f7, f8, na, na, na, na
   1024, 64, 63, 2048+0, 51, 1024, 0, 64, 64, 2, // RESTORE, na, STOP, INS, HM, RESTORE, DEL, na, na, RT
   2048+2, 7, 2048+7, 64, 55, 49, 43, 40, 1, 56, // LT, DN, UP, na, /, *, -, +, ENTER, 1
-  59, 8, 11, 16, 19, 24, 27, 32, 35, 44 // 2, 3, 4, 5, 6, 7, 8, 9, 0, . (keypad)
+  59, 8, 11, 16, 19, 24, 27, 32, 35, 44, // 2, 3, 4, 5, 6, 7, 8, 9, 0, . (keypad)
+  64, 64, 64, 4096+53, 64, 64, 64, 64, 64, 64 // na, na, na, = (keypad), na, na, na, na, na, na
 }
 };
 
@@ -133,9 +138,9 @@ static void onKeyData(uint8_t len, uint8_t* data)
     else
       scan_codes[8] = 64;
 
-      for (int i=0; i<6; ++i)
-      {
-      if (data[i+2] < 100)
+    for (int i=0; i<6; ++i)
+    {
+      if (data[i+2] < LIMITKEYS)
       {
         scan_codes[i] = usb_to_c64[((data[0] & 0x22) != 0) ? 1 : 0][data[i+2]]; // Normal vs. Shift
         if ((scan_codes[i] & SCAN_CODE_FLAG_FORCE_SHIFT) != 0)
@@ -162,14 +167,19 @@ static void onKeyData(uint8_t len, uint8_t* data)
 // place key into kbd_data indexes 2..7, or update modifier at index 0
 static void onKbdRawPress(uint8_t key)
 {
-  //Serial.printf("raw=%02X\n", key);
-  if (key == 0x68)
+  //Serial.printf("raw=%02X %04X %02X %02X\n", key, keyboard1.getKey(), keyboard1.getModifiers(), keyboard1.getOemKey());
+
+  // workaround: CAPS LOCK, NUM LOCK, and SCROLL LOCK calling Press without Release
+  if ((key == 0x39 || key == 0x53 || key == 0x47) && countUnmappedKeysPressed > 0)
+    --countUnmappedKeysPressed;
+
+  if (key == 0x68 && countUnmappedKeysPressed == 0)
     kbd_data[0] |= lshift;
-  else if (key == 0x6c)
+  else if (key == 0x6c && countUnmappedKeysPressed == 0)
     kbd_data[0] |= rshift;
-  else if (key == 0x67)
+  else if (key == 0x67 && countUnmappedKeysPressed == 0)
     kbd_data[0] |= lctrl;
-  else if (key == 0x6b)
+  else if (key == 0x6b && countUnmappedKeysPressed == 0)
     kbd_data[0] |= rctrl;
   else
   {
@@ -186,13 +196,13 @@ static void onKbdRawPress(uint8_t key)
 // remove key from kbd_data indexes 2..7, or update modifier at index 0
 static void onKbdRawRelease(uint8_t key)
 {
-  if (key == 0x68)
+  if (key == 0x68 && countUnmappedKeysPressed == 0)
     kbd_data[0] &= ~lshift;
-  else if (key == 0x6c)
+  else if (key == 0x6c && countUnmappedKeysPressed == 0)
     kbd_data[0] &= ~rshift;
-  else if (key == 0x67)
+  else if (key == 0x67 && countUnmappedKeysPressed == 0)
     kbd_data[0] &= ~lctrl;
-  else if (key == 0x6b)
+  else if (key == 0x6b && countUnmappedKeysPressed == 0)
     kbd_data[0] &= ~rctrl;
   else
   {
@@ -211,6 +221,26 @@ static void onKbdRawRelease(uint8_t key)
     }
   }
   onKeyData(8, &kbd_data[0]);
+  countUnmappedKeysPressed -= countUnmappedKeysReleased;
+  countUnmappedKeysReleased = 0;
+  if (countUnmappedKeysPressed < 0 || countUnmappedKeysPressed >= 8)
+    countUnmappedKeysPressed = 0;
+}
+
+void onKbdPress(int unicode)
+{
+  if (unicode == 0) {
+    ++countUnmappedKeysPressed;
+  }
+  //Serial.printf("press %d, unmapped = %d\n", unicode, countUnmappedKeysPressed);
+}
+
+void onKbdRelease(int unicode)
+{
+  if (unicode == 0) {
+    ++countUnmappedKeysReleased;
+  }
+  //Serial.printf("release %d, unmapped = %d, released = %d\n", unicode, countUnmappedKeysPressed, countUnmappedKeysReleased);
 }
 
 // void onKbdExtrasPress(uint32_t top, uint16_t code)
@@ -218,12 +248,20 @@ static void onKbdRawRelease(uint8_t key)
 //   Serial.printf("extras: %08X %04X\n", top, code);
 // }
 
+// void onKbdExtrasRelease(uint32_t top, uint16_t code)
+// {
+//   Serial.printf("extras release: %08X %04X\n", top, code);
+// }
+
 USBtoCBMkeyboard::USBtoCBMkeyboard()
 {
   myusb.begin();
+  keyboard1.attachPress(onKbdPress);
+  keyboard1.attachRelease(onKbdRelease);
   keyboard1.attachRawPress(onKbdRawPress);
   keyboard1.attachRawRelease(onKbdRawRelease);
   // keyboard1.attachExtrasPress(onKbdExtrasPress);
+  // keyboard1.attachExtrasRelease(onKbdExtrasRelease);
 }
 
 static String lastkeys;
