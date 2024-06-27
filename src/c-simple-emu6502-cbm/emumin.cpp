@@ -178,10 +178,18 @@ static char* getFilename(Terminal* terminal)
     for (i = 0; i < 10; ++i)
         dirFilenames[i] = 0;
     const char* directoryPath = "/roms/minimum";
+#ifdef ARDUINO_LILYGO_T_DISPLAY_S3
+    fs::File dir = FFat.open(directoryPath);
+#else
     File dir = SD.open(directoryPath);
+#endif    
     if (!dir)
         return chosenFilename;
+#ifdef ARDUINO_LILYGO_T_DISPLAY_S3
+    fs::File entry = dir.openNextFile();
+#else
     File entry = dir.openNextFile();
+#endif
     i = 0;
     while (entry && i < 9)
     {
