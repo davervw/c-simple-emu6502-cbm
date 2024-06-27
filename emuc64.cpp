@@ -61,7 +61,7 @@
 #include "emuc64.h"
 #include <Arduino.h>
 #include <Arduino_GFX_Library.h>
-#include <FFAT.h>
+#include <FFat.h>
 
 // globals
 const char* StartupPRG = 0;
