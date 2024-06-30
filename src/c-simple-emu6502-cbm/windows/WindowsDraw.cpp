@@ -168,7 +168,7 @@ void WindowsDraw::EndDraw()
         D2D1::RectF(left, top, right, bottom),
         1.0,
         D2D1_BITMAP_INTERPOLATION_MODE_LINEAR,
-        D2D1::RectF(0.0f, 0.0f, screenWidth, screenHeight)
+        D2D1::RectF(0.0f, 0.0f, (FLOAT)screenWidth, (FLOAT)screenHeight)
     );
 
     render2d->EndDraw();
