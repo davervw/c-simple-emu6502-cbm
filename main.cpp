@@ -39,6 +39,7 @@
 #include "emupet.h"
 #include "emutest.h"
 #include "emumin.h"
+#include <string.h>
 
 int main_go_num = 0;
 
@@ -96,6 +97,9 @@ int main(int argc, char* argv[])
 			{
 				puts("Minimum ROM Filename? ");
 				EmuCBM::StartupPRG = fgets(buffer, sizeof(buffer), stdin);
+				auto len = strlen(buffer);
+				if (len > 0 && buffer[len - 1] == '\n')
+					buffer[len - 1] = 0;
 			}
 
 			emu = new EmuMinimum(EmuCBM::StartupPRG, 0xFFF8, false);
