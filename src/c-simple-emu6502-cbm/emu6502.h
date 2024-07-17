@@ -61,7 +61,7 @@ public:
 
 protected:
   Memory* memory;
-  byte GetMemory(ushort addr)
+  virtual byte GetMemory(ushort addr)
   {
     return memory->read(addr);
   }
@@ -69,7 +69,7 @@ protected:
   {
     return memory->read(addr) | (memory->read(addr+1) << 8);
   }
-  void SetMemory(ushort addr, byte value)
+  virtual void SetMemory(ushort addr, byte value)
   {
     memory->write(addr, value);
   }
