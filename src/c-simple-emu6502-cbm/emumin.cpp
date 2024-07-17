@@ -88,6 +88,8 @@ byte EmuMinimum::GetMemory(ushort addr)
 void EmuMinimum::SetMemory(ushort addr, byte value)
 {
     memory->write(addr, value);
+    if (addr == 0xFFFE)
+        trace = (bool)(value >> 7);
 }
 
 MinimumMemory::MinimumMemory(ushort serialaddr)
