@@ -62,17 +62,59 @@ void CBMkeyboard::ReadKeyboard(CBMkeyboard::Model model)
     return;
 #else // NOT _WINDOWS
 
-#ifdef ARDUINO_M5STACK_FIRE
+#ifdef M5STACK
     const String upString = "15,7,88";
     const String dnString = "7,88";
     const String crString = "1,88";
     const String runString = "15,63,88";
     const String noString = "88";
-    static int lastUp = 1;
-    static int lastCr = 1;
-    static int lastDn = 1;
-    static int lastRun = 1;
-#endif
+    const String stopString = "63,88";
+    static bool lastUp = false;
+    static bool lastCr = false;
+    static bool lastDn = false;
+    static bool lastRun = false;
+    static bool lastStop = false;
+
+    M5.update();
+#ifdef ARDUINO_M5STACK_CORES3
+    static long pressed_time = 0;
+    int touchcount = M5.Touch.getCount();
+    bool a_pressed = false;
+    bool b_pressed = false;
+    bool c_pressed = false;
+    bool a_held = false;
+    bool b_held = false;
+    bool c_held = false;
+    if (touchcount > 0) {
+      auto touchpoint = M5.Touch.getTouchPointRaw();
+      if (touchpoint.y >= 230) {
+        a_pressed = (touchpoint.x < 320 / 3);
+        b_pressed = !a_pressed && (touchpoint.x < 320 * 2 / 3);
+        c_pressed = !a_pressed && !b_pressed;
+
+        if (lastCr && b_pressed && (millis() - pressed_time) >= 1000)
+          b_held = true;
+        if (!lastCr && b_pressed)
+          pressed_time = millis();
+        if (lastDn && c_pressed && (millis() - pressed_time) >= 1000)
+          c_held = true;
+        if (!lastDn && c_pressed)
+          pressed_time = millis();
+        }
+    }
+#else // NOT ARDUINO_M5STACK_CORES3
+    bool a_pressed = M5.BtnA.isPressed();
+    bool b_pressed = M5.BtnB.isPressed();
+    bool c_pressed = M5.BtnC.isPressed();
+    bool a_held = M5.BtnA.pressedFor(1000);
+    bool b_held = M5.BtnB.pressedFor(1000);
+    bool c_held = M5.BtnC.pressedFor(1000);
+#endif // NOT ARDUINO_M5STACK_CORES3    
+    if (b_held) {
+      a_pressed = true;
+      b_pressed = true;
+    }
+#endif // M5STACK
 
     String s;
 #ifndef ARDUINO_TEENSY41
@@ -94,22 +136,26 @@ void CBMkeyboard::ReadKeyboard(CBMkeyboard::Model model)
 #endif
         else if (SerialDef.available())
             s = SerialDef.readString();
-#ifdef ARDUINO_M5STACK_FIRE
-        else if (lastRun == 0 && (lastRun = (digitalRead(39) & digitalRead(38))) == 1)
+#ifdef M5STACK
+        else if (lastRun && (lastRun = (a_pressed && b_pressed)) == false)
             s = noString;
-        else if (lastUp == 0 && (lastUp = digitalRead(39)) == 1)
+        else if (lastUp && (lastUp = a_pressed) == false)
             s = noString;
-        else if (lastCr == 0 && (lastCr = digitalRead(38)) == 1)
+        else if (lastCr && (lastCr = b_pressed) == false)
             s = noString;
-        else if (lastDn == 0 && (lastDn = digitalRead(37)) == 1)
+        else if (lastStop && (lastStop = c_held) == false)
             s = noString;
-        else if ((lastRun = (~(~digitalRead(39) & ~digitalRead(38))) & 1) == 0)
+        else if (lastDn && (lastDn = c_pressed) == false)
+            s = noString;
+        else if ((lastRun = (a_pressed && b_pressed)) == true)
             s = runString;
-        else if ((lastUp = digitalRead(39)) == 0)
+        else if ((lastUp = a_pressed) == true)
             s = upString;
-        else if ((lastCr = digitalRead(38)) == 0)
+        else if ((lastCr = b_pressed) == true)
             s = crString;
-        else if ((lastDn = digitalRead(37)) == 0)
+        else if ((lastStop = c_held) == true)
+            s = stopString;
+        else if ((lastDn = c_pressed) == true)
             s = dnString;
 #endif    
 #ifdef ARDUINO_TEENSY41
