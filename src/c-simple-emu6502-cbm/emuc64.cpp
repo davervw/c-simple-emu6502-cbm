@@ -56,26 +56,15 @@
 
 #include "emuc64.h"
 #include "config.h"
+#include "CBMkeyboard.h"
 #ifdef _WINDOWS
 #include <string.h>
 #include <stdlib.h>
-#include <Windows.h>
-#include <stdio.h>
-#include "WindowsKeyboard.h"
-#include "WindowsTime.h"
 int static random(int max)
 {
     return (long)max * rand() / RAND_MAX;
 }
-#else
-#include "cardkbdscan.h"
-#ifdef ARDUINO_TEENSY41
-#include "USBtoCBMkeyboard.h"
-USBtoCBMkeyboard usbkbd;
-#else // not ARDUINO_TEENSY41
-#include "ble_keyboard.h"
-#endif // not ARDUINO_TEENSY41
-#endif // NOT _WINDOWS
+#endif // _WINDOWS
 
 // externs (globals)
 extern const char* StartupPRG;
@@ -85,15 +74,13 @@ extern int main_go_num;
 static int startup_state = 0;
 static int DRAW_TRAP = -1;
 
-// array allows multiple keys/modifiers pressed at one time
-static int scan_codes[16] = { 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64 };
-static void waitKeysReleased();
-
 EmuC64::EmuC64() : EmuCBM(new C64Memory())
 {
     c64memory = (C64Memory*)memory;
 
     go_state = 0;
+
+    CBMkeyboard::reset(CBMkeyboard::Model::C64);
 
     //trace = true;
     //sixty_hz_irq = false;
@@ -102,125 +89,7 @@ EmuC64::EmuC64() : EmuCBM(new C64Memory())
 EmuC64::~EmuC64()
 {
     delete c64memory;
-    waitKeysReleased();
-}
-
-static void ReadKeyboard()
-{
-    static const byte extras[24] = {
-      64, 27, 16, 64, 59, 11, 24, 56,
-      64, 40, 43, 64, 1, 19, 32, 8,
-      64, 35, 44, 7, 7, 2, 2, 64
-    };
-
-#ifdef _WINDOWS
-    static const int scan_codes_limit = sizeof(scan_codes) / sizeof(*scan_codes);
-
-    WindowsKeyboard::get_scan_codes(scan_codes, scan_codes_limit);
-    for (int i = 0; i < scan_codes_limit; ++i)
-    {
-        if (scan_codes[i] == 0x458) // C128 RESTORE, NO KEY
-            scan_codes[i] = 0x440; // C64 RESTORE, NO KEY
-        else if (scan_codes[i] >= 88)
-            scan_codes[i] = 64;
-        else if (scan_codes[i] > 64) {
-            auto extra = scan_codes[i] - 64;
-            scan_codes[i] = extras[extra];
-        }
-    }
-    return;
-#else // NOT _WINDOWS
-
-#ifdef ARDUINO_M5STACK_FIRE
-    const String upString = "15,7,64";
-    const String dnString = "7,64";
-    const String crString = "1,64";
-    const String runString = "15,63,88";
-    const String noString = "64";
-    static int lastUp = 1;
-    static int lastCr = 1;
-    static int lastDn = 1;
-    static int lastRun = 1;
-#endif
-
-    String s;
-#ifndef ARDUINO_TEENSY41
-    ble_keyboard->ServiceConnection();
-    s = ble_keyboard->Read();
-    if (s.length() != 0)
-        ;
-    else
-#endif
-        if (CardKbd)
-            s = CardKbdScanRead();
-#ifndef ARDUINO_SUNTON_8048S070
-#ifndef ARDUINO_TEENSY41
-#ifndef ARDUINO_LILYGO_T_DISPLAY_S3
-        else if (Serial2.available())
-            s = Serial2.readString();
-#endif
-#endif
-#endif
-        else if (SerialDef.available())
-            s = SerialDef.readString();
-#ifdef ARDUINO_M5STACK_FIRE
-        else if (lastRun == 0 && (lastRun = (digitalRead(39) & digitalRead(38))) == 1)
-            s = noString;
-        else if (lastUp == 0 && (lastUp = digitalRead(39)) == 1)
-            s = noString;
-        else if (lastCr == 0 && (lastCr = digitalRead(38)) == 1)
-            s = noString;
-        else if (lastDn == 0 && (lastDn = digitalRead(37)) == 1)
-            s = noString;
-        else if ((lastRun = (~(~digitalRead(39) & ~digitalRead(38))) & 1) == 0)
-            s = runString;
-        else if ((lastUp = digitalRead(39)) == 0)
-            s = upString;
-        else if ((lastCr = digitalRead(38)) == 0)
-            s = crString;
-        else if ((lastDn = digitalRead(37)) == 0)
-            s = dnString;
-#endif    
-#ifdef ARDUINO_TEENSY41
-        else
-            s = usbkbd.Read();
-#endif
-    if (s.length() == 0)
-        return;
-
-    unsigned src = 0;
-    int dest = 0;
-    int scan = 0;
-    int len = 0;
-    while (src < s.length() && dest < 16) {
-        char c = s.charAt(src++);
-        if (c >= '0' && c <= '9') {
-            scan = scan * 10 + (c - '0');
-            ++len;
-        }
-        else if (len > 0)
-        {
-            int lobits = scan & 127;
-            if (lobits >= 64 && lobits < 88)
-            {
-                scan = extras[lobits - 64];
-                for (int i = 0; i < dest; ++i)
-                    if (scan_codes[i] == 15 || scan_codes[i] == 52)
-                        scan_codes[i] = 64;
-                if (lobits == 83 || lobits == 85)
-                    scan_codes[dest++] = 15;
-            }
-            if (scan > 64)
-                scan = (scan & 0xFF80) | 0x40;
-            scan_codes[dest++] = scan;
-            scan = 0;
-            len = 0;
-        }
-    }
-    while (dest < 16)
-        scan_codes[dest++] = 64;
-
-#endif // NOT _WINDOWS
+    CBMkeyboard::waitKeysReleased(CBMkeyboard::Model::C64);
 }
 
 bool EmuC64::ExecutePatch()
@@ -229,7 +98,7 @@ bool EmuC64::ExecutePatch()
 
     int found_NMI = 0;
     for (int i = 0; !found_NMI && i < 16; ++i)
-        if (scan_codes[i] & 1024)
+        if (CBMkeyboard::scan_codes[i] & 1024)
             found_NMI = 1;
     if (NMI)
     {
@@ -555,13 +424,13 @@ byte EmuC64::C64Memory::read(ushort addr)
             return color_nybles[addr - color_addr] | 0xF0;
         else if (addr == 0xDC01)
         {
-            ReadKeyboard();
+            CBMkeyboard::ReadKeyboard(CBMkeyboard::Model::C64);
 
             int value = 0;
 
             for (int i = 0; i < 16; ++i)
             {
-                int scan_code = scan_codes[i] & 127; // remove any modifiers
+                int scan_code = CBMkeyboard::scan_codes[i] & 127; // remove any modifiers
                 if (scan_code < 64)
                 {
                     int col = scan_code / 8;
@@ -669,17 +538,4 @@ void EmuC64::C64Memory::write(ushort addr, byte value)
     {
         io[addr - io_addr] = value;
     }
-}
-
-static void waitKeysReleased()
-{
-    bool keypressed;
-    do {
-        keypressed = false;
-        ReadKeyboard();
-        for (int i = 0; !keypressed && i < 16; ++i)
-            if ((scan_codes[i] & 127) != 64)
-                keypressed = true;
-        delay(20);
-    } while (keypressed);
 }

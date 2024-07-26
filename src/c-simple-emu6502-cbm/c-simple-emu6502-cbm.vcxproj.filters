@@ -34,6 +34,7 @@
     <ClCompile Include="ASCIIKeyboard.cpp" />
     <ClCompile Include="LCDDraw.cpp" />
     <ClCompile Include="emuvic20.cpp" />
+    <ClCompile Include="CBMkeyboard.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="windows\framework.h">
@@ -121,6 +122,9 @@
       <Filter>Includes</Filter>
     </ClInclude>
     <ClInclude Include="config.h">
+      <Filter>Includes</Filter>
+    </ClInclude>
+    <ClInclude Include="CBMkeyboard.h">
       <Filter>Includes</Filter>
     </ClInclude>
   </ItemGroup>

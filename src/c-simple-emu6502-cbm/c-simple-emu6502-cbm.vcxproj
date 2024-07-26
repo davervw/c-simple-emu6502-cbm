@@ -135,6 +135,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="ASCIIKeyboard.cpp" />
+    <ClCompile Include="CBMkeyboard.cpp" />
     <ClCompile Include="emu6502.cpp" />
     <ClCompile Include="emuc128.cpp" />
     <ClCompile Include="emuc64.cpp" />
@@ -166,6 +167,7 @@
   <ItemGroup>
     <ClInclude Include="ASCIIKeyboard.h" />
     <ClInclude Include="C128ScanCode.h" />
+    <ClInclude Include="CBMkeyboard.h" />
     <ClInclude Include="config.h" />
     <ClInclude Include="dprintf.h" />
     <ClInclude Include="emu6502.h" />

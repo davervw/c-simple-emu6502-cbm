@@ -74,30 +74,17 @@
 
 #include "emuc128.h"
 #include "config.h"
-#ifdef _WINDOWS
-#include "WindowsKeyboard.h"
-#include "WindowsTime.h"
-#else
-#include "cardkbdscan.h"
-#ifdef ARDUINO_TEENSY41
-#include "USBtoCBMkeyboard.h"
-extern USBtoCBMkeyboard usbkbd;
-#else
-#include "ble_keyboard.h"
-#endif
-#endif // NOT _WINDOWS
+#include "CBMkeyboard.h"
 
 // externs (globals)
 extern const char* StartupPRG;
 extern int main_go_num;
 
-// array allows multiple keys/modifiers pressed at one time
-static int scan_codes[16] = { 88, 88, 88, 88, 88, 88, 88, 88, 88, 88, 88, 88, 88, 88, 88, 88 } ;
-
 EmuC128::EmuC128()
     : EmuCBM(new C128Memory())
 {
     c128memory = (C128Memory*)memory;
+    CBMkeyboard::reset(CBMkeyboard::Model::C128);
 }
 
 EmuC128::~EmuC128()
@@ -113,7 +100,7 @@ bool EmuC128::ExecutePatch()
     
     int found_NMI = 0;
     for (int i=0; !found_NMI && i<16; ++i)
-      if (scan_codes[i] & 1024)
+      if (CBMkeyboard::scan_codes[i] & 1024)
         found_NMI = 1;    
     if (NMI)
     {
@@ -452,100 +439,7 @@ C128Memory::~C128Memory()
     delete vdc;
     delete vicii;
 
-    WaitKeysReleased();
-}
-
-void C128Memory::ReadKeyboard()
-{
-#ifdef _WINDOWS
-    WindowsKeyboard::get_scan_codes(scan_codes, 16);
-    return;
-#endif
-#ifdef ARDUINO_M5STACK_FIRE
-  const String upString = "15,7,88";
-  const String dnString = "7,88";
-  const String crString = "1,88";
-  const String runString = "15,63,88";
-  const String noString = "88";
-  static int lastUp = 1;
-  static int lastCr = 1;
-  static int lastDn = 1;
-  static int lastRun = 1;
-#endif
-
-  bool caps = false;
-
-#ifndef _WINDOWS
-  String s;
-#ifndef ARDUINO_TEENSY41
-  ble_keyboard->ServiceConnection();
-  s = ble_keyboard->Read();
-  if (s.length() != 0)
-    ;
-  else 
-#endif
-  if (CardKbd)
-    s = CardKbdScanRead();
-#ifndef ARDUINO_SUNTON_8048S070
-#ifndef ARDUINO_TEENSY41
-#ifndef ARDUINO_LILYGO_T_DISPLAY_S3
-  else if (Serial2.available())
-    s = Serial2.readString();
-#endif
-#endif
-#endif
-  else if (SerialDef.available())
-    s = SerialDef.readString();
-#ifdef ARDUINO_M5STACK_FIRE
-  else if (lastRun==0 && (lastRun=(digitalRead(39) & digitalRead(38)))==1)
-    s = noString;
-  else if (lastUp==0 && (lastUp=digitalRead(39))==1)
-    s = noString;
-  else if (lastCr==0 && (lastCr=digitalRead(38))==1)
-    s = noString;
-  else if (lastDn==0 && (lastDn=digitalRead(37))==1)
-    s = noString;
-  else if ((lastRun=(~(~digitalRead(39) & ~digitalRead(38))) & 1)==0)
-    s = runString;
-  else if ((lastUp=digitalRead(39))==0)
-    s = upString;
-  else if ((lastCr=digitalRead(38))==0)
-    s = crString;
-  else if ((lastDn=digitalRead(37))==0)
-    s = dnString;
-#endif  
-#ifdef ARDUINO_TEENSY41
-  else
-    s = usbkbd.Read();
-#endif
-  if (s.length() == 0)
-    return;
-
-  unsigned src = 0;
-  int dest = 0;
-  int scan = 0;
-  int len = 0;
-  while (src < s.length() && dest < 16) {
-    char c = s.charAt(src++);
-    if (c >= '0' && c <= '9') {
-      scan = scan * 10 + (c - '0');
-      ++len;
-    } else if (len > 0)
-    {
-      if (scan & 128)
-        caps = true;
-      if (scan == 64 || scan > 88)
-        scan = (scan & 0xFF80) | 88;
-      scan_codes[dest++] = scan;
-      scan = 0;
-      len = 0;
-    }
-  }
-  while (dest < 16)
-    scan_codes[dest++] = 88;
-#endif // NOT _WINDOWS
-  
-  ram[1] = (ram[2] & 0xBF) | (caps ? 0 : 0x40);
+    CBMkeyboard::waitKeysReleased(CBMkeyboard::Model::C128);
 }
 
 byte C128Memory::read(ushort addr)
@@ -561,13 +455,14 @@ byte C128Memory::read(ushort addr)
             return (byte)((io[addr - io_addr] & 0xF) | 0xF0);
         else if (addr == 0xDC01)
         {
-          ReadKeyboard();
+          CBMkeyboard::ReadKeyboard(CBMkeyboard::Model::C128);
+          ram[1] = (ram[2] & 0xBF) | (CBMkeyboard::caps ? 0 : 0x40);
 
           int value = 0;
           
           for (int i=0; i<16; ++i)
           {
-            int scan_code = scan_codes[i] & 127; // remove any modifiers
+            int scan_code = CBMkeyboard::scan_codes[i] & 127; // remove any modifiers
             if (scan_code < 88)
             {     
               int col = scan_code / 8;
@@ -851,17 +746,4 @@ byte EmuC128::GetMemory(ushort addr)
 void EmuC128::SetMemory(ushort addr, byte value)
 {
     memory->write(addr, value);
-}
-
-void C128Memory::WaitKeysReleased()
-{
-    bool keypressed;
-    do {
-        keypressed = false;
-        ReadKeyboard();
-        for (int i = 0; !keypressed && i < 16; ++i)
-            if ((scan_codes[i] & 127) != 88)
-                keypressed = true;
-        delay(20);
-    } while (keypressed);
 }

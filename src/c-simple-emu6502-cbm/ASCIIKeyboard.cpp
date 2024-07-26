@@ -32,20 +32,13 @@
 
 //#include "dprintf.h"
 
+#include "config.h"
 #include "ASCIIKeyboard.h"
 #include "C128ScanCode.h"
+#include "CBMkeyboard.h"
 #ifdef _WINDOWS
 #include "WindowsTime.h"
-#else // NOT _WINDOWS
-#include "config.h"
-#include "cardkbdscan.h"
-#ifdef ARDUINO_TEENSY41
-#include "USBtoCBMkeyboard.h"
-extern USBtoCBMkeyboard usbkbd;
-#else
-#include "ble_keyboard.h"
-#endif // ARUDINO_TEENSY
-#endif // NOT _WINDOWS
+#endif // _WINDOWS
 
 typedef enum _ShiftState {
 	None = 0,
@@ -59,8 +52,7 @@ static char buffer[buffer_count];
 static int buffer_head = 0;
 static int buffer_tail = 0;
 
-static const int scan_codes_count = 16;
-static int scan_codes[scan_codes_count];
+static const int scan_codes_count = sizeof(CBMkeyboard::scan_codes) / sizeof(CBMkeyboard::scan_codes[0]);
 static int last_scan_code;
 static ShiftState shiftState = ShiftState::None;
 
@@ -119,17 +111,16 @@ static const char scan_to_ascii[4][88] = {
 	}
 };
 
-static void waitKeysReleased();
-
 ASCIIKeyboard::ASCIIKeyboard()
 {
 	buffer_head = 0;
 	buffer_tail = 0;
+  CBMkeyboard::reset(CBMkeyboard::Model::C128);
 }
 
 ASCIIKeyboard::~ASCIIKeyboard()
 {
-	waitKeysReleased();
+	CBMkeyboard::waitKeysReleased(CBMkeyboard::Model::C128);
 }
 
 bool ASCIIKeyboard::read(char& c)
@@ -147,7 +138,7 @@ static void calculateShiftState()
 {
 	shiftState = ShiftState::None;
 	for (int i = 0; i < scan_codes_count; ++i) {
-		int scan_code = scan_codes[i];
+		int scan_code = CBMkeyboard::scan_codes[i];
 		if (scan_code == SCAN_CODE_LSHIFT || scan_code == SCAN_CODE_RSHIFT)
 			shiftState = ShiftState(shiftState | ShiftState::Shift);
 		if (scan_code == SCAN_CODE_CTRL)
@@ -163,7 +154,7 @@ static int calculateScanCode()
 	bool found = false;
 	while (!found && counter < 88) {
 		for (int i = 0; i < scan_codes_count; ++i) {
-			int scan_code = scan_codes[i];
+			int scan_code = CBMkeyboard::scan_codes[i];
 			if (scan_code == counter && scan_code != SCAN_CODE_LSHIFT && scan_code != SCAN_CODE_RSHIFT && scan_code != SCAN_CODE_CTRL && scan_code != SCAN_CODE_COMMODORE)
 			{
 				found = true;
@@ -181,61 +172,7 @@ static bool caps = false;
 
 void pollKeyboard()
 {
-#ifdef _WINDOWS
-	WindowsKeyboard::get_scan_codes(scan_codes, scan_codes_count);
-#else
-// TODO: USB for Teensy
-  String s;
-#ifndef ARDUINO_TEENSY41
-  ble_keyboard->ServiceConnection();
-  s = ble_keyboard->Read();
-  if (s.length() != 0)
-    ;
-  else 
-#endif
-  if (CardKbd)
-    s = CardKbdScanRead();
-#ifndef ARDUINO_SUNTON_8048S070
-#ifndef ARDUINO_TEENSY41
-#ifndef ARDUINO_LILYGO_T_DISPLAY_S3
-  else if (Serial2.available())
-    s = Serial2.readString();
-#endif
-#endif
-#endif
-  else if (SerialDef.available())
-    s = SerialDef.readString();
-#ifdef ARDUINO_TEENSY41
-  else
-    s = usbkbd.Read();
-#endif
-  if (s.length() == 0)
-	  return;
-  caps = false;
-  unsigned src = 0;
-  int dest = 0;
-  int scan = 0;
-  int len = 0;
-  while (src < s.length() && dest < 16) {
-	  char c = s.charAt(src++);
-	  if (c >= '0' && c <= '9') {
-		  scan = scan * 10 + (c - '0');
-		  ++len;
-	  }
-	  else if (len > 0)
-	  {
-		  if (scan & 128)
-			  caps = true;
-		  if (scan == 64 || scan > 88)
-			  scan = (scan & 0xFF80) | 88;
-		  scan_codes[dest++] = scan;
-		  scan = 0;
-		  len = 0;
-	  }
-  }
-  while (dest < scan_codes_count)
-	  scan_codes[dest++] = 88;
-#endif
+  CBMkeyboard::ReadKeyboard(CBMkeyboard::Model::C128);
 }
 
 static void pushKey(int scan_code)

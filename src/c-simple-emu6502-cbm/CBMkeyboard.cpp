@@ -1,0 +1,180 @@
+#include "config.h"
+#include "CBMkeyboard.h"
+
+#ifdef _WINDOWS
+#include <string.h>
+#include <stdlib.h>
+#include <Windows.h>
+#include <stdio.h>
+#include "WindowsKeyboard.h"
+#include "WindowsTime.h"
+#else
+#include "cardkbdscan.h"
+#ifdef ARDUINO_TEENSY41
+#include "USBtoCBMkeyboard.h"
+USBtoCBMkeyboard usbkbd;
+#else // not ARDUINO_TEENSY41
+#include "ble_keyboard.h"
+#endif // not ARDUINO_TEENSY41
+#endif // NOT _WINDOWS
+
+bool CBMkeyboard::caps = false;
+
+int CBMkeyboard::scan_codes[16] = { 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64 };
+
+void CBMkeyboard::reset(CBMkeyboard::Model model)
+{
+  memset(scan_codes, model == C128 ? 88 : 64, sizeof(scan_codes));
+}
+
+void CBMkeyboard::ReadKeyboard(CBMkeyboard::Model model)
+{
+    // Vic-20, C64/128 share the same keyboard matrix
+    // but wiring on Vic-20 mixes up the lines, and the row/col to scan code math is different
+    // this code includes translation from a C64/128 scan code to a Vic-20 scan code
+    int toVic20Row[8] = { 0, 1, 2, 7, 4, 5, 6, 3 };
+    int toVic20Col[8] = { 7, 1, 2, 3, 4, 5, 6, 0 };
+
+    static const byte toC64[24] = {
+      64, 27, 16, 64, 59, 11, 24, 56,
+      64, 40, 43, 64, 1, 19, 32, 8,
+      64, 35, 44, 7, 7, 2, 2, 64
+    };
+
+#ifdef _WINDOWS
+    static const int scan_codes_limit = sizeof(scan_codes) / sizeof(*scan_codes);
+
+    WindowsKeyboard::get_scan_codes(scan_codes, scan_codes_limit);
+    for (int i = 0; i < scan_codes_limit; ++i)
+    {
+        if (model != C128 && scan_codes[i] == 0x458) // C128 RESTORE, NO KEY
+            scan_codes[i] = 0x440; // C64 RESTORE, NO KEY
+        else if (model == C128)
+          continue;
+        else if (scan_codes[i] >= 88)
+            scan_codes[i] = 64;
+        else if (scan_codes[i] > 64)
+            scan_codes[i] = toC64[scan_codes[i] - 64];
+        
+        if (model == VIC20 && scan_codes[i] < 64)
+            scan_codes[i] = (toVic20Row[scan_codes[i] & 7] << 3) | toVic20Col[scan_codes[i] >> 3];
+    }
+    return;
+#else // NOT _WINDOWS
+
+#ifdef ARDUINO_M5STACK_FIRE
+    const String upString = "15,7,88";
+    const String dnString = "7,88";
+    const String crString = "1,88";
+    const String runString = "15,63,88";
+    const String noString = "88";
+    static int lastUp = 1;
+    static int lastCr = 1;
+    static int lastDn = 1;
+    static int lastRun = 1;
+#endif
+
+    String s;
+#ifndef ARDUINO_TEENSY41
+    ble_keyboard->ServiceConnection();
+    s = ble_keyboard->Read();
+    if (s.length() != 0)
+        ;
+    else
+#endif
+        if (CardKbd)
+            s = CardKbdScanRead();
+#ifndef ARDUINO_SUNTON_8048S070
+#ifndef ARDUINO_TEENSY41
+#ifndef ARDUINO_LILYGO_T_DISPLAY_S3
+        else if (Serial2.available())
+            s = Serial2.readString();
+#endif
+#endif
+#endif
+        else if (SerialDef.available())
+            s = SerialDef.readString();
+#ifdef ARDUINO_M5STACK_FIRE
+        else if (lastRun == 0 && (lastRun = (digitalRead(39) & digitalRead(38))) == 1)
+            s = noString;
+        else if (lastUp == 0 && (lastUp = digitalRead(39)) == 1)
+            s = noString;
+        else if (lastCr == 0 && (lastCr = digitalRead(38)) == 1)
+            s = noString;
+        else if (lastDn == 0 && (lastDn = digitalRead(37)) == 1)
+            s = noString;
+        else if ((lastRun = (~(~digitalRead(39) & ~digitalRead(38))) & 1) == 0)
+            s = runString;
+        else if ((lastUp = digitalRead(39)) == 0)
+            s = upString;
+        else if ((lastCr = digitalRead(38)) == 0)
+            s = crString;
+        else if ((lastDn = digitalRead(37)) == 0)
+            s = dnString;
+#endif    
+#ifdef ARDUINO_TEENSY41
+        else
+            s = usbkbd.Read();
+#endif
+    if (s.length() == 0)
+        return;
+
+    //SerialDef.println(s);
+
+    caps = false;
+    int scan_lshift = (model == VIC20) ? 25 : 15;
+    int scan_rshift = (model == VIC20) ? 38 : 52;
+
+    unsigned src = 0;
+    int dest = 0;
+    int scan = 0;
+    int len = 0;
+    while (src < s.length() && dest < 16) {
+        char c = s.charAt(src++);
+        if (c >= '0' && c <= '9') {
+            scan = scan * 10 + (c - '0');
+            ++len;
+        }
+        else if (len > 0)
+        {
+            if (scan & 128) {
+                caps = true;
+                scan = 88;
+            }
+            int lobits = scan & 127;
+            if (model != C128 && lobits >= 64 && lobits < 88)
+            {
+                scan = toC64[lobits - 64];
+                for (int i = 0; i < dest; ++i)
+                    if (scan_codes[i] == scan_lshift || scan_codes[i] == scan_rshift)
+                        scan_codes[i] = 64;
+                if (lobits == 83 || lobits == 85)
+                    scan_codes[dest++] = scan_lshift;
+            }
+            if (model == VIC20 && scan < 64)
+                scan = (toVic20Row[scan & 7] << 3) | toVic20Col[scan >> 3];
+            if (model != C128 && scan > 64)
+                scan = (scan & 0xFF80) | 64;
+            scan_codes[dest++] = scan;
+            scan = 0;
+            len = 0;
+        }
+    }
+    while (dest < 16)
+        scan_codes[dest++] = (model == C128) ? 88 : 64;
+
+#endif // NOT _WINDOWS
+}
+
+void CBMkeyboard::waitKeysReleased(CBMkeyboard::Model model)
+{
+    bool keypressed;
+    do {
+        keypressed = false;
+        CBMkeyboard::ReadKeyboard(model);
+        for (int i = 0; !keypressed && i < 16; ++i)
+            if ((scan_codes[i] & 127) != ((model == C128) ? 88 : 64))
+                keypressed = true;
+        delay(20);
+    } while (keypressed);
+}

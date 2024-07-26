@@ -66,35 +66,21 @@
 #include "emuvic20.h"
 #include "vic.h"
 #include "config.h"
-#ifdef _WINDOWS
-#include "WindowsKeyboard.h"
-#include "WindowsTime.h"
-#else // NOT _WINDOWS
-#include "cardkbdscan.h"
-#ifdef ARDUINO_TEENSY41
-#include "USBtoCBMkeyboard.h"
-extern USBtoCBMkeyboard usbkbd;
-#else
-#include "ble_keyboard.h"
-#endif
-#endif // NOT _WINDOWS
+#include "CBMkeyboard.h"
 
 // externs/globals
 extern const char* StartupPRG;
 extern int main_go_num;
 
-// array allows multiple keys/modifiers pressed at one time
-static int scan_codes[16] = { 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64 };
-static void waitKeysReleased();
-
 EmuVic20::EmuVic20(int ram_size) : EmuCBM(new Vic20Memory(ram_size * 1024))
 {
+  CBMkeyboard::reset(CBMkeyboard::Model::VIC20);
 }
 
 EmuVic20::~EmuVic20()
 {
 	delete memory;
-	waitKeysReleased();
+	CBMkeyboard::waitKeysReleased(CBMkeyboard::Model::VIC20);
 }
 
 static byte RamSizeToRamConfig(int ram_size)
@@ -130,7 +116,7 @@ bool EmuVic20::ExecutePatch()
 
 	int found_NMI = 0;
 	for (int i = 0; !found_NMI && i < 16; ++i)
-		if (scan_codes[i] & 1024)
+		if (CBMkeyboard::scan_codes[i] & 1024)
 			found_NMI = 1;
 
 	if (NMI)
@@ -354,137 +340,6 @@ EmuVic20::Vic20Memory::~Vic20Memory()
 	delete vic;
 }
 
-static void ReadKeyboard()
-{
-	// Vic-20, C64/128 share the same keyboard matrix
-	// but wiring on Vic-20 mixes up the lines, and the row/col to scan code math is different
-	// this code includes translation from a C64/128 scan code to a Vic-20 scan code
-	int toVic20Row[8] = { 0, 1, 2, 7, 4, 5, 6, 3 };
-	int toVic20Col[8] = { 7, 1, 2, 3, 4, 5, 6, 0 };
-
-	static const byte extras[24] = { // Commodore 128 extra keys to 64 mappings
-	  64, 27, 16, 64, 59, 11, 24, 56,
-	  64, 40, 43, 64, 1, 19, 32, 8,
-	  64, 35, 44, 7, 7, 2, 2, 64
-	};
-
-#ifdef ARDUINO_M5STACK_FIRE
-	const String upString = "15,7,64";
-	const String dnString = "7,64";
-	const String crString = "1,64";
-	const String runString = "15,63,88";
-	const String noString = "64";
-	static int lastUp = 1;
-	static int lastCr = 1;
-	static int lastDn = 1;
-	static int lastRun = 1;
-#endif
-
-#ifdef _WINDOWS
-	WindowsKeyboard::get_scan_codes(scan_codes, 16);
-	for (int i = 0; i < 16; ++i)
-	{
-		int scan = scan_codes[i];
-		int lobits = scan & 127;
-		if (lobits >= 64 && lobits < 88)
-		{
-			scan = extras[lobits - 64];
-			for (int j = 0; j < i; ++j)
-				if (scan_codes[j] == 25 || scan_codes[j] == 38)
-					scan_codes[j] = 64; // remove shift keys temporarily
-			if (lobits == 83 || lobits == 85)
-				scan_codes[i] = 38; // add shift for up or left
-		}
-		if (scan < 64)
-			scan = (toVic20Row[scan & 7] << 3) | toVic20Col[scan >> 3];
-		if (scan > 64)
-			scan = (scan & 0xFF80) | 0x40;
-		scan_codes[i] = scan;
-	}
-	return;
-#else // NOT _WINDOWS
-	String s;
-#ifndef ARDUINO_TEENSY41
-	ble_keyboard->ServiceConnection();
-	s = ble_keyboard->Read();
-	if (s.length() != 0)
-		;
-	else
-#endif  
-		if (CardKbd)
-			s = CardKbdScanRead();
-#ifndef ARDUINO_SUNTON_8048S070
-#ifndef ARDUINO_TEENSY41
-#ifndef ARDUINO_LILYGO_T_DISPLAY_S3
-		else if (Serial2.available())
-			s = Serial2.readString();
-#endif
-#endif
-#endif
-		else if (SerialDef.available())
-			s = SerialDef.readString();
-#ifdef ARDUINO_M5STACK_FIRE
-		else if (lastRun == 0 && (lastRun = (digitalRead(39) & digitalRead(38))) == 1)
-			s = noString;
-		else if (lastUp == 0 && (lastUp = digitalRead(39)) == 1)
-			s = noString;
-		else if (lastCr == 0 && (lastCr = digitalRead(38)) == 1)
-			s = noString;
-		else if (lastDn == 0 && (lastDn = digitalRead(37)) == 1)
-			s = noString;
-		else if ((lastRun = (~(~digitalRead(39) & ~digitalRead(38))) & 1) == 0)
-			s = runString;
-		else if ((lastUp = digitalRead(39)) == 0)
-			s = upString;
-		else if ((lastCr = digitalRead(38)) == 0)
-			s = crString;
-		else if ((lastDn = digitalRead(37)) == 0)
-			s = dnString;
-#endif    
-#ifdef ARDUINO_TEENSY41
-		else
-			s = usbkbd.Read();
-#endif
-	if (s.length() == 0)
-		return;
-	{
-		unsigned src = 0;
-		int dest = 0;
-		int scan = 0;
-		int len = 0;
-		while (src < s.length() && dest < 16) {
-			char c = s.charAt(src++);
-			if (c >= '0' && c <= '9') {
-				scan = scan * 10 + (c - '0');
-				++len;
-			}
-			else if (len > 0)
-			{
-				int lobits = scan & 127;
-				if (lobits >= 64 && lobits < 88)
-				{
-					scan = extras[lobits - 64];
-					for (int i = 0; i < dest; ++i)
-						if (scan_codes[i] == 25 || scan_codes[i] == 38)
-							scan_codes[i] = 64; // remove shift keys temporarily
-					if (lobits == 83 || lobits == 85)
-						scan_codes[dest++] = 38; // add shift for up or left
-				}
-				if (scan < 64)
-					scan = (toVic20Row[scan & 7] << 3) | toVic20Col[scan >> 3];
-				if (scan > 64)
-					scan = (scan & 0xFF80) | 0x40;
-				scan_codes[dest++] = scan;
-				scan = 0;
-				len = 0;
-			}
-		}
-		while (dest < 16)
-			scan_codes[dest++] = 64;
-	}
-#endif // NOT _WINDOWS
-}
-
 byte EmuVic20::Vic20Memory::read(ushort addr)
 {
 	if (addr < ram3k_addr)
@@ -511,11 +366,11 @@ byte EmuVic20::Vic20Memory::read(ushort addr)
 			return 0x7E;
 		else if (addr == 0x9121)
 		{
-			ReadKeyboard();
+			CBMkeyboard::ReadKeyboard(CBMkeyboard::Model::VIC20);
 			byte value = 0xFF;
 			for (int i = 0; i < 16; ++i)
 			{
-				int scan_code = scan_codes[i] & 127; // remove any modifiers
+				int scan_code = CBMkeyboard::scan_codes[i] & 127; // remove any modifiers
 				if (scan_code < 64)
 				{
 					int row = scan_code >> 3;
@@ -593,17 +448,4 @@ void EmuVic20::Vic20Memory::write(ushort addr, byte value)
 	}
 	else if (addr >= cart_addr && addr < basic_addr && ((ram_banks & 0x10) != 0))
 		ram[addr] = value;
-}
-
-static void waitKeysReleased()
-{
-	bool keypressed;
-	do {
-		keypressed = false;
-		ReadKeyboard();
-		for (int i = 0; !keypressed && i < 16; ++i)
-			if ((scan_codes[i] & 127) != 64)
-				keypressed = true;
-		delay(20);
-	} while (keypressed);
 }
