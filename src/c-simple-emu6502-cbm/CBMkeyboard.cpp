@@ -65,7 +65,9 @@ void CBMkeyboard::ReadKeyboard(CBMkeyboard::Model model)
     return;
 #else // NOT _WINDOWS
 
+    bool restartBLE = false;
 #ifdef M5STACK
+loop:
     const String upString = "15,7,88";
     const String dnString = "7,88";
     const String crString = "1,88";
@@ -118,16 +120,20 @@ void CBMkeyboard::ReadKeyboard(CBMkeyboard::Model model)
     bool c_held = M5.BtnC.pressedFor(1000);
 #endif // NOT ARDUINO_M5STACK_CORES3    
     if (a_held)
-      heldToggle = true;
+      heldToggle = !c_pressed;
     if (b_held) {
       a_pressed = true;
       b_pressed = true;
+    }
+    if (a_held && c_held) {
+      restartBLE = true;
+      goto loop; // wait for release
     }
 #endif // M5STACK
 
     String s;
 #ifndef ARDUINO_TEENSY41
-    ble_keyboard->ServiceConnection();
+    ble_keyboard->ServiceConnection(restartBLE);
     s = ble_keyboard->Read();
     if (s.length() != 0)
         ;
@@ -148,23 +154,23 @@ void CBMkeyboard::ReadKeyboard(CBMkeyboard::Model model)
 #ifdef M5STACK
         else if (lastRun && (lastRun = (a_pressed && b_pressed)) == false)
             s = noString;
-        else if (lastUp && (lastUp = a_pressed) == false)
+        else if (lastUp && (lastUp = a_pressed && !c_pressed) == false)
             s = noString;
         else if (lastCr && (lastCr = b_pressed) == false)
             s = noString;
-        else if (lastStop && (lastStop = c_held) == false)
+        else if (lastStop && (lastStop = c_held && !a_pressed) == false)
             s = noString;
-        else if (lastDn && (lastDn = c_pressed) == false)
+        else if (lastDn && (lastDn = c_pressed && !a_pressed) == false)
             s = noString;
         else if ((lastRun = (a_pressed && b_pressed)) == true)
             s = runString;
-        else if ((lastUp = a_pressed) == true)
+        else if ((lastUp = a_pressed && !c_pressed) == true)
             s = upString;
         else if ((lastCr = b_pressed) == true)
             s = crString;
-        else if ((lastStop = c_held) == true)
+        else if ((lastStop = c_held && !a_pressed) == true)
             s = stopString;
-        else if ((lastDn = c_pressed) == true)
+        else if ((lastDn = c_pressed && !a_pressed) == true)
             s = dnString;
 #endif    
 #ifdef ARDUINO_TEENSY41

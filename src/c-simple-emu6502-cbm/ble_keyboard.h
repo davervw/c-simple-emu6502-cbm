@@ -34,7 +34,7 @@ class BLE_Keyboard
 {
 public:
   BLE_Keyboard();
-  void ServiceConnection();
+  void ServiceConnection(bool restart);
   String Read();
 };
 

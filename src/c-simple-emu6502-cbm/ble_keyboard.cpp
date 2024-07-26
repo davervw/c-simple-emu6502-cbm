@@ -183,7 +183,7 @@ BLE_Keyboard::BLE_Keyboard()
 } // End of setup.
 
 // This is the Arduino main loop function.
-void BLE_Keyboard::ServiceConnection() {
+void BLE_Keyboard::ServiceConnection(bool restart) {
   static unsigned long timer_then = micros();
   const unsigned long timeout = 1000000;
 
@@ -205,16 +205,13 @@ void BLE_Keyboard::ServiceConnection() {
     doConnect = false;
   }
 
-  // If we are connected to a peer BLE Server, update the characteristic each time we are reached
-  // with the current time since boot.
   if (connected) {
-    // String newValue = "Time since boot: " + String(millis()/1000);
-    // SerialDef.println("Setting new characteristic value to \"" + newValue + "\"");
-    
     // // Set the characteristic's value to be the array of bytes that is actually a string.
     // pRemoteCharacteristic->writeValue(newValue.c_str(), newValue.length());
   }else if(doScan){
     BLEDevice::getScan()->start(0);  // this is just example to start scan after disconnect, most likely there is better way to do it in arduino
+  } else if (restart) {
+    BLEDevice::getScan()->start(5, false);
   }
 } // End of loop
 
