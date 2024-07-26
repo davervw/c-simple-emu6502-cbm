@@ -28,7 +28,15 @@
 
 BLECharacteristic *pCharacteristic;
 
+#ifdef ARDUINO_M5STACK_STICKC
+#define ARDUINO_M5Stick_C
+#endif
+
 void setup() {
+#ifdef ARDUINO_M5Stick_C    
+    pinMode(10, OUTPUT);
+    digitalWrite(10, LOW);
+#endif    
   Serial.begin(115200);
   Serial.setTimeout(0); // so we don't wait for reads
   //Wire.begin(G2, G1, 100000UL); // ATOMS3
@@ -67,7 +75,6 @@ void setup() {
 
   pCharacteristic->setValue("");
   pService->start();
-  // BLEAdvertising *pAdvertising = pServer->getAdvertising();  // this still is working for backward compatibility
   BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
   pAdvertising->addServiceUUID(SERVICE_UUID);
   pAdvertising->setScanResponse(true);
@@ -78,7 +85,23 @@ void setup() {
   Serial.println("Started Commodore 64/128 BLE Keyboard Service");
 }
 
+void serviceLED()
+{
+  static long then = millis();
+  static bool state = false;
+
+  long now = millis();
+  if ((now - then) >= 1000) {
+    state = !state;
+#ifdef ARDUINO_M5Stick_C    
+    digitalWrite(10, state ? HIGH : LOW);
+#endif    
+    then = now;
+  }
+}
+
 void loop() {
+  serviceLED();
   String s = "";
   if (CardKB) 
     s = CardKbdScanRead();
