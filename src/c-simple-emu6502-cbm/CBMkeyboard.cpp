@@ -20,11 +20,14 @@ USBtoCBMkeyboard usbkbd;
 
 bool CBMkeyboard::caps = false;
 
+bool CBMkeyboard::heldToggle = false;
+
 int CBMkeyboard::scan_codes[16] = { 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64 };
 
 void CBMkeyboard::reset(CBMkeyboard::Model model)
 {
   memset(scan_codes, model == C128 ? 88 : 64, sizeof(scan_codes));
+  heldToggle = false;
 }
 
 void CBMkeyboard::ReadKeyboard(CBMkeyboard::Model model)
@@ -101,6 +104,10 @@ void CBMkeyboard::ReadKeyboard(CBMkeyboard::Model model)
         if (!lastDn && c_pressed)
           pressed_time = millis();
         }
+        if (lastUp && a_pressed && (millis() - pressed_time) >= 1000)
+          a_held = true;
+        if (!lastUp && a_pressed)
+          pressed_time = millis();
     }
 #else // NOT ARDUINO_M5STACK_CORES3
     bool a_pressed = M5.BtnA.isPressed();
@@ -110,6 +117,8 @@ void CBMkeyboard::ReadKeyboard(CBMkeyboard::Model model)
     bool b_held = M5.BtnB.pressedFor(1000);
     bool c_held = M5.BtnC.pressedFor(1000);
 #endif // NOT ARDUINO_M5STACK_CORES3    
+    if (a_held)
+      heldToggle = true;
     if (b_held) {
       a_pressed = true;
       b_pressed = true;

@@ -293,19 +293,10 @@ bool EmuC64::ExecutePatch()
         }
     }
 
-#ifdef ARDUINO_M5STACK_FIRE
-    static ushort counter = 0;
-    if (counter++ == 0) // infrequently check
-    {
-        if (digitalRead(37) == 0 && digitalRead(39) == 0)
-        {
-            while (digitalRead(37) == 0 || digitalRead(39) == 0); // wait until depress
-            main_go_num = 128;
-            quit = true;
-            return true;
-        }
+    if (main_go_num == 128) {
+        quit = true;
+        return true;
     }
-#endif
 
     return EmuCBM::ExecutePatch();
 }
@@ -425,6 +416,9 @@ byte EmuC64::C64Memory::read(ushort addr)
         else if (addr == 0xDC01)
         {
             CBMkeyboard::ReadKeyboard(CBMkeyboard::Model::C64);
+
+            if (CBMkeyboard::heldToggle)
+                main_go_num = 128;
 
             int value = 0;
 

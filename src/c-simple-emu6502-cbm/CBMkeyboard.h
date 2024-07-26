@@ -8,4 +8,5 @@ public:
   static void ReadKeyboard(Model model);
   static void reset(Model model);
   static bool caps;
+  static bool heldToggle;
 };

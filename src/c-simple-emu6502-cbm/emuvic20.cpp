@@ -260,19 +260,10 @@ bool EmuVic20::ExecutePatch()
 		}
 	}
 
-#ifdef ARDUINO_M5STACK_FIRE
-	static ushort counter = 0;
-	if (counter++ == 0) // infrequently check
-	{
-		if (digitalRead(37) == 0 && digitalRead(39) == 0)
-		{
-			while (digitalRead(37) == 0 || digitalRead(39) == 0); // wait until depress
-			main_go_num = 64;
-			quit = true;
-			return true;
-		}
+	if (main_go_num == 64) {
+		quit = true;
+		return true;
 	}
-#endif
 
 	return EmuCBM::ExecutePatch();
 }
@@ -367,6 +358,10 @@ byte EmuVic20::Vic20Memory::read(ushort addr)
 		else if (addr == 0x9121)
 		{
 			CBMkeyboard::ReadKeyboard(CBMkeyboard::Model::VIC20);
+
+			if (CBMkeyboard::heldToggle)
+				main_go_num = 64;
+
 			byte value = 0xFF;
 			for (int i = 0; i < 16; ++i)
 			{
