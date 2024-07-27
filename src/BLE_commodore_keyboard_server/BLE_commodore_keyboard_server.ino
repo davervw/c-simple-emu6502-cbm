@@ -13,7 +13,30 @@
     updates by chegewara
 */
 
+// Synonyms ////////////////////////////
+#ifdef ARDUINO_M5STACK_STICKC
+#define ARDUINO_M5Stick_C
+#endif
+
+#ifdef ARDUINO_M5STACK_ATOMS3
+#define ARDUINO_M5Stack_ATOMS3
+#endif
+
+#ifdef ARDUINO_M5STACK_CORE
+#define ARDUINO_M5Stack_Core_ESP32
+#endif
+////////////////////////////////////////
+
+#ifdef ARDUINO_M5Stack_ATOMS3
+#include "M5Unified.hpp"
+#endif
+#ifdef ARDUINO_M5Stack_Core_ESP32
+#include "M5Unified.hpp"
+#endif
+#ifdef ARDUINO_M5Stick_C
 #include <Arduino.h>
+#endif
+
 #include <BLEDevice.h>
 #include <BLEUtils.h>
 #include <BLEServer.h>
@@ -28,19 +51,28 @@
 
 BLECharacteristic *pCharacteristic;
 
-#ifdef ARDUINO_M5STACK_STICKC
-#define ARDUINO_M5Stick_C
-#endif
-
 void setup() {
 #ifdef ARDUINO_M5Stick_C    
-    pinMode(10, OUTPUT);
-    digitalWrite(10, LOW);
+  pinMode(10, OUTPUT);
+  digitalWrite(10, LOW);
 #endif    
+#ifdef ARDUINO_M5Stack_ATOMS3
+  m5::M5Unified::config_t cfg;
+  memset(&cfg, 0, sizeof(cfg));
+  cfg.external_display.atom_display = true;
+  M5.begin(cfg);
+#endif
+#ifdef ARDUINO_M5Stack_Core_ESP32
+  m5::M5Unified::config_t cfg;
+  memset(&cfg, 0, sizeof(cfg));
+  cfg.external_display.atom_display = true;
+  M5.begin(cfg);
+#endif
   Serial.begin(115200);
   Serial.setTimeout(0); // so we don't wait for reads
   //Wire.begin(G2, G1, 100000UL); // ATOMS3
-  Wire.begin(32, 33, 100000UL); // M5Stick-C
+  //Wire.begin(32, 33, 100000UL); // M5Stick-C
+  Wire.begin(SDA, SCL, 100000UL);
   for (int i=1; !CardKB && i<=5; ++i)
   {
     if (Wire.requestFrom((uint8_t)0x5F, (size_t)1, true) == 1)
@@ -54,7 +86,15 @@ void setup() {
   {
     Wire.end();
     Serial2.end();
-    Serial2.begin(115200, SERIAL_8N1, 32, 33);
+#ifdef ARDUINO_M5Stick_C    
+    Serial2.begin(115200, SERIAL_8N1, 32, 33); // M5Stick-C
+#endif
+#ifdef ARDUINO_M5Stack_ATOMS3    
+    Serial2.begin(115200, SERIAL_8N1, G2, G1); // M5AtomS3
+#endif
+#ifdef ARDUINO_M5Stack_Core_ESP32
+    Serial2.begin(115200, SERIAL_8N1, G21, -1); // M5Core
+#endif    
     Serial2.setTimeout(0); // so we don't wait for reads
   }
 
@@ -95,7 +135,13 @@ void serviceLED()
     state = !state;
 #ifdef ARDUINO_M5Stick_C    
     digitalWrite(10, state ? HIGH : LOW);
-#endif    
+#endif
+#ifdef ARDUINO_M5Stack_ATOMS3
+    M5.Lcd.fillScreen(state ? BLUE : WHITE);
+#endif
+#ifdef ARDUINO_M5Stack_Core_ESP32
+    M5.Lcd.fillScreen(state ? BLUE : WHITE);
+#endif
     then = now;
   }
 }
