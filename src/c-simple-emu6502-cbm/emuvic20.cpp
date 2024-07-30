@@ -318,6 +318,8 @@ EmuVic20::Vic20Memory::Vic20Memory(int size)
 	EmuCBM::File_ReadAllBytes(basic_rom, basic_size, "/roms/vic20/basic");
 	EmuCBM::File_ReadAllBytes(kernal_rom, kernal_size, "/roms/vic20/kernal");
 
+	kernal_rom[0x1d9] = 8; // default to floppy disk instead of tape
+
 	vic = new EmuVic(ram, io, char_rom);
 }
 
