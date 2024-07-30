@@ -175,12 +175,14 @@ int EmuD64::GetSectorOffset(int track, int sector)
         char exception[80];
         snprintf(exception, sizeof(exception), "track %d out of range, should be 1 to %d", track, n_tracks);
         show_exception(exception);
+        exit(1); // shouldn't get here
     }
     if (sector < 0 || sector >= sectors_per_track[track])
     {
         char exception[80];
         snprintf(exception, sizeof(exception), "sector %d out of range, should be 0 to %d for track %d", sector, sectors_per_track[track], track);
         show_exception(exception);
+        exit(1); // shouldn't get here
     }
     int offset = 0;
     for (int t = 1; t < track; ++t)
@@ -437,7 +439,7 @@ char EmuD64::DirStruct::PrintableChar(unsigned char c)
         return '?'; // not printable
 }
 
-void EmuD64::DirStruct::getName(unsigned char *name, int size)
+void EmuD64::DirStruct::getName(unsigned char *name, int size) const
 {
     memset(name, 0, size);
     int dest = 0;
@@ -570,7 +572,7 @@ static bool DirectoryEntryHandler(EmuD64* d64, EmuD64::DirStruct* dir, int n, bo
 
 EmuD64::DirStruct* EmuD64::DirectoryEntry(int i)
 {
-    DirectoryEntryContext direntrycontext;
+    DirectoryEntryContext direntrycontext{};
     direntrycontext.n = i;
     direntrycontext.dir = 0;
     void* context = &direntrycontext;
@@ -785,7 +787,7 @@ EmuD64::BlockStruct EmuD64::AllocBlock(bool directory)
         sector = 0;
     }
 
-    BlockStruct block;
+    BlockStruct block{};
     block.track = track;
     block.sector = sector;
     return block;
@@ -816,7 +818,7 @@ void EmuD64::StoreFileByStruct(DirStruct* dir, unsigned char* data, int data_len
         {
             while (n_sectors > 0)
             {
-                BlockStruct next_block;
+                BlockStruct next_block{};
                 next_block.track = 0;
                 next_block.sector = 0;
                 if (--n_sectors == 0) {
@@ -1035,7 +1037,7 @@ void EmuD64::LoadFromFilenameOrCreate()
     {
         // make copy for loading later
         filename = new char[filename_len + 1];
-        strcpy_s(filename, filename_len + 1, filename_d64);
+        strcpy_s(filename, (size_t)filename_len + 1, filename_d64);
 
         // fix disk extension name
         filename_d64[filename_len - 3] = 'd';

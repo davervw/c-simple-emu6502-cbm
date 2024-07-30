@@ -125,7 +125,7 @@ public:
         void ReadData(EmuD64* d64, unsigned char* data, int offset); // tested
         int Store(EmuD64* d64, int dir_track, int dir_sector, int dir_sector_entry);
         static char PrintableChar(unsigned char c); // tested
-        void getName(unsigned char* name, int size);
+        void getName(unsigned char* name, int size) const;
         const char* FileTypeString(); // tested
         const char* toString(); // tested
     }; // class DirStruct 

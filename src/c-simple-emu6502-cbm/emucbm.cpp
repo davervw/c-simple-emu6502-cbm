@@ -183,8 +183,9 @@ bool EmuCBM::FileSave(const char* filename, ushort addr1, ushort addr2)
         return false;
     bytes[0] = LO(addr1);
     bytes[1] = HI(addr1);
-    for (int i = 0; i < len - 2; ++i)
-        bytes[i + 2] = GetMemory(addr1 + i);
+    int dest = 2;
+    for (int src = 0; src < len - 2 && dest < len; ++src)
+        bytes[dest] = GetMemory(addr1 + src);
     disk->StoreFileByName(filename, bytes, len);
     free(bytes);
     return true;
