@@ -469,6 +469,10 @@ void EmuMinimum::LoadOrSaveState(byte key)
 			else if (choice > 0)
 				--choice;
 		}
+		if (c == 3) {
+			choice = -1;
+			break;
+		}
 	}
 
 	if (choice == 0)
