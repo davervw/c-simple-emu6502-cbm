@@ -318,6 +318,11 @@ EmuVic20::Vic20Memory::Vic20Memory(int size)
 	EmuCBM::File_ReadAllBytes(basic_rom, basic_size, "/roms/vic20/basic");
 	EmuCBM::File_ReadAllBytes(kernal_rom, kernal_size, "/roms/vic20/kernal");
 
+	// hack rom to load filename "*" instead of empty filename when SHIFT+RUN
+	kernal_rom[0xdf5] = 207; // shift O
+	kernal_rom[0xdf6] = 34;  // double quote
+	kernal_rom[0xdf7] = 42;  // asterisk
+
 	kernal_rom[0x1d9] = 8; // default to floppy disk instead of tape
 
 	vic = new EmuVic(ram, io, char_rom);
