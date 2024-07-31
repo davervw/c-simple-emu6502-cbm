@@ -61,7 +61,7 @@ void WindowsStart(HWND hWnd, bool& shuttingDown) // TODO: common start for Windo
 				system = new EmuMinimum(0xFFF8);
 				break;
 			case 20: 
-				system = new EmuVic20(40); 
+				system = new EmuVic20(5); 
 				break;
 			case 128:
 				system = new EmuC128();
