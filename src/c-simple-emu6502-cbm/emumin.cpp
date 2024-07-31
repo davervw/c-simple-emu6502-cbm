@@ -458,7 +458,7 @@ void EmuMinimum::LoadOrSaveState(byte key)
 		}
 		if (c == 11) {
 			if (counting) {
-                if (n < 999)
+                if (n < 99)
                     ++n;
 			}
 			else if (choice > 0)
@@ -480,7 +480,7 @@ void EmuMinimum::LoadOrSaveState(byte key)
 
 void EmuMinimum::ResetStateFromDisk(byte*& state, size_t& state_size, int state_num)
 {
-    if (state_num < 0 || state_num > 999)
+    if (state_num < 0 || state_num > 99)
         return;
 
     char filename[20];
@@ -497,7 +497,7 @@ void EmuMinimum::ResetStateFromDisk(byte*& state, size_t& state_size, int state_
 
 void EmuMinimum::SaveStateToDisk(byte* state, size_t state_size, int state_num)
 {
-    if (state_num < 0 || state_num > 999)
+    if (state_num < 0 || state_num > 99)
         return;
 
     char filename[20];
