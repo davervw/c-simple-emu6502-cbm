@@ -10,6 +10,9 @@
 // TODO: more build instructions needed for Arduino IDE options because they can get tricky
 
 ////////////////////////////
+#ifdef ARDUINO_M5STACK_CORE2
+#define ARDUINO_M5STACK_Core2
+#endif
 #ifdef ARDUINO_M5STACK_Core2
 #include <M5Core2.h> // library version 0.1.9
 #define SerialDef Serial
