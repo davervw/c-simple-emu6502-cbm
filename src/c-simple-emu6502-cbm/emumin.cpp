@@ -34,6 +34,7 @@
 
 #include "emucbm.h"
 //#include "dprintf.h"
+#include "CBMkeyboard.h"
 
 #ifdef _WINDOWS
 #include "WindowsFile.h"
@@ -82,6 +83,8 @@ bool EmuMinimum::ExecutePatch()
         ProcessSpecialKey(terminal->specialKey);
         terminal->specialKey = 0;
     }
+    if (CBMkeyboard::heldToggle)
+        main_go_num = 64;
     return false;
 }
 
@@ -242,6 +245,8 @@ static char* getFilename(Terminal* terminal)
             continue;
         }
         n = 0;
+        if (c == 13)
+            c = '1'; // default to first
         if (c >= '1' && c <= '9')
             n = c - '0';
         if (c == '0')
@@ -450,16 +455,16 @@ void EmuMinimum::LoadOrSaveState(byte key)
 		}
 		if (c == 10) {
 			if (counting) {
-                if (n > 0)
-                    --n;
-            }
+				if (n > 0)
+					--n;
+			}
 			else if (choice < 2)
 				++choice;
 		}
 		if (c == 11) {
 			if (counting) {
-                if (n < 99)
-                    ++n;
+				if (n < 99)
+					++n;
 			}
 			else if (choice > 0)
 				--choice;

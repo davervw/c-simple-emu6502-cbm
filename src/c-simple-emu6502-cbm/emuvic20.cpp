@@ -260,7 +260,7 @@ bool EmuVic20::ExecutePatch()
 		}
 	}
 
-	if (main_go_num == 64) {
+	if (main_go_num == 1) {
 		quit = true;
 		return true;
 	}
@@ -362,7 +362,7 @@ byte EmuVic20::Vic20Memory::read(ushort addr)
 			CBMkeyboard::ReadKeyboard(CBMkeyboard::Model::VIC20);
 
 			if (CBMkeyboard::heldToggle)
-				main_go_num = 64;
+				main_go_num = 1;
 
 			byte value = 0xFF;
 			for (int i = 0; i < 16; ++i)
