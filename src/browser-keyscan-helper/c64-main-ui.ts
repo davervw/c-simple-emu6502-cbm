@@ -296,7 +296,7 @@ function C64keyEvent(event: KeyboardEvent): boolean {
 
 function C64keyEventEx(event: KeyboardEvent): boolean {
   let i: number;
-  let scan: number = 64;
+  let scan: number = 88;
   //console.log(`key=${event.key}`);
   let key: any = keyDictionary[event.key];
   if (key == null)
@@ -338,7 +338,7 @@ function C64keyEventEx(event: KeyboardEvent): boolean {
   //console.log(event.type + " " + event.key + " " + event.code + " " + scan);
 
   if (event.type == "keydown") {
-    if (scan != 64) {
+    if (scan != 88) {
       if (keys.indexOf(scan) < 0)
         keys.push(scan);
     }
@@ -369,13 +369,13 @@ function C64keyEventEx(event: KeyboardEvent): boolean {
 
   let msg = keys.toString();
   if (msg.length == 0)
-    msg = '64';
+    msg = '88';
   if (msg != last_keys) {
     SerialWrite(msg);
     last_keys = msg;
   }
 
-  return (scan == 64);
+  return (scan == 88);
 }
 
 const mapper = new C64keymapper();
