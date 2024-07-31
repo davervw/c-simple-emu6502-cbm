@@ -50,8 +50,8 @@ const int cols = 40;
 const int rows = 30;
 #endif
 #ifdef _WINDOWS
-const int cols = 80;
-const int rows = 25;
+const int cols = 100;
+const int rows = 30;
 #endif
 #ifdef ILI9341
 const int cols = 40;
@@ -83,6 +83,7 @@ Terminal::Terminal()
 	redrawRequiredSignal = false;
 	needsPaintFrame = false;
 	lastPaintFrame = micros();
+	specialKey = 0;
 	WindowsDraw::CreateRenderTarget(cols*8, rows*8, 32, 16, redrawRequiredSignal);
 	WindowsDraw::BeginDraw();
 #else // NOT _WINDOWS
@@ -175,6 +176,11 @@ bool Terminal::read(char& c)
 	bool result = keyboard->read(c);
 	//if (result)
 	//	dprintf("Terminal.read %02X\n", c);
+	if (result && (byte)c >= 0xF0 && (byte)c <= 0xFE) {
+		specialKey = c;
+		c = 0x7F; // TODO: fix others interpreting this as a keypress, catch at readWaiting instead
+		result = false;
+	}
 	return result;
 }
 
@@ -281,4 +287,65 @@ void Terminal::RedrawScreen()
 #endif // NOT _WINDOWS
 		}
 	}
+}
+
+bool Terminal::SaveState(byte*& state, size_t& size)
+{
+	// note: always save 100x30 screen for fixed state buffer
+	size = (size_t)100 * 30 + 3;
+	state = new byte[size];
+	if (state == 0) {
+		size = 0;
+		return false;
+	}
+
+	// intialize screen to spaces
+	memset(state, ' ', sizeof(state) - 3);
+
+	// copy screen
+	for (int row = 0; row < rows; ++row)
+		for (int col = 0; col < cols; ++col)
+			state[row * 100 + col] = videoBuffer[row * cols + col];
+
+	state[size - 3] = crnlmode;
+	state[size - 2] = x;
+	state[size - 1] = y;
+
+	return true;
+}
+
+bool Terminal::RestoreState(byte* state, size_t size)
+{
+	if (size != (size_t)100 * 30 + 3)
+		return false;
+	if (state == 0)
+		return false;
+
+	memset(videoBuffer, ' ', rows * cols);
+
+	for (int row = 0; row < rows; ++row)
+		for (int col = 0; col < cols; ++col)
+			videoBuffer[row * cols + col] = state[row * 100 + col];
+
+	switch (state[size - 3])
+	{
+	case (int)CRNLMODE::CARRIAGE_RETURN_ONLY:
+		crnlmode = CARRIAGE_RETURN_ONLY;
+		break;
+	case (int)CRNLMODE::NEWLINE_ONLY:
+		crnlmode = NEWLINE_ONLY;
+		break;
+	case (int)CRNLMODE::CARRIAGE_RETURN_AND_NEWLINE:
+	default:
+		crnlmode = CARRIAGE_RETURN_AND_NEWLINE;
+		break;
+	}
+	x = state[size - 2];
+	y = state[size - 1];
+	RedrawScreen();
+#ifdef _WINDOWS
+	needsPaintFrame = true;
+#endif
+
+	return true;
 }

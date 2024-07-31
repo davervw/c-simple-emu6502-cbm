@@ -150,3 +150,27 @@ void MC6850::set_transmit_data_register_empty()
 {
 	status.tdre = 1;
 }
+
+bool MC6850::SaveState(byte*& state, size_t& size)
+{
+	size = 2;
+	state = new byte[size];
+	if (state == 0) {
+		size = 0;
+		return false;
+	}
+	state[0] = control.value;
+	state[1] = status.value;
+	return true;
+}
+
+bool MC6850::RestoreState(byte* state, size_t size)
+{
+	if (size != 2)
+		return false;
+	if (state == 0)
+		return false;
+	control.value = state[0];
+	status.value = state[1];
+	return true;
+}

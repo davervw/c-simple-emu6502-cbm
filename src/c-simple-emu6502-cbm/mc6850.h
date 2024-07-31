@@ -128,6 +128,8 @@ public:
 	byte read_status();
 	void write_control(byte value);
 	bool read_irq() const;
+	bool SaveState(byte*& state, size_t& size);
+	bool RestoreState(byte* state, size_t size);
 private:
 	void clear_irq();
 	void set_irq();

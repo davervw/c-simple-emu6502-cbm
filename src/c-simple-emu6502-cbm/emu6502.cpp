@@ -522,7 +522,7 @@ void Emu6502::JMPIND(ushort* p_addr, byte* p_bytes)
 }
 
 // "A:FF X:FF Y:FF S:FF P:XX-XXXXX"
-void Emu6502::GetDisplayState(char* state, int state_size)
+void Emu6502::GetDisplayState(char* state, int state_size) const
 {
 	snprintf(state, state_size, "A:%02X X:%02X Y:%02X S:%02X P:%c%c-%c%c%c%c%c",
 		A,
@@ -1180,4 +1180,57 @@ void Emu6502::DisassembleShort(ushort addr, bool* p_conditional, byte* p_bytes, 
 		return;
 		//throw new Exception(string.Format("Invalid opcode {0:X2}", memory[addr]));
 	}
+}
+
+bool Emu6502::SaveState(byte*& state, size_t& size) const
+{
+	size = 17;
+	state = new byte[size];
+	if (state == 0) {
+		size = 0;
+		return false;
+	}
+	state[0] = A;
+	state[1] = X;
+	state[2] = Y;
+	state[3] = S;
+	state[4] = N;
+	state[5] = V;
+	state[6] = B;
+	state[7] = D;
+	state[8] = I;
+	state[9] = Z;
+	state[10] = C;
+	state[11] = (byte)PC;
+	state[12] = PC >> 8;
+	state[13] = trace;
+	state[14] = step;
+	state[15] = quit;
+	state[16] = sixty_hz_irq;
+	return true;
+}
+
+bool Emu6502::RestoreState(byte* state, size_t size)
+{
+	if (size != 17)
+		return false;
+	if (state == 0)
+		return false;
+	A = state[0];
+	X = state[1];
+	Y = state[2];
+	S = state[3];
+	N = state[4];
+	V = state[5];
+	B = state[6];
+	D = state[7];
+	I = state[8];
+	Z = state[9];
+	C = state[10];
+	PC = state[11] | (state[12] << 8);
+	trace = state[13];
+	step = state[14];
+	quit = state[15];
+	sixty_hz_irq = state[16];
+	return true;
 }

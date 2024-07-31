@@ -32,6 +32,8 @@
 
 #pragma once
 
+#include <stdlib.h>
+
 //#define TEST6502 // set for 6502 tests instead of Commodore emulation, see emutest.cpp
 
 typedef signed char sbyte;
@@ -73,6 +75,8 @@ protected:
   {
     memory->write(addr, value);
   }
+  bool SaveState(byte*& state, size_t& size) const;
+  bool RestoreState(byte* state, size_t size);
   virtual bool ExecutePatch() = 0;
   void Push(int value);
   byte Pop(void);
@@ -181,7 +185,7 @@ private:
   byte GetIM(ushort addr, byte *p_bytes);
   void Execute(ushort addr);
 
-  void GetDisplayState(char *state, int state_size);
+  void GetDisplayState(char *state, int state_size) const;
   void DisassembleShort(ushort addr, bool *p_conditional, byte *p_bytes, ushort *p_addr2, char *dis, int dis_size);
   void DisassembleLong(ushort addr, bool *p_conditional, byte *p_bytes, ushort *p_addr2, char *dis, int dis_size, char *line, int line_size);
 

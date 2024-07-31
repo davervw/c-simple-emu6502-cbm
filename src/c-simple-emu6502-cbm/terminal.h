@@ -83,6 +83,8 @@ public:
 	virtual bool readWaiting();
 	void write(const char* s);
 	void clearScreen();
+	bool SaveState(byte*& state, size_t& size);
+	bool RestoreState(byte* state, size_t size);
 
 	typedef enum _CRNLMODE {
 		CARRIAGE_RETURN_AND_NEWLINE = 0,
@@ -91,6 +93,8 @@ public:
 	} CRNLMODE;
 
 	static CRNLMODE crnlmode; // default NEWLINE_ONLY; // TODO: for input too
+
+	byte specialKey; // allow special processing outside of normal channels, e.g. load/save state
 
 private:
 	ASCIIKeyboard* keyboard;

@@ -58,7 +58,7 @@ static ShiftState shiftState = ShiftState::None;
 
 static const char scan_to_ascii[4][88] = {
 	{
-		127, '\r', '\xff', '\xff', '\xff', '\xff', '\xff', '\xff',
+		127, '\r', 12, '\xf7', '\xf1', '\xf3', '\xf5', 10,
 		'3', 'w', 'a', '4', 'z', 's', 'e', '\xff',
 		'5', 'r', 'd', '6', 'c', 'f', 't', 'x',
 		'7', 'y', 'g', '8', 'b', 'h', 'u', 'v',
@@ -68,10 +68,10 @@ static const char scan_to_ascii[4][88] = {
 		'1', '_', '\xff', '2', ' ', '\xff', 'q', 3,
 		'\xff', '8', '5', '\t', '2', '4', '7', '1',
 		27, '+', '-', '\n', '\r', '6', '9', '3',
-		'\xff', '0', '*', '\xff', '\xff', '\xff', '\xff', 19,
+		'\xff', '0', '*', 11, '\xff', 8, '\xff', 19,
 	},
 	{
-		127, '\r', '\xff', '\xff', '\xff', '\xff', '\xff', '\xff',
+		127, '\r', '\xff', '\xf8', '\xf2', '\xf4', '\xf6', '\xff',
 		'#', 'W', 'A', '$', 'Z', 'S', 'E', '\xff',
 		'%', 'R', 'D', '&', 'C', 'F', 'T', 'X',
 		'\'', 'Y', 'G', '(', 'B', 'H', 'U', 'V',
@@ -81,7 +81,7 @@ static const char scan_to_ascii[4][88] = {
 		'!', '_', '\xff', '"', ' ', '\xff', 'Q', 3,
 		'\xff', '*', '%', '\t', '2', '4', '7', '1',
 		27, '+', '-', '\n', '\r', '6', '9', '3',
-		'\xff', '0', '*', '\xff', '\xff', '\xff', '\xff', 19,
+		'\xff', '0', '*', 11, '\xff', 8, '\xff', 19,
 	},
 	{
 		127, 13, '\xff', '\xff', '\xff', '\xff', '\xff', '\xff',
@@ -177,6 +177,7 @@ void pollKeyboard()
 
 static void pushKey(int scan_code)
 {
+	//dprintf("shiftState %04X\n", shiftState);
 	char ascii = '\xff';
 	if (shiftState == ShiftState::None)
 		ascii = scan_to_ascii[0][scan_code];
@@ -186,7 +187,7 @@ static void pushKey(int scan_code)
 		ascii = scan_to_ascii[2][scan_code];
 	else if (shiftState & ShiftState::Commodore)
 		ascii = scan_to_ascii[3][scan_code];
-	if (ascii & 0x80)
+	if (ascii == 0xFF)
 		return;
 	if ((buffer_tail + 1) % buffer_count == buffer_head)
 		return;
@@ -205,8 +206,10 @@ static void scanCodesToKeyboardBuffer()
 	int scan_code = calculateScanCode();
 	if (scan_code != last_scan_code) {
 		last_scan_code = scan_code;
-		if (scan_code != SCAN_CODE_NO_KEY)
+		if (scan_code != SCAN_CODE_NO_KEY) {
+			//dprintf("scan %02X\n", scan_code);
 			pushKey(scan_code);
+		}
 	}
 }
 

@@ -30,3 +30,4 @@ roms/minimum/src/sweet16.asm
 !roms/minimum/src/build.sh
 *.swp
 disks/
+snapshots/

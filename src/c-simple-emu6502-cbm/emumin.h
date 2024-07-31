@@ -43,6 +43,8 @@ class EmuMinimum : public Emu6502
 public:
 	EmuMinimum(ushort serialaddr);
 	virtual ~EmuMinimum();
+	bool SaveState(byte*& state, size_t& size);
+	bool RestoreState(byte* state, size_t size);
 
 protected:
 	bool ExecutePatch();
@@ -50,6 +52,10 @@ protected:
 private:
 	byte GetMemory(ushort addr);
 	void SetMemory(ushort addr, byte value);
+	void ProcessSpecialKey(byte key);
+	void LoadOrSaveState(byte key);
+	void ResetStateFromDisk(byte*& state, size_t& state_size, int state_num);
+	void SaveStateToDisk(byte* state, size_t state_size, int state_num);
 
 private:
 	EmuMinimum(const EmuMinimum& other); // disabled
@@ -63,6 +69,8 @@ public:
 	virtual ~MinimumMemory();
 	virtual byte read(ushort addr);
 	virtual void write(ushort addr, byte value);
+	bool SaveState(byte*& state, size_t& size) const;
+	bool RestoreState(byte* state, size_t size);
 	unsigned getramsize() const;
 	unsigned getromsize() const;
 	MC6850* uart;
