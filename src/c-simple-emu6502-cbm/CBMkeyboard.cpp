@@ -216,6 +216,8 @@ loop:
                 scan = (toVic20Row[scan & 7] << 3) | toVic20Col[scan >> 3];
             if (model != C128 && scan > 64)
                 scan = (scan & 0xFF80) | 64;
+            if (model == C128 && scan == 64)
+                scan = 88; // disable HELP key, some keyboard helpers still send 64 for no key // TODO: find and destroy bugs
             scan_codes[dest++] = scan;
             scan = 0;
             len = 0;
