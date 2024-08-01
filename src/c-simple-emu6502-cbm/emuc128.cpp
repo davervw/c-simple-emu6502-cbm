@@ -394,7 +394,11 @@ C128Memory::C128Memory()
     EmuCBM::File_ReadAllBytes(basic_hi_rom, basic_hi_size, "/roms/c128/basichi");
     EmuCBM::File_ReadAllBytes(char_rom, chargen_size, "/roms/c128/chargen");
     EmuCBM::File_ReadAllBytes(kernal_rom, kernal_size, "/roms/c128/kernal");
-    
+
+    // hack rom to use load instead of dload, avoiding empty filename error // TODO: fix C128 loading
+    kernal_rom[0xEE7] = 'L';
+    kernal_rom[0xEE8] = 'o';
+
     io = new byte[io_size];
     for (int i = 0; i < io_size; ++i)
         io[i] = 0x0;
