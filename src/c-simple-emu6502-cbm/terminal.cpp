@@ -340,8 +340,14 @@ bool Terminal::RestoreState(byte* state, size_t size)
 		crnlmode = CARRIAGE_RETURN_AND_NEWLINE;
 		break;
 	}
+
 	x = state[size - 2];
 	y = state[size - 1];
+	if (x >= cols)
+		x = cols - 1;
+	if (y >= rows)
+		y = rows - 1;
+
 	RedrawScreen();
 #ifdef _WINDOWS
 	needsPaintFrame = true;
