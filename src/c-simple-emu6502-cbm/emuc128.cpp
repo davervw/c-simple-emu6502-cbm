@@ -79,6 +79,7 @@
 // externs (globals)
 extern const char* StartupPRG;
 extern int main_go_num;
+extern int main_go_arg;
 
 EmuC128::EmuC128()
     : EmuCBM(new C128Memory())
@@ -282,12 +283,15 @@ bool EmuC128::ExecutePatch()
         ushort addr = (ushort)(GetMemory(0x3D) | (GetMemory(0x3E) << 8)); // pointer to current token in buffer
         static char s[81];
         s[0] = 0;
-        while (strlen(s) < 80) // some limit
+        int i = 0;
+        while (i < 80) // some limit
         {
             char c = (char)GetMemory(addr++);
-            if (c >= '0' && c <= '9')
-                s[strlen(s)] = c;
-            else if (c == 0 || strlen(s) > 0)
+            if (c >= '0' && c <= '9') {
+                s[i++] = c;
+                s[i] = 0;
+            }
+            else if (c == 0 || strlen(s) > 0) 
                 break;
         }
         int go_num = atoi(s);
@@ -302,7 +306,25 @@ bool EmuC128::ExecutePatch()
     {
         if (X != 64)
         {
+            main_go_arg = 0;
             main_go_num = X;
+            ushort addr = (ushort)(GetMemory(0x3D) | (GetMemory(0x3E) << 8)); // pointer to current token in buffer
+            if (GetMemory(addr++) == ',') {
+                static char s[81];
+                s[0] = 0;
+                int i = 0;
+                while (i < 80) // some limit
+                {
+                    char c = (char)GetMemory(addr++);
+                    if (c >= '0' && c <= '9') {
+                        s[i++] = c;
+                        s[i] = 0;
+                    }
+                    else if (c == 0 || strlen(s) > 0)
+                        break;
+                }
+                main_go_arg = atoi(s);
+            }
             quit = true;
             return true;
         }

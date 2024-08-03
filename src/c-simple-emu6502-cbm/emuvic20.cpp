@@ -71,6 +71,7 @@
 // externs/globals
 extern const char* StartupPRG;
 extern int main_go_num;
+extern int main_go_arg;
 
 EmuVic20::EmuVic20(int ram_size) : EmuCBM(new Vic20Memory(ram_size * 1024))
 {
@@ -253,8 +254,30 @@ bool EmuVic20::ExecutePatch()
 		}
 		else if (go_state == 2)
 		{
-			extern int main_go_num;
+			main_go_arg = 0;
 			main_go_num = (ushort)(Y + (A << 8));
+			if (main_go_num == 20 && memory->read(memory->read(0x7A) | (memory->read(0x7B) << 8)) == ',') {
+				go_state = 3;
+				A = ',';
+				return ExecuteJSR(0xCEFD); // Validate comma
+			}
+			quit = true;
+			return true;
+		}
+		else if (go_state == 3)
+		{
+			trace = false;
+			go_state = 4;
+			return ExecuteJSR(0xCD8A); // Evaluate expression, check data type
+		}
+		else if (go_state == 4)
+		{
+			go_state = 5;
+			return ExecuteJSR(0xD7F7); // Convert fp to 2 byte integer
+		}
+		else if (go_state == 5)
+		{
+			main_go_arg = (ushort)(Y + (A << 8));
 			quit = true;
 			return true;
 		}

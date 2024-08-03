@@ -69,6 +69,7 @@ int static random(int max)
 // externs (globals)
 extern const char* StartupPRG;
 extern int main_go_num;
+extern int main_go_arg;
 
 // locals
 static int startup_state = 0;
@@ -287,7 +288,30 @@ bool EmuC64::ExecutePatch()
         }
         else if (go_state == 2)
         {
+            main_go_arg = 0;
             main_go_num = (ushort)(Y + (A << 8));
+            if (main_go_num == 20 && memory->read(memory->read(0x7A) | (memory->read(0x7B) << 8)) == ',') {
+                go_state = 3;
+                A = ',';
+                return ExecuteJSR(0xAEFD); // Validate comma
+            }
+            quit = true;
+            return true;
+        }
+        else if (go_state == 3)
+        {
+            trace = false;
+            go_state = 4;
+            return ExecuteJSR(0xAD8A); // Evaluate expression, check data type
+        }
+        else if (go_state == 4)
+        {
+            go_state = 5;
+            return ExecuteJSR(0xB7F7); // Convert fp to 2 byte integer
+        }
+        else if (go_state == 5)
+        {
+            main_go_arg = (ushort)(Y + (A << 8));
             quit = true;
             return true;
         }

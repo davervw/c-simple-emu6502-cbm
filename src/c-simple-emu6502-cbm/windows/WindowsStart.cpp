@@ -40,6 +40,7 @@
 #include "WindowsStart.h"
 
 int main_go_num = 64;
+int main_go_arg = 0;
 const char* StartupPRG = 0;
 HWND hWnd;
 
@@ -61,7 +62,8 @@ void WindowsStart(HWND hWnd, bool& shuttingDown) // TODO: common start for Windo
 				system = new EmuMinimum(0xFFF8);
 				break;
 			case 20: 
-				system = new EmuVic20(5); 
+				system = new EmuVic20(main_go_arg);
+				main_go_arg = 0; // reset
 				break;
 			case 128:
 				system = new EmuC128();

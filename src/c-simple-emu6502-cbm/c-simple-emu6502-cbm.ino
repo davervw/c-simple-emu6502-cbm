@@ -116,6 +116,7 @@ int main_go_num = 0;
 #else
 int main_go_num = 64;
 #endif
+int main_go_arg = 0;
 
 void setup() {
 
@@ -229,8 +230,10 @@ void loop() {
   //   emu = new EmuTed(64);
   // else if (main_go_num == 16)
   //   emu = new EmuTed(16);
-  else if (main_go_num == 20)
-    emu = new EmuVic20(5);
+  else if (main_go_num == 20) {
+    emu = new EmuVic20(main_go_arg);
+    main_go_arg = 0;
+  }
   // else if (main_go_num == 2001)
   //   emu = new EmuPET(32);
   else if (main_go_num == 0) {
