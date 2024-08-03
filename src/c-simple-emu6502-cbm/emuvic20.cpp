@@ -47,10 +47,10 @@
 // No loading of files implemented.
 //
 // MEMORY MAP:
-//   $0000-$03FF Low 1K RAM (199=reverse if non-zero, 646=foreground color)
+//   $0000-$03FF Low 1K RAM
 //   $0400-$0FFF (3K RAM expansion)
-//   $1000-$1DFF 3K RAM (for BASIC) [or alternate screen address]
-//   $1E00-$1FFF RAM (Screen characters)
+//   $1000-$1DFF 3.5K RAM (for BASIC) [or alternate screen address]
+//   $1E00-$1FFF 0.5K RAM (Screen characters)
 //   $2000-$7FFF (24K RAM expansion)
 //   $8000-$8FFF (Character ROM)
 //   $9000-$9FFF (I/O)
