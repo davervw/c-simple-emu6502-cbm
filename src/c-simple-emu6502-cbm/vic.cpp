@@ -370,8 +370,11 @@ void EmuVic::DrawChar(int offset)
 {
   int col = offset % 22;
   int row = offset / 22;
-  int fg = EmuVic::Vic20ColorToLCDColor(color_nybles[offset] & 7);
-  int bg = EmuVic::Vic20ColorToLCDColor(io[0xf] >> 4);
+  int color1 = EmuVic::Vic20ColorToLCDColor(color_nybles[offset] & 7);
+  int color2 = EmuVic::Vic20ColorToLCDColor(io[0xf] >> 4);
+  bool reverse = (io[0xf] & 8) == 0;
+  int fg = reverse ? color2 : color1;
+  int bg = reverse ? color1 : color2;
   DrawChar(ram[video_ram_addr+offset], col, row, fg, bg);
 }
 
