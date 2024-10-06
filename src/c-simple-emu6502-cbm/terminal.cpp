@@ -155,6 +155,10 @@ void Terminal::write_internal(char c)
 	}
 	else if (c == 12)
 		c = ' '; // TODO: cursor right // TODO: option for clearscreen?
+	else if (c == 26) {
+		clearScreen();
+		return;
+	}
 	byte* image = &chargen[c * 8];
 	videoBuffer[y * cols + x] = c;
 #ifdef _WINDOWS
