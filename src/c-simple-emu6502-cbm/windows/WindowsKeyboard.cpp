@@ -226,7 +226,7 @@ void static append_scan_code(C128ScanCode code)
 	}
 }
 
-void static release_scan_code(C128ScanCode code)
+static bool release_scan_code(C128ScanCode code)
 {
 	static const int limit = sizeof(scan_codes) / sizeof(*scan_codes) - 1;
 
@@ -257,7 +257,9 @@ void static release_scan_code(C128ScanCode code)
 				}
 			}
 		}
+		return true;
 	}
+	return false;
 }
 
 LRESULT WindowsKeyboard::ReceiveMessage(UINT message, WPARAM wParam, LPARAM lParam)
@@ -298,7 +300,18 @@ LRESULT WindowsKeyboard::ReceiveMessage(UINT message, WPARAM wParam, LPARAM lPar
 
 		C128ScanCode code = find_scan_code_by_windows_key(wParam, lParam);
 		if (code != SCAN_CODE_NO_KEY)
-			release_scan_code(code);
+		{
+			if (!release_scan_code(code))
+			{
+				wParam = MapVirtualKey(windows_scancode, MAPVK_VSC_TO_VK_EX);
+				_WinShiftState saveShiftState = shiftState;
+				shiftState = WinShiftState(shiftState | LSHIFT | ANYSHIFT);
+				code = find_scan_code_by_windows_key(wParam, lParam);
+				shiftState = saveShiftState;
+				if (code != SCAN_CODE_NO_KEY)
+					release_scan_code(code);
+			}
+		}
 
 		if (wParam == VK_LSHIFT || wParam == VK_RSHIFT)
 			shiftState = WinShiftState((int)shiftState & ~(LSHIFT | RSHIFT | ANYSHIFT));
