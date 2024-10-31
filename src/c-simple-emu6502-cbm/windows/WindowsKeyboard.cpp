@@ -31,6 +31,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #ifdef _WINDOWS
+//#include "../dprintf.h"
 #include "../C128ScanCode.h"
 #include "WindowsKeyboard.h"
 
@@ -50,6 +51,14 @@ typedef enum _WinShiftState {
 } WinShiftState;
 
 static WinShiftState shiftState = NONE;
+
+//static void debug_scancodes()
+//{
+//	dprintf("scan_codes[] { ");
+//	for (int i = 0; i < 16; ++i)
+//		dprintf("%d, ", scan_codes[i]);
+//	dprintf("} shiftState %d\n", shiftState);
+//}
 
 typedef struct _KeyMap {
 	WinShiftState state;
@@ -252,7 +261,13 @@ static bool release_scan_code(C128ScanCode code)
 			for (i = 0; i < limit; ++i) {
 				if (scan_codes[i] == SCAN_CODE_NO_KEY)
 				{
-					scan_codes[i] = (shiftState & LSHIFT) ? SCAN_CODE_LSHIFT : SCAN_CODE_RSHIFT;
+					int scan_code_replace = (shiftState & LSHIFT) ? SCAN_CODE_LSHIFT : SCAN_CODE_RSHIFT;
+					bool found = false; // make sure not already present in buffer
+					for (int j = 0; !found && j < limit; ++j)
+						found = (i != j && scan_codes[j] == scan_code_replace);
+					if (found)
+						scan_code_replace = SCAN_CODE_NO_KEY;
+					scan_codes[i] = scan_code_replace;
 					break;
 				}
 			}
@@ -287,6 +302,9 @@ LRESULT WindowsKeyboard::ReceiveMessage(UINT message, WPARAM wParam, LPARAM lPar
 		else if (wParam == VK_RSHIFT)
 			shiftState = WinShiftState(shiftState | RSHIFT | ANYSHIFT);
 
+		//dprintf("press %d %d ", code - (code & 127), code & 127);
+		//debug_scancodes();
+
 		break;
 	}
 	case WM_KEYUP:
@@ -303,6 +321,7 @@ LRESULT WindowsKeyboard::ReceiveMessage(UINT message, WPARAM wParam, LPARAM lPar
 		{
 			if (!release_scan_code(code))
 			{
+				// try releasing key with shift pressed
 				wParam = MapVirtualKey(windows_scancode, MAPVK_VSC_TO_VK_EX);
 				_WinShiftState saveShiftState = shiftState;
 				shiftState = WinShiftState(shiftState | LSHIFT | ANYSHIFT);
@@ -315,6 +334,9 @@ LRESULT WindowsKeyboard::ReceiveMessage(UINT message, WPARAM wParam, LPARAM lPar
 
 		if (wParam == VK_LSHIFT || wParam == VK_RSHIFT)
 			shiftState = WinShiftState((int)shiftState & ~(LSHIFT | RSHIFT | ANYSHIFT));
+
+		//dprintf("release %d %d ", code - (code & 127), code & 127);
+		//debug_scancodes();
 
 		break;
 	}
