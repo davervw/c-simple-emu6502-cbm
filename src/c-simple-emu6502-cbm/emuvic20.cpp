@@ -379,13 +379,11 @@ byte EmuVic20::Vic20Memory::read(ushort addr)
 		return char_rom[addr - char_addr];
 	else if (addr >= io_addr && addr < io_addr + io_size)
 	{
-		if (addr == 0x912F)
-			return 0xFF;
-		else if (addr == 0x911C)
+		if (addr == 0x911C)
 			return 0xFE;
 		else if (addr == 0x911F)
 			return 0x7E;
-		else if (addr == 0x9121)
+		else if (addr == 0x9121 || addr == 0x912F)
 		{
 			CBMkeyboard::ReadKeyboard(CBMkeyboard::Model::VIC20);
 
