@@ -134,6 +134,7 @@ bool EmuVic20::ExecutePatch()
 		PHP();
 		B = true; // return to normal state
 		PC = (ushort)(GetMemory(0xFFFA) + (GetMemory(0xFFFB) << 8)); // JMP(NMI)
+		((Vic20Memory*)memory)->io[0x11D] |= 0x82; // set that interrupt caused by NMI
 		return true; // overriden, and PC changed, so caller should reloop before execution to allow breakpoint/trace/ExecutePatch/etc.
 	}
 
@@ -404,6 +405,10 @@ byte EmuVic20::Vic20Memory::read(ushort addr)
 				}
 			}
 			return value;
+		}
+		else if (addr == 0x9111)
+		{
+			io[addr - io_addr] &= 0x7C; // reset lower 2 bits and high bit
 		}
 		return io[addr - io_addr];
 	}
