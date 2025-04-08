@@ -225,11 +225,12 @@ void EmuVic::DrawChar(byte c, int col, int row, int fg, int bg)
 #endif
   int offset = ((io[0x5] & 2) == 0) ? 0 : (8*256);
   const byte* shape = &chargen[c*8+offset];
+  bool reverse = (io[0xf] & 8) == 0;
 #ifdef _WINDOWS
   byte fg_red, fg_green, fg_blue;
   byte bg_red, bg_green, bg_blue;
-  Extract565Color(fg, fg_red, fg_green, fg_blue);
-  Extract565Color(bg, bg_red, bg_green, bg_blue);
+  Extract565Color(reverse ? bg : fg, fg_red, fg_green, fg_blue);
+  Extract565Color(reverse ? fg : bg, bg_red, bg_green, bg_blue);
   WindowsDraw::DrawCharacter2Color(shape, col, row, fg_red, fg_green, fg_blue, bg_red, bg_green, bg_blue);
   needsPaintFrame = true;
   return;
@@ -280,7 +281,7 @@ void EmuVic::DrawChar(byte c, int col, int row, int fg, int bg)
     int mask = 128;
     for (int col_i=0; col_i<maxcol; ++col_i)
     {
-      int color = ((shape[row_i] & mask) == 0) ? bg : fg;
+      int color = (((shape[row_i] & mask) == 0) ^ reverse) ? bg : fg;
   #ifdef VIC1TO1
       mask = mask >> 1;
   #endif
@@ -370,11 +371,8 @@ void EmuVic::DrawChar(int offset)
 {
   int col = offset % 22;
   int row = offset / 22;
-  int color1 = EmuVic::Vic20ColorToLCDColor(color_nybles[offset] & 7);
-  int color2 = EmuVic::Vic20ColorToLCDColor(io[0xf] >> 4);
-  bool reverse = (io[0xf] & 8) == 0;
-  int fg = reverse ? color2 : color1;
-  int bg = reverse ? color1 : color2;
+  int fg = EmuVic::Vic20ColorToLCDColor(color_nybles[offset] & 7);
+  int bg = EmuVic::Vic20ColorToLCDColor(io[0xf] >> 4);
   DrawChar(ram[video_ram_addr+offset], col, row, fg, bg);
 }
 
