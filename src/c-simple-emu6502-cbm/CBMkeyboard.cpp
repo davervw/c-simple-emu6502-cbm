@@ -131,7 +131,7 @@ loop:
     }
 #endif // M5STACK
 
-    String s;
+    String s = "";
 #ifndef ARDUINO_TEENSY41
     ble_keyboard->ServiceConnection(restartBLE);
     s = ble_keyboard->Read();
@@ -144,12 +144,12 @@ loop:
 #ifndef ARDUINO_SUNTON_8048S070
 #ifndef ARDUINO_TEENSY41
 #ifndef ARDUINO_LILYGO_T_DISPLAY_S3
-        else if (Serial2.available())
+        if (s.length() == 0 && Serial2.available())
             s = Serial2.readString();
 #endif
 #endif
 #endif
-        else if (SerialDef.available())
+        if (s.length() == 0 && SerialDef.available())
             s = SerialDef.readString();
 #ifdef M5STACK
         else if (lastRun && (lastRun = (a_pressed && b_pressed)) == false)
