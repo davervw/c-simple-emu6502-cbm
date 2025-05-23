@@ -27,6 +27,9 @@ GO 1 is a minimum environment similar to an Apple 1, except using MC6850 UART (i
 4. Insert MicroSD with the following files (roms from Vice or similar, disk files optional), and reset; or [detailed instructions for LilyGo T-Display-S3 with FFAT partition](https://github.com/davervw/c-simple-emu6502-cbm/tree/lilygo-t-display-s3)
 
 ```
+roms\vic20\basic
+roms\vic20\chargen
+roms\vic20\kernal
 roms\c64\basic
 roms\c64\chargen
 roms\c64\kernal
@@ -34,6 +37,7 @@ roms\c128\basiclo
 roms\c128\basichi
 roms\c128\chargen
 roms\c128\kernal
+roms\minimum\*
 disks\drive8.d64
 disks\drive9.d64
 ```
@@ -50,6 +54,7 @@ Notes:
 * VDC 8563/8568 text emulation is included in the Commodore 128 emulator only.  Use GRAPHIC 5 command to switch to the 80 column text screen.   GRAPHIC 0 will return to the 40 column screen.
 * There is no fast mode of C128.   The emulator runs flat out as much as it can all the time.  No effort has been made to be cycle accurate.
 * This emulator does not have a C64 within C128 mode implemented.  GO 64 will switch to a strict 64 only mode.  None of the C128 hardware will be present in 64 mode.  No VDC, no fast mode, no extended keyboard scan codes (extended keys are translated to C64 scan codes though for convenience).
+* roms/minimum/* files are included in this repository, copy to SD or Flash as appropriate to test that environment
 
 See more description at blog entries:
 
