@@ -20,7 +20,7 @@ const int Y0 = 28;
 const int X0 = 28;
 const int Y0 = 28;
 #endif
-#endif
+#endif // M5STACK
 
 #ifdef ARDUINO_SUNTON_8048S070
 #define VIC1TO1 // 1 to 1 pixels horizontally and vertically
