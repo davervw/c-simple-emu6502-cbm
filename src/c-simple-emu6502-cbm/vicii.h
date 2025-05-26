@@ -42,6 +42,7 @@ public:
   int C64ColorToLCDColor(byte value);
   void DrawChar(byte c, int col, int row, int fg, int bg);
   void DrawChar(int offset);
+  void RedrawChar(byte c);
   void RedrawScreen();
   void DrawBorder(byte value);
 #ifndef _WINDOWS
@@ -51,7 +52,7 @@ public:
   void Activate();
   void Deactivate();
   void UpdateAddresses();
-
+  bool ChargenIsROM() const;
 #ifdef _WINDOWS
   void CheckPaintFrame(unsigned long micros_now);
   bool needsPaintFrame;

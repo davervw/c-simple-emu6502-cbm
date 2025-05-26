@@ -315,12 +315,18 @@ static void Extract565Color(int color, byte& red, byte& green, byte& blue)
 }
 #endif
 
+bool EmuVicII::ChargenIsROM() const
+{
+    bool vicii_bank_even = (~io[0xD00] & 1) == 0;
+    return vicii_bank_even && ((chargen_addr & 0xF000) == 0xD000);
+}
+
 void EmuVicII::DrawChar(byte c, int col, int row, int fg, int bg)
 {
     if (postponeDrawChar || !active)
         return;
 
-    const byte* shape = (chargen_addr == 0xD000 || chargen_addr == 0xD800)
+    const byte* shape = ChargenIsROM()
         ? &chargen[chargen_addr - 0xD000 + c * 8]
         : &ram[chargen_addr + c * 8];
 
@@ -418,6 +424,13 @@ void EmuVicII::DrawChar(int offset)
     int fg = EmuVicII::C64ColorToLCDColor(color_nybles[offset]);
     int bg = EmuVicII::C64ColorToLCDColor(io[0x21]);
     DrawChar(ram[video_addr + offset], col, row, fg, bg);
+}
+
+void EmuVicII::RedrawChar(byte c)
+{
+    for (int offset = 0; offset < 1000; ++offset)
+        if (ram[video_addr + offset] == c)
+            DrawChar(offset);
 }
 
 void EmuVicII::RedrawScreen()

@@ -488,6 +488,8 @@ void EmuC64::C64Memory::write(ushort addr, byte value)
             ram[addr] = value;
             if (addr >= vicii->video_addr && addr < vicii->video_addr+1000)
                 vicii->DrawChar(addr - vicii->video_addr);
+            if (!vicii->ChargenIsROM() && addr >= vicii->chargen_addr && addr < vicii->chargen_addr + 2048)
+                vicii->RedrawChar((addr - vicii->chargen_addr)/8);
         }
     }
     else if (addr == 0xD018) // VIC-II Chip Memory Control Register
