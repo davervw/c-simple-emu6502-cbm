@@ -120,9 +120,11 @@ void EmuVicII::UpdateAddresses()
     ushort vicii_bank = ~io[0xD00] & 3;
     ushort new_video_addr = vicii_bank * 0x4000 + video_1k_offset * 0x0400;
     ushort new_chargen_addr = ((~vicii_bank & 1) && (chargen_1k_offset == 4 || chargen_1k_offset == 6) ? 3 : vicii_bank) * 0x4000 + chargen_1k_offset * 0x0400;
-    if (new_video_addr != video_addr || new_chargen_addr != chargen_addr) {
+    bool new_isHires = (io[0x18] & 8) == 8;
+    if (new_video_addr != video_addr || new_chargen_addr != chargen_addr || new_isHires != isHires) {
         video_addr = new_video_addr;
         chargen_addr = new_chargen_addr;
+        isHires = new_isHires;
         RedrawScreen(); // upper to lower or lower to upper
     }
 }
@@ -326,9 +328,24 @@ void EmuVicII::DrawChar(byte c, int col, int row, int fg, int bg)
     if (postponeDrawChar || !active)
         return;
 
-    const byte* shape = ChargenIsROM()
-        ? &chargen[chargen_addr - 0xD000 + c * 8]
-        : &ram[chargen_addr + c * 8];
+    const byte* shape;    
+    if (isHires)
+    {
+        ushort hires_addr = chargen_addr & 0xE000;
+        ushort offset = col * 8 + row * 320;
+        shape = ChargenIsROM()
+            ? &chargen[hires_addr - 0xD000 + offset] 
+            : &ram[hires_addr + offset];
+        offset = col + row * 40;
+        fg = EmuVicII::C64ColorToLCDColor(ram[video_addr + offset] >> 4);
+        bg = EmuVicII::C64ColorToLCDColor(ram[video_addr + offset] & 15);
+    }
+    else
+    {
+        shape = ChargenIsROM()
+            ? &chargen[chargen_addr - 0xD000 + c * 8]
+            : &ram[chargen_addr + c * 8];
+    }
 
 #ifdef _WINDOWS
     byte fg_red, fg_green, fg_blue;

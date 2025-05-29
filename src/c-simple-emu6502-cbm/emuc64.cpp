@@ -234,7 +234,7 @@ bool EmuC64::ExecutePatch()
         }
     }
 #ifndef _WINDOWS
-    else if (DRAW_TRAP == -1 && !c64memory->vicii->postponeDrawChar &&
+    else if (DRAW_TRAP == -1 && !c64memory->vicii->postponeDrawChar && !c64memory->vicii->isHires &&
         (PC == 0xE8EA // SCROLL SCREEN
             || PC == 0xE965 // INSERT BLANK LINE
             || PC == 0xE9C8 // MOVE SCREEN LINE
@@ -461,6 +461,16 @@ byte EmuC64::C64Memory::read(ushort addr)
 
             return ~value;
         }
+        else if (addr == 0xD011 || addr == 0xD012) // 9-bit raster location
+        {
+            byte value = ++io[0x12];
+            if (value == 0)
+                io[0x11] ^= 0x80;
+            if (addr == 0xD011)
+                return io[0x11];
+            else
+                return io[0x12];
+        }
         else if (addr == 0xD41B && (io[0x412] & 0x80) != 0 && (io[0x40E] != 0 || io[0x40F] != 0))
             return random(256);
         else
@@ -486,10 +496,18 @@ void EmuC64::C64Memory::write(ushort addr, byte value)
         if (changedRequiresUpdate)
         {
             ram[addr] = value;
-            if (addr >= vicii->video_addr && addr < vicii->video_addr+1000)
+            if (vicii->isHires)
+            {
+                ushort hires_addr = vicii->chargen_addr & 0xE000;
+                if (!vicii->ChargenIsROM() && addr >= hires_addr && addr < hires_addr + 8000)
+                    vicii->DrawChar((addr - hires_addr) / 8);
+            }
+            else if (!vicii->ChargenIsROM() && addr >= vicii->chargen_addr && addr < vicii->chargen_addr + 2048)
+                vicii->RedrawChar((addr - vicii->chargen_addr) / 8);
+
+            // text screen memory or hires color memory, algorithm is the same
+            if (addr >= vicii->video_addr && addr < vicii->video_addr + 1000)
                 vicii->DrawChar(addr - vicii->video_addr);
-            if (!vicii->ChargenIsROM() && addr >= vicii->chargen_addr && addr < vicii->chargen_addr + 2048)
-                vicii->RedrawChar((addr - vicii->chargen_addr)/8);
         }
     }
     else if (addr == 0xD018) // VIC-II Chip Memory Control Register
@@ -507,7 +525,7 @@ void EmuC64::C64Memory::write(ushort addr, byte value)
         io[addr - io_addr] = value & 0xF;
         vicii->RedrawScreen();
     }
-    else if (addr >= color_addr && addr < color_addr + color_nybles_size)
+    else if (!vicii->isHires && addr >= color_addr && addr < color_addr + color_nybles_size)
     {
         int offset = addr - color_addr;
         bool colorChange = (color_nybles[offset] != value);

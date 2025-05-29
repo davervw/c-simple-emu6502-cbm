@@ -74,4 +74,5 @@ public:
   byte border;
   ushort chargen_addr;
   ushort video_addr;
+  bool isHires;
 };
