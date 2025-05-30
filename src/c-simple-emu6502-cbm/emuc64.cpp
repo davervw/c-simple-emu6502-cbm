@@ -247,6 +247,12 @@ bool EmuC64::ExecutePatch()
         c64memory->vicii->postponeDrawChar = true;
         c64memory->vicii->SaveOldVideoAndColor();
     }
+    else if (DRAW_TRAP != -1 && c64memory->vicii->postponeDrawChar && c64memory->vicii->isHires)
+    {
+        c64memory->vicii->postponeDrawChar = false; // don't postpone anymore if switched to hires
+        c64memory->vicii->RedrawScreen(); // redraws hires instead of text
+        return true; // caller should reloop to perform other tests
+    }
     else if (PC == DRAW_TRAP && c64memory->vicii->postponeDrawChar) // returned from drawing postponement
     {
         DRAW_TRAP = -1;

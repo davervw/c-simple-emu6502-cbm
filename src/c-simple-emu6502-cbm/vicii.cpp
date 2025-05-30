@@ -126,7 +126,8 @@ void EmuVicII::UpdateAddresses()
         video_addr = new_video_addr;
         chargen_addr = new_chargen_addr;
         isHires = new_isHires;
-        RedrawScreen(); // upper to lower or lower to upper
+        if (!postponeDrawChar) // otherwise will redraw later
+            RedrawScreen(); // upper to lower or lower to upper
     }
 }
 
