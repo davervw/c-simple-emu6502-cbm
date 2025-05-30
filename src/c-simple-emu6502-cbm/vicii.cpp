@@ -50,6 +50,7 @@ EmuVicII::EmuVicII(byte* vram, byte* vio, byte* vcolor_nybles, byte* vchargen)
     border = 0;
     video_addr = 0x0400;
     chargen_addr = 0xD000;
+    isHires = false;
 
 #ifndef _WINDOWS
     old_video = new byte[1000];
@@ -326,6 +327,9 @@ bool EmuVicII::ChargenIsROM() const
 void EmuVicII::DrawChar(byte c, int col, int row, int fg, int bg)
 {
     if (postponeDrawChar || !active)
+        return;
+
+    if (col < 0 || row < 0 || col > 39 || row > 24)
         return;
 
     const byte* shape;    
