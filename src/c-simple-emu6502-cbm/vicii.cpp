@@ -120,7 +120,7 @@ void EmuVicII::UpdateAddresses()
     ushort vicii_bank = ~io[0xD00] & 3;
     ushort new_video_addr = vicii_bank * 0x4000 + video_1k_offset * 0x0400;
     ushort new_chargen_addr = ((~vicii_bank & 1) && (chargen_1k_offset == 4 || chargen_1k_offset == 6) ? 3 : vicii_bank) * 0x4000 + chargen_1k_offset * 0x0400;
-    bool new_isHires = (io[0x18] & 8) == 8;
+    bool new_isHires = (io[0x11] & 0x20) != 0;
     if (new_video_addr != video_addr || new_chargen_addr != chargen_addr || new_isHires != isHires) {
         video_addr = new_video_addr;
         chargen_addr = new_chargen_addr;

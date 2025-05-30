@@ -510,6 +510,11 @@ void EmuC64::C64Memory::write(ushort addr, byte value)
                 vicii->DrawChar(addr - vicii->video_addr);
         }
     }
+    else if (addr == 0xD011) // VIC-II Bitmap Graphics Mode, & other
+    {
+        io[addr - io_addr] = value;
+        vicii->UpdateAddresses();
+    }
     else if (addr == 0xD018) // VIC-II Chip Memory Control Register
     {
         io[addr - io_addr] = value;
