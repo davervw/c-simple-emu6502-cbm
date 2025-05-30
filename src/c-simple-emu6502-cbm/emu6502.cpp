@@ -40,8 +40,12 @@
 #include <Windows.h>
 #include <WindowsTime.h>
 #else
-void strcpy_s(char* dest, size_t size, const char* src) { strncpy(dest, src, size); }
-void strcat_s(char* dest, size_t size, const char* src) { strncat(dest, src, size); }
+static void strcpy_s(char* dest, size_t size, const char* src) { strncpy(dest, src, size); }
+static void strcat_s(char* dest, size_t size, const char* src) { strncat(dest, src, size); }
+#endif
+
+#ifdef _WINDOWS
+FILE* debugFile = 0;
 #endif
 
 Emu6502::Emu6502(Memory* mem)
@@ -64,10 +68,17 @@ Emu6502::Emu6502(Memory* mem)
 	quit = false;
 	sixty_hz_irq = true;
 	timer_now = micros();
+#ifdef _WINDOWS
+	//fopen_s(&debugFile, "c:\\src\\debug.txt", "wt");
+#endif
 }
 
 Emu6502::~Emu6502()
 {
+#ifdef _WINDOWS
+	if (debugFile != 0)
+		fclose(debugFile);
+#endif
 }
 
 void Emu6502::ResetRun()
@@ -707,7 +718,10 @@ void Emu6502::Execute(ushort addr)
 				char full_line[80];
 #ifdef _WINDOWS
 				snprintf(full_line, sizeof(full_line), "%-30s%s\n", line, state);
-				OutputDebugStringA(full_line);
+				if (debugFile != 0)
+					fputs(full_line, debugFile);
+				else
+					OutputDebugStringA(full_line);
 #else				
 				snprintf(full_line, sizeof(full_line), "%-30s%s\n", line, state);
 				SerialDef.print(full_line);
@@ -895,6 +909,13 @@ void Emu6502::Execute(ushort addr)
 			// char buffer[40];
 					// snprintf(buffer, sizeof(buffer), "Invalid opcode %02X at %04X", GetMemory(PC), PC);
 			//Serial.println(buffer);
+#ifdef _WINDOWS
+			if (debugFile != 0)
+			{
+				fflush(debugFile);
+				fclose(debugFile);
+			}
+#endif
 			exit(1);
 		}
 		}
