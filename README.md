@@ -69,3 +69,39 @@ See more description at blog entries:
 * [LCD version of 6502 emulators ported to Windows](https://techwithdave.davevw.com/2024/05/lcd-version-of-6502-emulators-ported-to.html)
 
 Open src/browser-keyscan-helper/index.html to run an adapter with instructions how to use a keyboard via serial from a desktop web browser (e.g. Chrome).
+
+Build Notes (versions also mentioned in config.h)
+
+* Arduino IDE 2.3.2
+* Teensy 1.57.2 board support (for Teensy 4.1)
+* Espressif esp32 2.0.17 board support
+* M5Stack 2.1.1 board support
+* Adafruit GFX Library 1.11.9 (for Sunton 8048S070 7")
+* M5Core2 Library 0.1.9
+* M5Unified Library 0.1.14
+* ILI9341_t3n.h 1.1.1 (for Teensy 4.1 with that LCD, otherwise ILI9488 included in Teensy Board Support)
+* TFT_eSPI Libray 2.5.0 (for LilyGo T-Display S3)
+
+|ESP32 Build Options        |M5 Fire          |M5 Core2         |M5 CoreS3            |LilyGo T-Display S3  |Sunton(4)            |
+|---------------------------|-----------------|-----------------|---------------------|---------------------|---------------------|
+**USB CDC on boot**         |N/A              |N/A              |Disabled             |Disabled             |Disabled             |
+**CPU Frequency**           |240 MHz (WiFi/BT)|240 MHz (WiFi/BT)|240 MHz (WiFi)       |N/A                  |240 MHz (WiFi)       |
+**Core Debug Level**        |None             |None             |None                 |None                 |None                 |
+**USB DFU on Boot**         |N/A              |N/A              |Disabled             |Disabled             |Disabled             |
+**Erase all Flash...**      |Disabled(1)      |Disabled(1)      |Disabled(1)          |Disabled(1)          |Disabled(1)          |
+**Events Runs On**          |Core 1           |Core 1           |Core 1               |Core 1               |Core 1               |
+**Flash Mode**              |QIO 80MHz        |QIO 80MHz        |QIO 80MHz            |N/A                  |QIO 80MHz            |
+**Flash Size**              |16MB (128Mb)     |16MB (128Mb)     |16MB (128Mb)         |N/A                  |16MB (128Mb)         |
+**JTAG Adapter**            |Disabled         |Disabled         |Disabled             |Disabled             |Disabled             |
+**Arduino Runs On**         |Core 1           |Core 1           |Core 1               |Core 1               |Core 1               |
+**USB Firmware MSC On Boot**|N/A              |N/A              |Disabled             |Disabled             |Disabled             |
+**Partition Scheme**        |Default 2x6.5(2) |Default 2x6.5(2) |16MB Flash (3/9.9)(3)|16MB Flash (3/9.9)(3)|16MB Flash (3/9.9)(3)|
+**PSRAM**                   |Enabled          |Enabled          |QSPI PSRAM           |N/A                  |OPI PSRAM            |
+**Upload Mode**             |N/A              |N/A              |UART0 / Hardware CDC |UART0 / Hardware CDC |UART0 / Hardware CDC |
+**Upload Speed**            |1500000          |1500000          |921600               |N/A                  |921600               |
+**USB Mode**                |N/A              |N/A              |Hardware CDC and JTAG|Hardware CDC and JTAG|Hardware CDC and JTAG|
+
+* (1) Need to have Erase all Flash Enabled once per board for partitioning
+* (2) Default (2x6.5MB APP/3.6 MB SPIFFS), most important to choose at least 2MB, file partition not used as rely on MicroSD
+* (3) 16MB Flash (3MB APP/9.9MB FFATFS), most important to choose at least 2MB, file partition used only with LilyGo T-Display S3, otherwise MicroSD
+* (4) Sunton, for compilation select ESP32S3 Dev Module
