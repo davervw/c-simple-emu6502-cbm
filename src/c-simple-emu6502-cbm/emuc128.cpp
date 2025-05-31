@@ -541,7 +541,17 @@ void C128Memory::write(ushort addr, byte value)
         io[mmu_addr - io_addr] = io[mmu_addr - io_addr + 4];
     else if (IsIO(addr))
     {
-        if (addr == 0xD02F) // keyboard scan write
+        if (addr == 0xD011) // VIC-II Bitmap Graphics Mode, & other
+        {
+            io[addr - io_addr] = value;
+            vicii->UpdateAddresses();
+        }
+        else if (addr == 0xD018) // VIC-II Chip Memory Control Register
+        {
+            io[addr - io_addr] = value;
+            vicii->UpdateAddresses();
+        }
+        else if (addr == 0xD02F) // keyboard scan write
         {
             io[addr - io_addr] = value;
         }
@@ -588,11 +598,7 @@ void C128Memory::write(ushort addr, byte value)
             io[addr - io_addr] = (byte)((value & 0xF) | 0xF0); // store value so can be retrieved
             vicii->DrawBorder(value);
         }
-        else if (addr == 0xD018) // character set (upper/lower/etc.)
-        {
-            io[addr - io_addr] = value & 0xFE;
-        }
-        else if (IsColor(addr))
+        else if (!vicii->isHires && IsColor(addr))
         {
             bool changedRequiresUpdate =  io[addr - io_addr] != value;
             if (changedRequiresUpdate)
@@ -620,41 +626,62 @@ void C128Memory::write(ushort addr, byte value)
         int addr128k = addr;
         if (IsRam(addr128k, true))
         {
-            // if (addr128k == 241/*foreground*/ || addr128k == 243/*reverse*/)
-            //     ;
-            // else if (addr128k == 0xA2C || addr128k == 0xF1) // lowercase
-            //     ;
-            //else if (addr128k == 244)
-            //    CBM_Console_QuoteMode = (value != 0);
-            //else if (addr128k == 245)
-            //    CBM_Console_InsertMode = (value != 0);
             bool changedRequiresUpdate = ram[addr128k] != value;
             if (changedRequiresUpdate)
             {
-              if (addr128k == 215 && ram[addr128k] != value)
-              {
+                if (addr128k == 215 && ram[addr128k] != value)
+                {
                 ram[addr128k] = value;
                 if (value & 128)
-				{
-					vicii->Deactivate();
-					vdc->Activate();
-				}
-				else
-				{
-					vdc->Deactivate();
-					vicii->Activate();
+			    {
+				    vicii->Deactivate();
+				    vdc->Activate();
+			    }
+			    else
+			    {
+				    vdc->Deactivate();
+				    vicii->Activate();
                 }
                 return;
-              }
-              ram[addr128k] = value;
-              if (addr128k >= vicii->video_addr && addr128k < vicii->video_addr+1000) {
-                  vicii->DrawChar(addr128k - vicii->video_addr);
-                  return;
-              }
-              if (addr128k == 0xA2C) { // workaround: this ram mirror set by KERNAL for VICII scanline IRQ handler to transfer to D018
-                  io[0xd018 - io_addr] = value;
-                  vicii->UpdateAddresses();
-              }
+                }
+                ram[addr128k] = value;
+                if (vicii->isHires)
+                {
+                    ushort hires_addr = vicii->chargen_addr & 0xE000;
+                    if (!vicii->ChargenIsROM() && addr128k >= hires_addr && addr128k < hires_addr + 8000)
+                        vicii->DrawChar((addr128k - hires_addr) / 8);
+                }
+                else if (!vicii->ChargenIsROM() && addr128k >= vicii->chargen_addr && addr128k < vicii->chargen_addr + 2048)
+                    vicii->RedrawChar((addr128k - vicii->chargen_addr) / 8);
+
+                // text screen memory or hires color memory, algorithm is the same
+                if (addr >= vicii->video_addr && addr < vicii->video_addr + 1000)
+                    vicii->DrawChar(addr128k - vicii->video_addr);
+                if (!vicii->ChargenIsROM() && addr128k >= vicii->chargen_addr && addr128k < vicii->chargen_addr + 2048)
+                    vicii->RedrawChar((addr128k - vicii->chargen_addr) / 8);
+
+                if (addr128k == 0xA2C && (ram[0xD8] & 32) == 0) { // workaround: this ram mirror set by KERNAL for VICII scanline IRQ handler to transfer to D018
+                    io[0xd018 - io_addr] = value;
+                    vicii->UpdateAddresses();
+                }
+
+                if (addr128k == 0xA2D && (ram[0xD8] & 32) != 0) { // workaround: this ram mirror set by KERNAL for VICII scanline IRQ handler to transfer to D018
+                    io[0xd018 - io_addr] = value;
+                    vicii->UpdateAddresses();
+                }
+
+                if (addr128k == 0xD8) { // workaround: bit 6 signals VICII graphics modes
+                    if ((value & 32) == 0) {
+                        io[0xd011 - io_addr] &= 0xdf;
+                        io[0xd018 - io_addr] = ram[0xa2c];
+                        vicii->UpdateAddresses();
+                    }
+                    else if ((value & 32) != 0) {
+                        io[0xd011 - io_addr] |= 0x20;
+                        io[0xd018 - io_addr] = ram[0xa2d];
+                        vicii->UpdateAddresses();
+                    }
+                }
             }
         }
     }
