@@ -66,6 +66,11 @@ int static random(int max)
 }
 #endif // _WINDOWS
 
+#ifdef ARDUINO_TEENSY41
+#include "USBtoCBMkeyboard.h"
+USBtoCBMkeyboard usbkbd; // initialization order seems to matter, this must be declared here, don't know why **MYSTERY*
+#endif // not ARDUINO_TEENSY41
+
 // externs (globals)
 extern const char* StartupPRG;
 extern int main_go_num;

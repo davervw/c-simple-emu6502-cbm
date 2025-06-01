@@ -12,7 +12,7 @@
 #include "cardkbdscan.h"
 #ifdef ARDUINO_TEENSY41
 #include "USBtoCBMkeyboard.h"
-USBtoCBMkeyboard usbkbd;
+extern USBtoCBMkeyboard usbkbd;
 #else // not ARDUINO_TEENSY41
 #include "ble_keyboard.h"
 #endif // not ARDUINO_TEENSY41
