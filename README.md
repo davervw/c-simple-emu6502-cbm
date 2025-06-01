@@ -23,8 +23,9 @@ GO 1 is a minimum environment similar to an Apple 1, except using MC6850 UART (i
 1. Clone repository, switch to branch unified
 2. Open src/c-simple-emu6502-cbm/c-simple-emu6502-cbm.ino with Arduino 2.x IDE
 3. Embedded?  Select compatible target in Adrudino 2.x IDE, build and deploy, should complain "Card Mount Failed" or similar
+
    Windows? Select compatible target in Visual Studio 2022 IDE, build and deploy, needs roms folder in current directory
-4. Insert MicroSD with the following files (roms from Vice or similar, disk files optional), and reset; or [detailed instructions for LilyGo T-Display-S3 with FFAT partition](https://github.com/davervw/c-simple-emu6502-cbm/tree/lilygo-t-display-s3)
+5. Insert MicroSD with the following files (roms from Vice or similar, disk files optional), and reset; or [detailed instructions for LilyGo T-Display-S3 with FFAT partition](https://github.com/davervw/c-simple-emu6502-cbm/tree/lilygo-t-display-s3)
 
 ```
 roms\vic20\basic
