@@ -499,7 +499,7 @@ void EmuC64::C64Memory::write(ushort addr, byte value)
         && (
             addr < io_addr // RAM, including open RAM, and RAM under BASIC
             || (addr >= kernal_addr && addr <= kernal_addr + kernal_size - 1) // RAM under KERNAL
-            || (((ram[1] & 7) == 0) && addr >= io_addr && addr < io_addr + io_size) // RAM banked in instead of IO
+            || (((ram[1] & 7) < 5) && addr >= io_addr && addr < io_addr + io_size) // RAM banked in instead of IO
             )
         )
     {
@@ -510,11 +510,15 @@ void EmuC64::C64Memory::write(ushort addr, byte value)
             if (vicii->isHires)
             {
                 ushort hires_addr = vicii->chargen_addr & 0xE000;
-                if (!vicii->ChargenIsROM() && addr >= hires_addr && addr < hires_addr + 8000)
+                if (addr >= hires_addr && addr < hires_addr + 8000)
                     vicii->DrawChar((addr - hires_addr) / 8);
             }
-            else if (!vicii->ChargenIsROM() && addr >= vicii->chargen_addr && addr < vicii->chargen_addr + 2048)
-                vicii->RedrawChar((addr - vicii->chargen_addr) / 8);
+            else
+            {
+                ushort chargen_addr = vicii->chargen_addr & 0xFFFF;
+                if (addr >= chargen_addr && addr < chargen_addr + 2048)
+                    vicii->RedrawChar((addr - chargen_addr) / 8);
+            }
 
             // text screen memory or hires color memory, algorithm is the same
             if (addr >= vicii->video_addr && addr < vicii->video_addr + 1000)

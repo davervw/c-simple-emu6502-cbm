@@ -52,7 +52,6 @@ public:
   void Activate();
   void Deactivate();
   void UpdateAddresses();
-  bool ChargenIsROM() const;
 #ifdef _WINDOWS
   void CheckPaintFrame(unsigned long micros_now);
   bool needsPaintFrame;
@@ -72,7 +71,7 @@ public:
   bool postponeDrawChar;
   bool active;
   byte border;
-  ushort chargen_addr;
+  unsigned chargen_addr;
   ushort video_addr;
   bool isHires;
 };

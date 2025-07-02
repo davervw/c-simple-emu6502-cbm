@@ -651,17 +651,19 @@ void C128Memory::write(ushort addr, byte value)
 				if (vicii->isHires)
 				{
 					ushort hires_addr = vicii->chargen_addr & 0xE000;
-					if (!vicii->ChargenIsROM() && addr128k >= hires_addr && addr128k < hires_addr + 8000)
+					if (addr128k >= hires_addr && addr128k < hires_addr + 8000)
 						vicii->DrawChar((addr128k - hires_addr) / 8);
 				}
-				else if (!vicii->ChargenIsROM() && addr128k >= vicii->chargen_addr && addr128k < vicii->chargen_addr + 2048)
-					vicii->RedrawChar((addr128k - vicii->chargen_addr) / 8);
+				else
+				{
+					ushort chargen_addr = vicii->chargen_addr & 0xFFFF;
+					if (addr128k >= chargen_addr && addr128k < chargen_addr + 2048)
+						vicii->RedrawChar((addr128k - chargen_addr) / 8);
+				}
 
 				// text screen memory or hires color memory, algorithm is the same
 				if (addr >= vicii->video_addr && addr < vicii->video_addr + 1000)
 					vicii->DrawChar(addr128k - vicii->video_addr);
-				if (!vicii->ChargenIsROM() && addr128k >= vicii->chargen_addr && addr128k < vicii->chargen_addr + 2048)
-					vicii->RedrawChar((addr128k - vicii->chargen_addr) / 8);
 
 				if (addr128k == 0xA2C && (ram[0xD8] & 32) == 0) { // workaround: this ram mirror set by KERNAL for VICII scanline IRQ handler to transfer to D018
 					io[0xd018 - io_addr] = value;

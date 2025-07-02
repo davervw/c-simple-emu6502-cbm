@@ -49,7 +49,7 @@ EmuVicII::EmuVicII(byte* vram, byte* vio, byte* vcolor_nybles, byte* vchargen)
     active = true;
     border = 0;
     video_addr = 0x0400;
-    chargen_addr = 0xD000;
+    chargen_addr = 0x1D000; // designates CHAR ROM
     isHires = false;
 
 #ifndef _WINDOWS
@@ -120,8 +120,10 @@ void EmuVicII::UpdateAddresses()
     ushort video_1k_offset = io[0x18] >> 4;
     ushort vicii_bank = ~io[0xD00] & 3;
     ushort new_video_addr = vicii_bank * 0x4000 + video_1k_offset * 0x0400;
-    ushort new_chargen_addr = ((~vicii_bank & 1) && (chargen_1k_offset == 4 || chargen_1k_offset == 6) ? 3 : vicii_bank) * 0x4000 + chargen_1k_offset * 0x0400;
     bool new_isHires = (io[0x11] & 0x20) != 0;
+    unsigned new_chargen_addr = vicii_bank * 0x4000 + (chargen_1k_offset & (new_isHires ? 8 : 15)) * 0x0400;
+    if ((vicii_bank == 0 || vicii_bank == 2) && (new_chargen_addr & 0x3000) == 0x1000)
+        new_chargen_addr = (new_chargen_addr & 0x0800) | 0x1D000;
     if (new_video_addr != video_addr || new_chargen_addr != chargen_addr || new_isHires != isHires) {
         video_addr = new_video_addr;
         chargen_addr = new_chargen_addr;
@@ -319,12 +321,6 @@ static void Extract565Color(int color, byte& red, byte& green, byte& blue)
 }
 #endif
 
-bool EmuVicII::ChargenIsROM() const
-{
-    bool vicii_bank_even = (~io[0xD00] & 1) == 0;
-    return vicii_bank_even && ((chargen_addr & 0xF000) == 0xD000);
-}
-
 void EmuVicII::DrawChar(byte c, int col, int row, int fg, int bg)
 {
     if (postponeDrawChar || !active)
@@ -338,17 +334,19 @@ void EmuVicII::DrawChar(byte c, int col, int row, int fg, int bg)
     {
         ushort hires_addr = chargen_addr & 0xE000;
         ushort offset = col * 8 + row * 320;
-        shape = ChargenIsROM()
+        bool chargenIsROM = (chargen_addr & 0x10000) != 0;
+        shape = (chargenIsROM)
             ? &chargen[hires_addr - 0xD000 + offset] 
             : &ram[hires_addr + offset];
         offset = col + row * 40;
-        fg = EmuVicII::C64ColorToLCDColor(ram[video_addr + offset] >> 4);
-        bg = EmuVicII::C64ColorToLCDColor(ram[video_addr + offset] & 15);
+        bg = EmuVicII::C64ColorToLCDColor(ram[video_addr + offset] >> 4);
+        fg = EmuVicII::C64ColorToLCDColor(ram[video_addr + offset] & 15);
     }
     else
     {
-        shape = ChargenIsROM()
-            ? &chargen[chargen_addr - 0xD000 + c * 8]
+        bool chargenIsROM = (chargen_addr & 0x10000) != 0;
+        shape = (chargenIsROM)
+            ? &chargen[chargen_addr - 0x1D000 + c * 8]
             : &ram[chargen_addr + c * 8];
     }
 
