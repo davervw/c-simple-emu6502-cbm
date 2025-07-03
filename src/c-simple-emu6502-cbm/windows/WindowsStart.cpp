@@ -66,7 +66,7 @@ void WindowsStart(HWND hWnd, bool& shuttingDown) // TODO: common start for Windo
 				main_go_arg = 0; // reset
 				break;
 			case 128:
-				system = new EmuC128();
+				system = new EmuC128(main_go_arg);
 				break;
 			case 64: 
 			default: 

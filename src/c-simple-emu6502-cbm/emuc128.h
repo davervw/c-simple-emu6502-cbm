@@ -41,7 +41,7 @@ class C128Memory;
 class EmuC128 : public EmuCBM
 {
 public:
-	EmuC128();
+	EmuC128(byte goarg);
 	virtual ~EmuC128();
 
 protected:
@@ -62,7 +62,7 @@ private:
 class C128Memory : public Emu6502::Memory
 {
 public:
-	C128Memory();
+	C128Memory(byte goarg);
 	virtual ~C128Memory();
 	virtual byte read(ushort addr);
 	virtual void write(ushort addr, byte value);

@@ -81,8 +81,8 @@ extern const char* StartupPRG;
 extern int main_go_num;
 extern int main_go_arg;
 
-EmuC128::EmuC128()
-	: EmuCBM(new C128Memory())
+EmuC128::EmuC128(byte goarg)
+	: EmuCBM(new C128Memory(goarg))
 {
 	c128memory = (C128Memory*)memory;
 	CBMkeyboard::reset(CBMkeyboard::Model::C128);
@@ -400,7 +400,7 @@ static const int mmu_addr = 0xD500;
 static const int mmu_size = 0xC;
 static const int chargen_addr = io_addr;
 
-C128Memory::C128Memory()
+C128Memory::C128Memory(byte goarg)
 {
 	ram = new byte[ram_size];
 
@@ -426,7 +426,7 @@ C128Memory::C128Memory()
 		io[i] = 0x0;
 
 	io[mmu_addr - io_addr] = 0; // default MMU CR
-	io[0xD505 - io_addr] = 0xB9; // 40/80 up, no /GAME, no /EXROM, C128 mode, Fast serial out, 8502 select
+	io[0xD505 - io_addr] = (goarg == 80) ? 0x39 : 0xB9; // 40/80 up, no /GAME, no /EXROM, C128 mode, Fast serial out, 8502 select
 	io[0xD506 - io_addr] = 0; // no common RAM at startup
 	io[0xD507 - io_addr] = 0; // zero page default
 	io[0xD508 - io_addr] = 0; // zero page bank
