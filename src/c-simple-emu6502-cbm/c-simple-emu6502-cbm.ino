@@ -225,7 +225,7 @@ void setup() {
 void loop() {
   Emu6502* emu;
   if (main_go_num == 128)
-    emu = new EmuC128();
+    emu = new EmuC128(main_go_arg);
   // else if (main_go_num == 4)
   //   emu = new EmuTed(64);
   // else if (main_go_num == 16)
