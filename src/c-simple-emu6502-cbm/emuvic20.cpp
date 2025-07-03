@@ -257,7 +257,7 @@ bool EmuVic20::ExecutePatch()
 		{
 			main_go_arg = 0;
 			main_go_num = (ushort)(Y + (A << 8));
-			if (main_go_num == 20 && memory->read(memory->read(0x7A) | (memory->read(0x7B) << 8)) == ',') {
+			if ((main_go_num == 20 || main_go_num == 128) && memory->read(memory->read(0x7A) | (memory->read(0x7B) << 8)) == ',') {
 				go_state = 3;
 				A = ',';
 				return ExecuteJSR(0xCEFD); // Validate comma
