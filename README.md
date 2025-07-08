@@ -71,19 +71,30 @@ See more description at blog entries:
 
 Open src/browser-keyscan-helper/index.html to run an adapter with instructions how to use a keyboard via serial from a desktop web browser (e.g. Chrome).
 
-Build Notes (versions also mentioned in config.h)
+## Build Notes (versions also mentioned in config.h)
 
-* Arduino IDE 2.3.2
-* Teensy 1.57.2 board support (for Teensy 4.1)
-* Espressif esp32 2.0.17 board support
-* M5Stack 2.1.1 board support
-* Adafruit GFX Library 1.11.9 (for Sunton 8048S070 7")
-* M5Core2 Library 0.1.9
+* [Arduino IDE](https://www.arduino.cc/en/software/) 2.3.6
+
+### M5Stack
+
+* [M5Stack board support](https://docs.m5stack.com/en/arduino/arduino_board) 2.1.1 
+* M5Core2 Library 0.2.0
 * M5Unified Library 0.1.14
-* ILI9341_t3n.h 1.1.1 (for Teensy 4.1 with that LCD, otherwise ILI9488 included in Teensy Board Support)
-* TFT_eSPI Libray 2.5.0 (for LilyGo T-Display S3)
 
-|ESP32 Build Options        |M5 Fire          |M5 Core2         |M5 CoreS3            |LilyGo T-Display S3  |Sunton(4)            |
+### Teensy 4.1
+
+* [Teensy board support](https://www.pjrc.com/teensy/td_download.html) 1.57.3 (for Teensy 4.1)
+* ILI9341_t3n.h 1.1.1 (for Teensy 4.1 with that LCD, otherwise ILI9488 included in Teensy Board Support)
+
+### Other ESP32 (Sunton 7", LilyGo T-Display S3)
+
+* [Espressif esp32 board support](https://docs.espressif.com/projects/arduino-esp32/en/latest/installing.html) 2.0.17 (for Sunton 8048S070 7" and LilyGo T-Display S3)
+* GFX Library for Arduino 1.3.1 (for Sunton 8048S070 7")
+* TFT_eSPI Library 2.5.43 by Bodmer (must configure arduino/libraries/TFT_eSPI/User_Setup_Select.h for LilyGo T-Display S3)
+
+### ESP32 build options
+
+|Tools...Option             |M5 Fire          |M5 Core2         |M5 CoreS3            |LilyGo T-Display S3  |Sunton(4)            |
 |---------------------------|-----------------|-----------------|---------------------|---------------------|---------------------|
 **USB CDC on boot**         |N/A              |N/A              |Disabled             |Disabled             |Disabled             |
 **CPU Frequency**           |240 MHz (WiFi/BT)|240 MHz (WiFi/BT)|240 MHz (WiFi)       |N/A                  |240 MHz (WiFi)       |
@@ -104,7 +115,7 @@ Build Notes (versions also mentioned in config.h)
 
 * (1) Need to have Erase all Flash Enabled once per board for partitioning
 * (2) Default (2x6.5MB APP/3.6 MB SPIFFS), most important to choose at least 2MB, file partition not used as rely on MicroSD
-* (3) 16MB Flash (3MB APP/9.9MB FFATFS), most important to choose at least 2MB, file partition used only with LilyGo T-Display S3, otherwise MicroSD
+* (3) 16MB Flash (3MB APP/9.9MB FFATFS), most important to choose at least 2MB APP, file partition used only with LilyGo T-Display S3, otherwise MicroSD is used with all others
 * (4) Sunton, for compilation select ESP32S3 Dev Module
 
 ## Font Scaling ##

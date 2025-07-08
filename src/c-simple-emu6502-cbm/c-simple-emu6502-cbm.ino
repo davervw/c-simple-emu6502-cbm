@@ -47,13 +47,14 @@
 #include "emumin.h"
 #include "emu6502.h"
 
+#include <Wire.h>
+
 #ifdef ARDUINO_LILYGO_T_DISPLAY_S3
 #include <FFat.h>
 #else
 #include <SD.h>
 #include <SPI.h>
 #endif
-#include <Wire.h>
 
 #include "config.h"
 #include "cardkbdscan.h"
