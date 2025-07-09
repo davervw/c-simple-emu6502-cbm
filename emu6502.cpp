@@ -951,13 +951,13 @@ static void ZPY(char *dis, int dis_size, const char* opcode, ushort addr, byte *
 	snprintf(dis, dis_size, "%s $%02X,Y", opcode, GetMemory((ushort)(addr + 1)));
 }
 
-static void ABS(char *dis, int dis_size, const char* opcode, ushort addr, byte *p_bytes)
+static void ABSAddr(char *dis, int dis_size, const char* opcode, ushort addr, byte *p_bytes)
 {
 	*p_bytes = 3;
 	snprintf(dis, dis_size, "%s $%04X", opcode, GetMemory((ushort)(addr + 1)) | (GetMemory((ushort)(addr + 2)) << 8));
 }
 
-static void ABSAddr(char *dis, int dis_size, const char* opcode, ushort addr, ushort *p_addr2, byte *p_bytes)
+static void ABSIndirect(char *dis, int dis_size, const char* opcode, ushort addr, ushort *p_addr2, byte *p_bytes)
 {
 	*p_bytes = 3;
 	*p_addr2 = (ushort)(GetMemory((ushort)(addr + 1)) | (GetMemory((ushort)(addr + 2)) << 8));
@@ -1008,8 +1008,8 @@ extern void DisassembleShort(ushort addr, bool *p_conditional, byte *p_bytes, us
 	case 0x08: strcpy_s(dis, dis_size, "PHP"); return;
 	case 0x09: IM(dis, dis_size, "ORA", addr, p_bytes); return;
 	case 0x0A: strcpy_s(dis, dis_size, "ASL A"); return;
-	case 0x0D: ABS(dis, dis_size, "ORA", addr, p_bytes); return;
-	case 0x0E: ABS(dis, dis_size, "ASL", addr, p_bytes); return;
+	case 0x0D: ABSAddr(dis, dis_size, "ORA", addr, p_bytes); return;
+	case 0x0E: ABSAddr(dis, dis_size, "ASL", addr, p_bytes); return;
 
 	case 0x10: BRX(dis, dis_size, "BPL", addr, p_conditional, p_addr2, p_bytes); return;
 	case 0x11: IndY(dis, dis_size, "ORA", addr, p_bytes); return;
@@ -1020,7 +1020,7 @@ extern void DisassembleShort(ushort addr, bool *p_conditional, byte *p_bytes, us
 	case 0x1D: ABSX(dis, dis_size, "ORA", addr, p_bytes); return;
 	case 0x1E: ABSX(dis, dis_size, "ASL", addr, p_bytes); return;
 
-	case 0x20: ABSAddr(dis, dis_size, "JSR", addr, p_addr2, p_bytes); return;
+	case 0x20: ABSIndirect(dis, dis_size, "JSR", addr, p_addr2, p_bytes); return;
 	case 0x21: IndX(dis, dis_size, "AND", addr, p_bytes); return;
 	case 0x24: ZP(dis, dis_size, "BIT", addr, p_bytes); return;
 	case 0x25: ZP(dis, dis_size, "AND", addr, p_bytes); return;
@@ -1028,9 +1028,9 @@ extern void DisassembleShort(ushort addr, bool *p_conditional, byte *p_bytes, us
 	case 0x28: strcpy_s(dis, dis_size, "PLP"); return;
 	case 0x29: IM(dis, dis_size, "AND", addr, p_bytes); return;
 	case 0x2A: strcpy_s(dis, dis_size, "ROL A"); return;
-	case 0x2C: ABS(dis, dis_size, "BIT", addr, p_bytes); return;
-	case 0x2D: ABS(dis, dis_size, "AND", addr, p_bytes); return;
-	case 0x2E: ABS(dis, dis_size, "ROL", addr, p_bytes); return;
+	case 0x2C: ABSAddr(dis, dis_size, "BIT", addr, p_bytes); return;
+	case 0x2D: ABSAddr(dis, dis_size, "AND", addr, p_bytes); return;
+	case 0x2E: ABSAddr(dis, dis_size, "ROL", addr, p_bytes); return;
 
 	case 0x30: BRX(dis, dis_size, "BMI", addr, p_conditional, p_addr2, p_bytes); return;
 	case 0x31: IndY(dis, dis_size, "AND", addr, p_bytes); return;
@@ -1048,9 +1048,9 @@ extern void DisassembleShort(ushort addr, bool *p_conditional, byte *p_bytes, us
 	case 0x48: strcpy_s(dis, dis_size, "PHA"); return;
 	case 0x49: IM(dis, dis_size, "EOR", addr, p_bytes); return;
 	case 0x4A: strcpy_s(dis, dis_size, "LSR A"); return;
-	case 0x4C: ABSAddr(dis, dis_size, "JMP", addr, p_addr2, p_bytes); return;
-	case 0x4D: ABS(dis, dis_size, "EOR", addr, p_bytes); return;
-	case 0x4E: ABS(dis, dis_size, "LSR", addr, p_bytes); return;
+	case 0x4C: ABSIndirect(dis, dis_size, "JMP", addr, p_addr2, p_bytes); return;
+	case 0x4D: ABSAddr(dis, dis_size, "EOR", addr, p_bytes); return;
+	case 0x4E: ABSAddr(dis, dis_size, "LSR", addr, p_bytes); return;
 
 	case 0x50: BRX(dis, dis_size, "BVC", addr, p_conditional, p_addr2, p_bytes); return;
 	case 0x51: IndY(dis, dis_size, "EOR", addr, p_bytes); return;
@@ -1069,8 +1069,8 @@ extern void DisassembleShort(ushort addr, bool *p_conditional, byte *p_bytes, us
 	case 0x69: IM(dis, dis_size, "ADC", addr, p_bytes); return;
 	case 0x6A: strcpy_s(dis, dis_size, "ROR A"); return;
 	case 0x6C: Ind(dis, dis_size, "JMP", addr, p_addr2, p_bytes); return;
-	case 0x6D: ABS(dis, dis_size, "ADC", addr, p_bytes); return;
-	case 0x6E: ABS(dis, dis_size, "ROR", addr, p_bytes); return;
+	case 0x6D: ABSAddr(dis, dis_size, "ADC", addr, p_bytes); return;
+	case 0x6E: ABSAddr(dis, dis_size, "ROR", addr, p_bytes); return;
 
 	case 0x70: BRX(dis, dis_size, "BVS", addr, p_conditional, p_addr2, p_bytes); return;
 	case 0x71: IndY(dis, dis_size, "ADC", addr, p_bytes); return;
@@ -1087,9 +1087,9 @@ extern void DisassembleShort(ushort addr, bool *p_conditional, byte *p_bytes, us
 	case 0x86: ZP(dis, dis_size, "STX", addr, p_bytes); return;
 	case 0x88: strcpy_s(dis, dis_size, "DEY"); return;
 	case 0x8A: strcpy_s(dis, dis_size, "TXA"); return;
-	case 0x8C: ABS(dis, dis_size, "STY", addr, p_bytes); return;
-	case 0x8D: ABS(dis, dis_size, "STA", addr, p_bytes); return;
-	case 0x8E: ABS(dis, dis_size, "STX", addr, p_bytes); return;
+	case 0x8C: ABSAddr(dis, dis_size, "STY", addr, p_bytes); return;
+	case 0x8D: ABSAddr(dis, dis_size, "STA", addr, p_bytes); return;
+	case 0x8E: ABSAddr(dis, dis_size, "STX", addr, p_bytes); return;
 
 	case 0x90: BRX(dis, dis_size, "BCC", addr, p_conditional, p_addr2, p_bytes); return;
 	case 0x91: IndY(dis, dis_size, "STA", addr, p_bytes); return;
@@ -1110,9 +1110,9 @@ extern void DisassembleShort(ushort addr, bool *p_conditional, byte *p_bytes, us
 	case 0xA8: strcpy_s(dis, dis_size, "TAY"); return;
 	case 0xA9: IM(dis, dis_size, "LDA", addr, p_bytes); return;
 	case 0xAA: strcpy_s(dis, dis_size, "TAX"); return;
-	case 0xAC: ABS(dis, dis_size, "LDY", addr, p_bytes); return;
-	case 0xAD: ABS(dis, dis_size, "LDA", addr, p_bytes); return;
-	case 0xAE: ABS(dis, dis_size, "LDX", addr, p_bytes); return;
+	case 0xAC: ABSAddr(dis, dis_size, "LDY", addr, p_bytes); return;
+	case 0xAD: ABSAddr(dis, dis_size, "LDA", addr, p_bytes); return;
+	case 0xAE: ABSAddr(dis, dis_size, "LDX", addr, p_bytes); return;
 
 	case 0xB0: BRX(dis, dis_size, "BCS", addr, p_conditional, p_addr2, p_bytes); return;
 	case 0xB1: IndY(dis, dis_size, "LDA", addr, p_bytes); return;
@@ -1134,9 +1134,9 @@ extern void DisassembleShort(ushort addr, bool *p_conditional, byte *p_bytes, us
 	case 0xC8: strcpy_s(dis, dis_size, "INY"); return;
 	case 0xC9: IM(dis, dis_size, "CMP", addr, p_bytes); return;
 	case 0xCA: strcpy_s(dis, dis_size, "DEX"); return;
-	case 0xCC: ABS(dis, dis_size, "CPY", addr, p_bytes); return;
-	case 0xCD: ABS(dis, dis_size, "CMP", addr, p_bytes); return;
-	case 0xCE: ABS(dis, dis_size, "DEC", addr, p_bytes); return;
+	case 0xCC: ABSAddr(dis, dis_size, "CPY", addr, p_bytes); return;
+	case 0xCD: ABSAddr(dis, dis_size, "CMP", addr, p_bytes); return;
+	case 0xCE: ABSAddr(dis, dis_size, "DEC", addr, p_bytes); return;
 
 	case 0xD0: BRX(dis, dis_size, "BNE", addr, p_conditional, p_addr2, p_bytes); return;
 	case 0xD1: IndY(dis, dis_size, "CMP", addr, p_bytes); return;
@@ -1155,9 +1155,9 @@ extern void DisassembleShort(ushort addr, bool *p_conditional, byte *p_bytes, us
 	case 0xE8: strcpy_s(dis, dis_size, "INX"); return;
 	case 0xE9: IM(dis, dis_size, "SBC", addr, p_bytes); return;
 	case 0xEA: strcpy_s(dis, dis_size, "NOP"); return;
-	case 0xEC: ABS(dis, dis_size, "CPX", addr, p_bytes); return;
-	case 0xED: ABS(dis, dis_size, "SBC", addr, p_bytes); return;
-	case 0xEE: ABS(dis, dis_size, "INC", addr, p_bytes); return;
+	case 0xEC: ABSAddr(dis, dis_size, "CPX", addr, p_bytes); return;
+	case 0xED: ABSAddr(dis, dis_size, "SBC", addr, p_bytes); return;
+	case 0xEE: ABSAddr(dis, dis_size, "INC", addr, p_bytes); return;
 
 	case 0xF0: BRX(dis, dis_size, "BEQ", addr, p_conditional, p_addr2, p_bytes); return;
 	case 0xF1: IndY(dis, dis_size, "SBC", addr, p_bytes); return;
