@@ -339,8 +339,8 @@ void EmuVicII::DrawChar(byte c, int col, int row, int fg, int bg)
             ? &chargen[hires_addr - 0xD000 + offset] 
             : &ram[hires_addr + offset];
         offset = col + row * 40;
-        bg = EmuVicII::C64ColorToLCDColor(ram[video_addr + offset] >> 4);
-        fg = EmuVicII::C64ColorToLCDColor(ram[video_addr + offset] & 15);
+        fg = EmuVicII::C64ColorToLCDColor(ram[video_addr + offset] >> 4);
+        bg = EmuVicII::C64ColorToLCDColor(ram[video_addr + offset] & 15);
     }
     else
     {
