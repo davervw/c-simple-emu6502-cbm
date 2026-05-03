@@ -122,12 +122,12 @@ Open src/browser-keyscan-helper/index.html to run an adapter with instructions h
 
 To achieve the right aspect ratio and to fill the various resolution screens for the largest images, sometimes fonts had to be scaled from their original resolution (8x8) to bigger or smaller, and sometimes in non-integral increments. When in-between pixels or merging of pixels was required, color averaging was performed (separate to red/green/blue components, and average values, combine back into RGB).  When non-integral (not doubled, etc.), the color averaging occurred at necessary increments stretching or shrinking the pixels differently across the text characters and graphics.  Sometimes tops and bottoms of characters were color averaged while the middles remained 1:1, e.g. T-Display S3 where the resolution was almost the right size of a C64, but not quite, so information had to be lost, and the result is not perfect.  Theory was that losing information at the edges was less important than the centers (can probably be debated either way).   The results are not pixel perfect, but geared towards the most readable text.  Suprisingly, displaying 640x480 text in half the resolution using color averaging comes out very readable.   Close up it looks like a mess, but scaled out the brain fills in the missing data based on the fuzzy image.  You'll have to try it for yourself!
 
-|Video Resolution|M5/Teensy(320x240)|Teensy(480x320)|T-Display S3(320x170)|Sunton(800x480)|Windows    |
-|----------------|------------------|---------------|---------------------|---------------|-----------|
-|vic 176x184     |x(2:3), y(1:1)    |x(2:5), y(2:3) |x(4:7), y(8:7)       |x(1:4), y(1:2) |1:1 (in sw)|
-|vicii 320x200   |x(1:1), y(1:1)    |x(2:3), y(2:3) |x(1:1), y(4:3)       |x(1:2), y(1:2) |1:1 (in sw)|
-|vdc 640x200     |x(2:1), y(1:1)    |x(4:3), y(2:3) |x(2:1), y(4:3)       |x(1:2), y(1:1) |1:1 (in sw)|
-|terminal resized|40x30, 40x25      |60x25          |40x25                |100x30         |100x30     |
-|minimal w/mc6850|x:(1:1), y(1:1)   |x(1:1), y(2:3) |x(1:1), y(4:3)       |x(1:1), y(1:2) |1:1 (in sw)|
+|Video Resolution|M5/Teensy(320x240)|Teensy(480x320)|T-Display S3(320x170)|Sunton(800x480)|Tab5(1280x720)|Windows    
+|----------------|------------------|---------------|---------------------|---------------|--------------|-----------
+|vic 176x184     |x(2:3), y(1:1)    |x(2:5), y(2:3) |x(4:7), y(8:7)       |x(1:4), y(1:2) |x(6:1), y(3:1)|1:1 (in sw)
+|vicii 320x200   |x(1:1), y(1:1)    |x(2:3), y(2:3) |x(1:1), y(4:3)       |x(1:2), y(1:2) |x(3:1), y(3:1)|1:1 (in sw)
+|vdc 640x200     |x(2:1), y(1:1)    |x(4:3), y(2:3) |x(2:1), y(4:3)       |x(1:2), y(1:1) |x(2:1), y(3:1)|1:1 (in sw)
+|terminal resized|40x30, 40x25      |60x25          |40x25                |100x30         |100x30        |100x30     
+|minimal w/mc6850|x:(1:1), y(1:1)   |x(1:1), y(2:3) |x(1:1), y(4:3)       |x(1:1), y(1:2) |x(3:2), y(3:1)|1:1 (in sw)
 
 ![scaling](media/font_scaling.png)

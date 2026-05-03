@@ -46,8 +46,13 @@
 #endif // NOT _WINDOWS
 
 #ifdef M5STACK
+#ifdef M5TAB5
+const int cols = 100;
+const int rows = 30;
+#else
 const int cols = 40;
 const int rows = 30;
+#endif
 #endif
 #ifdef _WINDOWS
 const int cols = 100;
@@ -88,7 +93,11 @@ Terminal::Terminal()
 	WindowsDraw::BeginDraw();
 #else // NOT _WINDOWS
 #ifdef M5STACK
+#ifdef M5TAB5
+  LCDDraw::CreateRenderTarget(cols*8, rows*8, 12, 24);
+#else
   LCDDraw::CreateRenderTarget(cols*8, rows*8, 8, 8);
+#endif
 #endif  
 #ifdef ARDUINO_SUNTON_8048S070
   LCDDraw::CreateRenderTarget(cols*8, rows*8, 8, 16);

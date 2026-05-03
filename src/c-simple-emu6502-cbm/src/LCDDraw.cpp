@@ -53,8 +53,13 @@ int LCDDraw::scaley;
 bool LCDDraw::CreateRenderTarget(int screenwidth, int screenheight, int scalex, int scaley)
 {
 #ifdef M5STACK
+#ifdef M5TAB5
+	clientwidth = 1280;
+	clientheight = 720;
+#else
 	clientwidth = 320;
 	clientheight = 240;
+#endif
 #endif
 #ifdef ILI9341
 	clientwidth = 320;
@@ -139,11 +144,26 @@ void LCDDraw::DrawCharacter2Color(byte* src, int col, int row, int fg, int bg)
 			gfx->drawPixel(x0 + col_i, y0 + row_i * 2 + 1, color);
 #endif      
 #ifdef M5STACK
-			if (scalex == 4 && (col_i & 1)) {
+#ifdef M5TAB5
+			// col_i: 0 1 2 3 4 5 6 7
+			// x:     0 2 3 5 6 8 9 11
+			int x = (col_i + 1) * 3 / 2;
+			for (int yy = 0; yy < 3; ++yy)
+			{
+				M5.Lcd.drawPixel(x0 + x, y0 + yy + row_i * 3, color);
+				if (col_i & 1)
+					M5.Lcd.drawPixel(x0 + x - 1, y0 + yy + row_i * 3, average_color(colors[col_i - 1], color));
+				else if (yy == 0)
+					colors[col_i] = color;
+			}
+#else
+			if (scalex == 4 && (col_i & 1)) 
+			{
 			  	M5.Lcd.drawPixel(x0 + col_i / 2, y0 + row_i, average_color(colors[col_i - 1], color));
  			    colors[col_i] = color;
-      } else if (scalex == 8)
-          M5.Lcd.drawPixel(x0 + col_i, y0 + row_i, color);
+			} else if (scalex == 8)
+				M5.Lcd.drawPixel(x0 + col_i, y0 + row_i, color);
+#endif				
 #endif
 #ifdef ARDUINO_LILYGO_T_DISPLAY_S3
 			if (scalex == 4 && (col_i & 1))

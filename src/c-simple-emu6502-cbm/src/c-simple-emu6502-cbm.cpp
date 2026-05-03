@@ -48,13 +48,17 @@
 #include "emu6502.h"
 
 #include <Wire.h>
+#include <SPI.h>
 
 #ifdef ARDUINO_LILYGO_T_DISPLAY_S3
 #include <FFat.h>
-#else
+#else // NOT ARDUINO_LILYGO_T_DISPLAY_S3
+#ifdef M5TAB5
+#include <SD_MMC.h>
+#else // NOT M5TAB5
 #include <SD.h>
-#include <SPI.h>
-#endif
+#endif // NOT M5TAB5
+#endif // NOT ARDUINO_LILYGO_T_DISPLAY_S3
 
 #include "config.h"
 #include "cardkbdscan.h"
@@ -126,7 +130,9 @@ void setup() {
 #endif
 
 #ifdef M5STACK
-  M5.begin();
+  auto cfg = M5.config();
+  M5.begin(cfg);
+  M5.Display.setRotation(3);
 #endif
 #ifdef ARDUINO_SUNTON_8048S070
   gfx->begin();
@@ -159,7 +165,18 @@ void setup() {
       Serial.println("WARNING: did not mount FFAT");
       lcd.println("FFAT Mount Failed");
   #else
-  if(!SD.begin()){
+    #ifdef M5TAB5
+      const int sd_D0=GPIO_NUM_39;
+      const int sd_D1=GPIO_NUM_40;
+      const int sd_D2=GPIO_NUM_41;
+      const int sd_D3=GPIO_NUM_42;
+      const int sd_CLK=GPIO_NUM_43;
+      const int sd_CMD=GPIO_NUM_44;
+      SD_MMC.setPins(sd_CLK, sd_CMD, sd_D0, sd_D1, sd_D2, sd_D3);
+      if (!SD_MMC.begin("/sdcard", false, false, 20000)) {
+    #else
+      if(!SD.begin()){
+    #endif
   #endif
  #endif
 #endif

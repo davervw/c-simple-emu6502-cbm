@@ -11,11 +11,14 @@
 
 ////////////////////////////
 #ifdef ARDUINO_M5STACK_CORE2
+#ifndef ARDUINO_M5STACK_Core2
 #define ARDUINO_M5STACK_Core2
+#endif
 #endif
 #ifdef ARDUINO_M5STACK_Core2
 #include <M5Core2.h> // library version 0.1.9
 #define SerialDef Serial
+#undef RX2
 #define RX2 G32
 #define SDA G32
 #define SCL G33
@@ -26,6 +29,7 @@
 #ifdef ARDUINO_M5STACK_CORES3
 #include <M5Unified.h> // library version 0.1.14
 #define SerialDef USBSerial
+#undef RX2
 #define RX2 G2
 #define SDA G2
 #define SCL G1
@@ -36,6 +40,7 @@
 #ifdef ARDUINO_M5STACK_FIRE
 #include <M5Unified.h> // library version 0.1.14
 #define SerialDef Serial
+#undef RX2
 #define RX2 G21
 #define SDA G21
 #define SCL G22
@@ -61,8 +66,6 @@ extern Arduino_RPi_DPI_RGBPanel *gfx;
 #ifdef ARDUINO_TEENSY41
 #define RX2 -1
 #define SerialDef Serial
-//#define ILI9341
-#define ILI9488
 #include <SPI.h>
 #ifdef ILI9341
 #include "ILI9341_t3n.h" // library version 1.1.1
@@ -75,9 +78,20 @@ extern ILI9488_t3 lcd;
 #endif
 ////////////////////////////
 #ifdef ARDUINO_LILYGO_T_DISPLAY_S3
+#undef RX2
 #define RX2 -1
 #define SerialDef Serial
 #include <Arduino.h>
+//#include "Setup206_LilyGo_T_Display_S3.h"
 #include <TFT_eSPI.h> // library version 2.5.0
 extern TFT_eSPI lcd;
 #endif
+////////////////////////////
+#ifdef M5TAB5
+#include <M5Unified.h>
+#define M5STACK
+#define RX2 -1
+#define SerialDef Serial
+#define SD SD_MMC
+#endif
+////////////////////////////
