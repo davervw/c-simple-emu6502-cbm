@@ -82,7 +82,11 @@ void VDC8563::Activate()
     gfx->fillRect(0, 0, 800, 480, bg);
 #endif
 #ifdef M5STACK
+#ifdef M5TAB5
+    M5.Lcd.fillRect(0, 0, 1280, 720, bg);
+#else
     M5.Lcd.fillRect(0, 0, 320, 240, bg);
+#endif
 #endif
 #ifdef ARDUINO_LILYGO_T_DISPLAY_S3
     lcd.fillRect(0, 0, 320, 170, bg);
@@ -217,6 +221,7 @@ int VDC8563::VDCColorToLCDColor(byte value)
 }
 
 #ifdef M5STACK
+#ifndef M5TAB5
 static int average_color(int color1, int color2)
 { // extract 565 color from 16-bit values, average them, and combine back the same way
   int red = ((color1 >> 11) + (color2 >> 11)) / 2;
@@ -224,6 +229,7 @@ static int average_color(int color1, int color2)
   int blue = ((color1 & 0x1F) + (color2 & 0x1F)) / 2;
   return ((red & 0x1f) << 11) | ((green & 0x3f) << 5) | (blue & 0x1F);
 }
+#endif
 #endif
 #ifdef ARDUINO_LILYGO_T_DISPLAY_S3
 static int average_color(int color1, int color2)
@@ -284,9 +290,14 @@ void VDC8563::DrawChar(byte c, int col, int row, int fg, int bg, byte attrib)
   int y0 = 40 + row * 16;
 #endif
 #ifdef M5STACK
+#ifdef M5TAB5
+  int x0 = 0 + col * 16;
+  int y0 = 60 + row * 24;
+#else
   int x0 = col * 4;
   int y0 = 20 + row * 8;
   int colors[8];
+#endif  
   M5.Lcd.startWrite();
 #endif
 #ifdef ARDUINO_LILYGO_T_DISPLAY_S3
@@ -341,9 +352,15 @@ void VDC8563::DrawChar(byte c, int col, int row, int fg, int bg, byte attrib)
       gfx->drawPixel(x0+col_i, y0+row_i*2+1, color);
 #endif      
 #ifdef M5STACK
+#ifdef M5TAB5
+      for (int yy = 0; yy < 3; ++yy)
+        for (int xx = 0; xx < 2; ++xx)
+          M5.Lcd.drawPixel(x0+col_i*2+xx, y0+row_i*3+yy, color);
+#else
       if (col_i & 1)
         M5.Lcd.drawPixel(x0+col_i/2, y0+row_i, average_color(colors[col_i-1], color));
       colors[col_i] = color;
+#endif      
 #endif
 #ifdef ARDUINO_LILYGO_T_DISPLAY_S3
       if (col_i & 1)
@@ -578,7 +595,11 @@ void VDC8563::SetDataRegister(byte value)
         gfx->fillRect(0, 0, 800, 480, bg);
 #endif    
 #ifdef M5STACK
+#ifdef M5TAB5
+        M5.Lcd.fillRect(0, 0, 1280, 720, bg);
+#else
         M5.Lcd.fillRect(0, 0, 320, 240, bg);
+#endif
 #endif
 #ifdef ARDUINO_LILYGO_T_DISPLAY_S3
         lcd.fillRect(0, 0, 320, 170, bg);

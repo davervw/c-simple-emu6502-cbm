@@ -31,3 +31,4 @@ roms/minimum/src/sweet16.asm
 *.swp
 disks/
 snapshots/
+src/BLE_commodore_keyboard_server/.vscode/extensions.json

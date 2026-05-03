@@ -47,10 +47,14 @@
 #ifdef ARDUINO_LILYGO_T_DISPLAY_S3
 #include "FFat.h"
 #else
+#ifdef M5TAB5
+#include <SD_MMC.h>
+#else // NOT M5TAB5
 #include <SD.h>
 #include <SPI.h>
-#endif
-#endif
+#endif // NOT M5TAB5
+#endif // NOT ARDUINO_LILYGO_T_DISPLAY_S3
+#endif // NOT _WINDOWS
 #include "emud64.h"
 #include "config.h"
 

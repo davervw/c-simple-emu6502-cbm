@@ -363,9 +363,14 @@ void EmuVicII::DrawChar(byte c, int col, int row, int fg, int bg)
 #ifdef M5STACK  
     M5.Lcd.startWrite();
 #endif  
-#ifdef M5STACK  
+#ifdef M5STACK
+#ifdef M5TAB5
+    int x0 = 160 + col * 24;
+    int y0 = 60 + row * 24;
+#else
     int x0 = 0 + col * 8;
     int y0 = 20 + row * 8;
+#endif    
 #endif
 #ifdef ARDUINO_SUNTON_8048S070
     int x0 = 80 + col * 16;
@@ -389,8 +394,14 @@ void EmuVicII::DrawChar(byte c, int col, int row, int fg, int bg)
         for (int col_i = 0; col_i < 8; ++col_i)
         {
             int color = ((shape[row_i] & mask) == 0) ? bg : fg;
-#ifdef M5STACK      
+#ifdef M5STACK
+#ifdef M5TAB5
+            for (int yy=0; yy<3; ++yy)
+                for (int xx=0; xx<3; ++xx)
+                    M5.Lcd.drawPixel(x0 + xx + col_i*3, y0 + yy + row_i*3, color);
+#else
             M5.Lcd.drawPixel(x0 + col_i, y0 + row_i, color);
+#endif
 #endif
 #ifdef ARDUINO_SUNTON_8048S070
             gfx->drawPixel(x0 + col_i * 2, y0 + row_i * 2, color);
@@ -517,8 +528,15 @@ void EmuVicII::DrawBorder(byte value)
 #endif
 #ifdef M5STACK
     M5.Lcd.startWrite();
+#ifdef M5TAB5
+    M5.Lcd.fillRect(0, 0, 1280, 60, color);
+    M5.Lcd.fillRect(0, 60, 160, 600, color);
+    M5.Lcd.fillRect(1120, 60, 160, 600, color);
+    M5.Lcd.fillRect(0, 660, 1280, 60, color);
+#else
     M5.Lcd.fillRect(0, 0, 320, 20, color);
     M5.Lcd.fillRect(0, 220, 320, 20, color);
+#endif    
     M5.Lcd.endWrite();
 #endif    
 #ifdef ARDUINO_SUNTON_8048S070

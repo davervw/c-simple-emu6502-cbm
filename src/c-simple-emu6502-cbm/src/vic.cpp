@@ -8,6 +8,11 @@
 #endif // _WINDOWS
 
 #ifdef M5STACK
+#ifdef M5TAB5
+const int X0 = 112;
+const int Y0 = 84;
+#define VIC1TO1
+#else
 //#define VIC1TO1 // 1 to 1 pixels horizontally and vertically
 #define VIC3TO2 //3 pixels for every 2 pixels horizontally, 1 to 1 pixels vertically
 
@@ -19,6 +24,7 @@ const int Y0 = 28;
 #ifdef VIC3TO2
 const int X0 = 28;
 const int Y0 = 28;
+#endif
 #endif
 #endif // M5STACK
 
@@ -235,19 +241,25 @@ void EmuVic::DrawChar(byte c, int col, int row, int fg, int bg)
   needsPaintFrame = true;
   return;
 #else // NOT _WINDOWS
-#ifdef M5STACK  
+#ifdef M5STACK
+#ifdef M5TAB5
+  int x0 = X0 + col*48;
+  int y0 = Y0 + row*24;
+  int maxcol = 8;
+#else // NOT M5TAB5
   int y0 = Y0 + row*8;
 #ifdef VIC1TO1  
   int x0 = X0 + col*8;
   int maxcol = 8;
-#endif
+#endif // VIC1TO1
 #ifdef VIC3TO2
   int x0 = X0 + col*12;
   int midcolor = bg;
   int maxcol = 12;
   int last_color;
-#endif
-#endif
+#endif // VIC3TO2
+#endif // NOT M5TAB5
+#endif // M5STACK
 #ifdef ARDUINO_SUNTON_8048S070
   int y0 = Y0 + row*8*2;
   int x0 = X0 + col*8*4;
@@ -299,7 +311,13 @@ void EmuVic::DrawChar(byte c, int col, int row, int fg, int bg)
       }
   #endif
 #ifdef M5STACK  
+#ifdef M5TAB5
+      for (int yy=0; yy<3; ++yy)
+        for (int xx=0; xx<6; ++xx)
+          M5.Lcd.drawPixel(x0+xx+col_i*6, y0+yy+row_i*3, color);
+#else
       M5.Lcd.drawPixel(x0+col_i, y0+row_i, color);
+#endif      
 #endif
 #ifdef ARDUINO_SUNTON_8048S070
       int x1=x0+col_i*4;
@@ -434,10 +452,17 @@ void EmuVic::DrawBorder(byte value)
 #endif // _WINDOWS
 #ifdef M5STACK
     M5.Lcd.startWrite();
+#ifdef M5TAB5
+    M5.Lcd.fillRect(0, 0, 1280, Y0, border);
+    M5.Lcd.fillRect(0, Y0, X0, 23*8*3, border);
+    M5.Lcd.fillRect(1280-X0, Y0, X0, 23*8*3, border);
+    M5.Lcd.fillRect(0, 720-Y0, 1280, Y0, border);
+#else
     M5.Lcd.fillRect(0, 0, 320, Y0, border);
     M5.Lcd.fillRect(0, Y0, X0, 23*8, border);
     M5.Lcd.fillRect(320-X0, Y0, X0, 23*8, border);
     M5.Lcd.fillRect(0, 240-Y0, 320, Y0, border);
+#endif
     M5.Lcd.endWrite();
 #endif
 #ifdef ARDUINO_SUNTON_8048S070
