@@ -31,3 +31,8 @@ roms/minimum/src/sweet16.asm
 *.swp
 disks/
 snapshots/
+/src/browser-keyscan-helper/node_modules/.bin
+src/browser-keyscan-helper/node_modules/.package-lock.json
+/src/browser-keyscan-helper/node_modules/@types
+/src/browser-keyscan-helper/node_modules
+src/BLE_commodore_keyboard_server/.vscode/extensions.json
