@@ -194,6 +194,7 @@ let keyDictionary = {
     'F6': { scan: 6, shift: 1 },
     'F7': { scan: 3 },
     'F8': { scan: 3, shift: 1 },
+    'F9': { scan: 64, },
     '{': { scan: 62, shift: 0, commodore: 1 },
     '}': { scan: 9, shift: 0, commodore: 1 },
     '~': { scan: 14, shift: 0, commodore: 1 },

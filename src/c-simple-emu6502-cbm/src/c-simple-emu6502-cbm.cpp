@@ -132,7 +132,9 @@ void setup() {
 #ifdef M5STACK
   auto cfg = M5.config();
   M5.begin(cfg);
+#ifdef M5TAB5
   M5.Display.setRotation(3);
+#endif  
 #endif
 #ifdef ARDUINO_SUNTON_8048S070
   gfx->begin();
@@ -196,7 +198,14 @@ void setup() {
       while(1); // cannot continue, so hang around
   }
 
-  //Serial or I2C
+#ifdef M5TAB5
+  M5.Lcd.drawJpgFile("/sdcard/splash1280x720.jpg", 0, 0);
+  M5.Lcd.setTextColor(TFT_BLACK);
+  M5.Lcd.setTextSize(3);
+  M5.Lcd.print("github.com/davervw/c-simple-emu6502-cbm/tree/unified");
+#endif
+
+  //Serial or I2Ch
 #ifdef ARDUINO_TEENSY41
   Wire.begin();
 #else

@@ -131,7 +131,7 @@ static bool connectToServer() {
 
     // Read the value of the characteristic.
     if(pRemoteCharacteristic->canRead()) {
-      String value = pRemoteCharacteristic->readValue();
+      auto value = pRemoteCharacteristic->readValue();
       SerialDef.print("The characteristic value was: ");
       SerialDef.println(value.c_str());
     }

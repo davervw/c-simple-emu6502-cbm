@@ -121,7 +121,7 @@ String CardKbdScanRead()
 
   if (keys[0] != 0)
   {
-    s = "64\n";
+    s = "88\n";
     keys[0] = 0;
   }
 

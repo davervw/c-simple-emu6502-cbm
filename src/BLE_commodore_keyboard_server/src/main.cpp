@@ -51,6 +51,25 @@
 
 BLECharacteristic *pCharacteristic;
 
+static bool _isConnected = false;
+
+class MyServerCallbacks: public BLEServerCallbacks {
+    void onConnect(BLEServer* pServer) {
+      // Stage: Connected
+      _isConnected = true;
+      //Serial.println("Connected");
+    };
+
+    void onDisconnect(BLEServer* pServer) {
+      // Stage: Disconnected
+      _isConnected = false;
+      //Serial.println("Disconnected");
+      
+      // Stage: Advertising (Restart so it can be found again)
+      BLEDevice::startAdvertising();
+    }
+};
+
 void setup() {
 #ifdef ARDUINO_M5Stick_C    
   pinMode(10, OUTPUT);
@@ -103,9 +122,10 @@ void setup() {
     Serial.println("CardKB or USB Serial");
   else
     Serial.println("HW Serial or USB Serial");
-  BLEDevice::init("Commodore 64/128 BLE Keyboard Service");
+  BLEDevice::init("C128BLE");
 
   BLEServer *pServer = BLEDevice::createServer();
+  pServer->setCallbacks(new MyServerCallbacks());
   BLEService *pService = pServer->createService(SERVICE_UUID);
   pCharacteristic = pService->createCharacteristic(
                                          CHARACTERISTIC_UUID,
@@ -118,8 +138,8 @@ void setup() {
   BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
   pAdvertising->addServiceUUID(SERVICE_UUID);
   pAdvertising->setScanResponse(true);
-  pAdvertising->setMinPreferred(0x06);  // functions that help with iPhone connections issue
-  pAdvertising->setMinPreferred(0x12);
+  pAdvertising->setMinPreferred(0x06); // functions that help with iPhone connections issue
+  pAdvertising->setMinPreferred(0x12); // functions that help with iPhone connections issue
   BLEDevice::startAdvertising();
 
   Serial.println("Started Commodore 64/128 BLE Keyboard Service");
