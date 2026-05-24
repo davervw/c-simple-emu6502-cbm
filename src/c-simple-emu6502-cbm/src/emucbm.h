@@ -40,7 +40,7 @@ class EmuCBM : public Emu6502
 public:
   EmuCBM(Memory* memory);
   virtual ~EmuCBM();
-  static int File_ReadAllBytes(byte* bytes, int size, const char* filename);
+  static int File_ReadAllBytes(byte* bytes, int size, const char* filename, int offset = 0);
 
 protected:
   int LOAD_TRAP;
