@@ -414,7 +414,7 @@ C128Memory::C128Memory(byte goarg)
 
 	EmuCBM::File_ReadAllBytes(basic_lo_rom, basic_lo_size, "/roms/c128/basiclo");
 	EmuCBM::File_ReadAllBytes(basic_hi_rom, basic_hi_size, "/roms/c128/basichi");
-	EmuCBM::File_ReadAllBytes(char_rom, chargen_size, "/roms/c128/chargen");
+	EmuCBM::File_ReadAllBytes(char_rom, chargen_size, "/roms/c128/chargen", chargen_size); // English C128 mode: load only upper half (C128 characters) into ROM area.  We didn't implement C64 mode directly so don't need the lower half.  TODO: need both upper/lower for intl C128
 	EmuCBM::File_ReadAllBytes(kernal_rom, kernal_size, "/roms/c128/kernal");
 
 	// hack rom to use load instead of dload, avoiding empty filename error // TODO: fix C128 loading
