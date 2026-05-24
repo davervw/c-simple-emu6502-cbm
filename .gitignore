@@ -31,3 +31,10 @@ roms/minimum/src/sweet16.asm
 *.swp
 disks/
 snapshots/
+/src/BLE_commodore_keyboard_server/.pio
+/src/BLE_commodore_keyboard_server/.vscode
+/src/browser-keyscan-helper/node_modules
+/src/c-simple-emu6502-cbm/.pio
+src/c-simple-emu6502-cbm/.vscode/launch.json
+src/c-simple-emu6502-cbm/.vscode/extensions.json
+src/c-simple-emu6502-cbm/.vscode/c_cpp_properties.json
