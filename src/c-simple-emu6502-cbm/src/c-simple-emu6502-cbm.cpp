@@ -67,6 +67,12 @@
 BLE_Keyboard* ble_keyboard;
 #endif
 
+#ifdef ARDUINO_M5STACK_CORES3
+#if !ARDUINO_USB_CDC_ON_BOOT
+HWCDC USBSerialInstance;
+#endif
+#endif
+
 // globals
 const char* StartupPRG = 0;
 #ifdef ARDUINO_TEENSY41

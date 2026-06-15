@@ -28,6 +28,11 @@
 ////////////////////////////
 #ifdef ARDUINO_M5STACK_CORES3
 #include <M5Unified.h> // library version 0.1.14
+#if !ARDUINO_USB_CDC_ON_BOOT
+  #include <HWCDC.h>
+  #define USBSerial USBSerialInstance
+  extern HWCDC USBSerialInstance;
+#endif
 #define SerialDef USBSerial
 #undef RX2
 #define RX2 G2
