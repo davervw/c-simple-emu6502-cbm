@@ -264,10 +264,41 @@ USBtoCBMkeyboard::USBtoCBMkeyboard()
   // keyboard1.attachExtrasRelease(onKbdExtrasRelease);
 }
 
+static bool tryRawRead()
+{
+  uint8_t buffer[8];
+  static char hex[] = "0123456789ABCDEF";
+
+  if (Serial1.available() < 25)
+    return false;
+  auto s = Serial1.readString().c_str();
+  int i=0;
+  auto len = strlen(s);
+  if (len < 23)
+    return false;
+  while (i < 8)
+  {
+    auto hi_p = strchr(hex, s[3*i]);
+    auto lo_p = strchr(hex, s[3*i+1]);
+    if (hi_p == nullptr || lo_p == nullptr || ((i < 7) && (s[3*i+2] != ' ')) || ((i == 7) && len > 23 && (s[23] != '\r')))
+      return false;
+    auto hi = hi_p - &hex[0];
+    auto lo = lo_p - &hex[0];
+    if (hi < 0 || hi > 15 || lo < 0 || lo > 15)
+      return false;
+    buffer[i++] = (hi << 4) | lo;
+  }
+  if (len > 24 && s[24] != '\n')
+    return false;
+  onKeyData(sizeof(buffer), &buffer[0]);
+  return true;
+}
+
 static String lastkeys;
 
 String USBtoCBMkeyboard::Read()
 {
+  tryRawRead();
   String s = "";
   for (int i = 0; i < 9; ++i)
   {
