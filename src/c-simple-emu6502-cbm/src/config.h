@@ -9,6 +9,8 @@
 
 // TODO: more build instructions needed for Arduino IDE options because they can get tricky
 
+#include <Arduino.h>
+
 ////////////////////////////
 #ifdef ARDUINO_M5STACK_CORE2
 #ifndef ARDUINO_M5STACK_Core2
