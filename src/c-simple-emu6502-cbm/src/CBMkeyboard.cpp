@@ -17,6 +17,10 @@ extern USBtoCBMkeyboard usbkbd;
 #include "ble_keyboard.h"
 #endif // not ARDUINO_TEENSY41
 #endif // NOT _WINDOWS
+#ifdef M5TAB5
+#include "tab5keymatrix.h"
+#include "tab5keystoc128.h"
+#endif // M5TAB5
 
 bool CBMkeyboard::caps = false;
 
@@ -177,10 +181,35 @@ loop:
         else
             s = usbkbd.Read();
 #endif
+#ifdef M5TAB5
+        else
+        {
+            Tab5KeyMatrix::update();
+            m5::unit::tab5_keyboard::key_status_bits_t keys;
+            if (Tab5KeyMatrix::check_key_change(keys))
+            {
+                uint16_t *c128_keys;
+                uint8_t c128_size;
+                tab5_key_matrix_to_c128(keys, c128_keys, c128_size);
+                char sb[256];
+                char *p = &sb[0];
+                *p = '\0';
+                for (int i = 0; i < c128_size; ++i)
+                {
+                    auto key = c128_keys[i];
+                    if (key == 88)
+                        break;
+                    p += sprintf(p, "%d,", key);
+                }
+                sprintf(p, "88\n");
+                s = String(sb);
+            }
+        }
+#endif
     if (s.length() == 0)
         return;
 
-    //SerialDef.println(s);
+    // SerialDef.println(s);
 
     caps = false;
     int scan_lshift = (model == VIC20) ? 25 : 15;
@@ -190,15 +219,18 @@ loop:
     int dest = 0;
     int scan = 0;
     int len = 0;
-    while (src < s.length() && dest < 16) {
+    while (src < s.length() && dest < 16)
+    {
         char c = s.charAt(src++);
-        if (c >= '0' && c <= '9') {
+        if (c >= '0' && c <= '9')
+        {
             scan = scan * 10 + (c - '0');
             ++len;
         }
         else if (len > 0)
         {
-            if (scan & 128) {
+            if (scan & 128)
+            {
                 caps = true;
                 scan = 88;
             }
