@@ -66,6 +66,9 @@
 #include "ble_keyboard.h"
 BLE_Keyboard* ble_keyboard;
 #endif
+#ifdef M5TAB5
+#include "tab5keymatrix.h"
+#endif
 
 #ifdef ARDUINO_M5STACK_CORES3
 #if !ARDUINO_USB_CDC_ON_BOOT
@@ -252,6 +255,10 @@ void setup() {
 
 #ifdef ARDUINO_TEENSY41
   SerialDef.printf("PSRAM Memory Size = %d Mbyte\n", external_psram_size);
+#endif
+
+#ifdef M5TAB5
+  Tab5KeyMatrix::begin();
 #endif
 }
 
