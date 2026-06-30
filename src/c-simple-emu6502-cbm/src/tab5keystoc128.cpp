@@ -105,6 +105,8 @@ void tab5_key_matrix_to_c128(const m5::unit::tab5_keyboard::key_status_bits_t &m
         auto c128key = to128[index][i];
         if (c128key == 88)
             continue;
+        if (i == 0 && sym && !lshift)
+            c128key = 72;
         if ((c128key & 2048) != 0 && !lshift && !force_shift) {
             if (count > 6)
                 continue;
@@ -127,6 +129,9 @@ void tab5_key_matrix_to_c128(const m5::unit::tab5_keyboard::key_status_bits_t &m
         if (count == 8)
             break;
     }
+
+    if (sym && cbm && count < 8)
+        c128_keys[count++] = 67;
 
     if (count == 2 && ctrl && sym && c128_keys[0] == 0) {
         c128_keys[0] = 63;
