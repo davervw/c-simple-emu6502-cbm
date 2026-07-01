@@ -17,8 +17,8 @@ namespace
     // CTRL ALT z x c v b n m  .  lt dn rt space
 
     // [C128 SYM+]
-    // esc F1..F2F3F4F5F6F7F8       _  =   restore
-    // SR  ?                   <  >  {  }  |       SR = stop restore
+    // stopF1..F2F3F4F5F6F7F8          home restore
+    // ~   ?                   <  >  {  }  |
     // tab                           :  "
     //                                  =
     //                         ,
@@ -38,7 +38,7 @@ namespace
 	// SCAN_CODE_FLAG_FORCE_NOSHIFT = 4096,
 	// SCAN_CODE_FLAG_FORCE_COMMODORE = 8192,
 
-    uint16_t to128[2][70] = {
+    uint16_t to128[3][70] = {
       { 63, 56, 59,  8, 11, 16, 19, 24, 27, 32, 35, 43, 40,  0,
         17+8192, 56+2048, 46,  8+2048, 11+2048, 16+2048, 54, 19+2048, 49, 27+2048, 32+2048, 45+2048, 50+2048, 48,
         61, 62,  9, 14, 17, 22, 25, 30, 33, 38, 41, 50, 24+2048,  0,
@@ -50,6 +50,12 @@ namespace
         61, 62,  9, 14, 17, 22, 25, 30, 33, 38, 41, 45+4096, 59, 0,
         88, 15, 10, 13, 18, 21, 26, 29, 34, 37, 42, 83+4096, 53+4096,  1,
         58, 80, 12, 23, 20, 31, 28, 39, 36, 47+4096, 85+4096, 84+4096, 86+4096, 60 },
+
+      { 72, 4, 4+2048, 5, 5+2048, 6, 6+2048, 3, 3+2048, 88, 88, 88, 51, 1024, 
+        14+8192, 55+2048, 88, 88, 88, 88, 88, 88, 55, 47+2048, 44+2048, 62+8192, 9+8192, 43+2048,
+        67, 88, 88, 88, 88, 88, 88, 88, 88, 88, 88, 45, 59+2048, 88, 
+        88, 15, 88, 88, 88, 88, 88, 88, 88, 88, 88, 88, 53, 88, 
+        88, 88, 88, 88, 88, 88, 88, 88, 88, 47, 88, 88, 88, 88 }
     };
 
     static uint16_t c128_keys[8];
@@ -86,7 +92,7 @@ void tab5_key_matrix_to_c128(const m5::unit::tab5_keyboard::key_status_bits_t &m
     bool cbm = matrix[2*14] == 1;
     bool sym = matrix[3*14] == 1;
     bool ctrl = matrix[4*14] == 1;
-    int index = lshift ? 1 : 0;
+    int index = sym ? 2 : (lshift ? 1 : 0);
 
     c128_keys = ::c128_keys;
     c128_size = 8;
@@ -105,8 +111,6 @@ void tab5_key_matrix_to_c128(const m5::unit::tab5_keyboard::key_status_bits_t &m
         auto c128key = to128[index][i];
         if (c128key == 88)
             continue;
-        if (i == 0 && sym && !lshift)
-            c128key = 72;
         if ((c128key & 2048) != 0 && !lshift && !force_shift) {
             if (count > 6)
                 continue;
@@ -124,28 +128,12 @@ void tab5_key_matrix_to_c128(const m5::unit::tab5_keyboard::key_status_bits_t &m
                 continue;
             force_cbm = true;
             insert_key(61, count);
-        }            
-        c128_keys[count++] = c128key & 511;
+        }
+        c128_keys[count++] = c128key & 0x5ff;
+        if (c128key == 1024 && ctrl && count == 1)
+            c128_keys[count++] = 63;          
         if (count == 8)
             break;
-    }
-
-    if (sym && cbm && count < 8)
-        c128_keys[count++] = 67;
-
-    if (count == 2 && ctrl && sym && c128_keys[0] == 0) {
-        c128_keys[0] = 63;
-        c128_keys[1] = 1024;
-        count = 2;
-    }
-
-    if (count == 1 && sym && c128_keys[0] == 40)
-        c128_keys[0] = 51;
-
-    if (count == 1 && force_noshift && sym && c128_keys[0] == 53) {
-        c128_keys[0] = 15;
-        c128_keys[1] = 51;
-        count = 2;
     }
 
     while (count < 8)
