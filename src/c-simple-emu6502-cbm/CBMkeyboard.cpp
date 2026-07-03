@@ -174,6 +174,8 @@ loop:
             s = dnString;
 #endif    
 #ifdef ARDUINO_TEENSY41
+        else if (Serial1.available() > 0)
+            s = Serial1.readString();
         else
             s = usbkbd.Read();
 #endif
