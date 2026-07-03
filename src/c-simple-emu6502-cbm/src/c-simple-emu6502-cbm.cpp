@@ -62,10 +62,6 @@
 
 #include "config.h"
 #include "cardkbdscan.h"
-#ifndef ARDUINO_TEENSY41
-#include "ble_keyboard.h"
-BLE_Keyboard* ble_keyboard;
-#endif
 #ifdef M5TAB5
 #include "tab5keymatrix.h"
 #endif
@@ -247,10 +243,6 @@ void setup() {
   pinMode(39, INPUT_PULLUP);
   pinMode(38, INPUT_PULLUP);
   pinMode(37, INPUT_PULLUP);
-#endif
-
-#ifndef ARDUINO_TEENSY41
-  ble_keyboard = new BLE_Keyboard();
 #endif
 
 #ifdef ARDUINO_TEENSY41

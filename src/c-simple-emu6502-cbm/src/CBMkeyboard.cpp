@@ -14,7 +14,10 @@
 #include "USBtoCBMkeyboard.h"
 extern USBtoCBMkeyboard usbkbd;
 #else // not ARDUINO_TEENSY41
-#include "ble_keyboard.h"
+#include "autoblehid.h"
+#include "blehid.h"
+#include "HIDtoCBMkeyboard.h"
+#include <queue>
 #endif // not ARDUINO_TEENSY41
 #endif // NOT _WINDOWS
 #ifdef M5TAB5
@@ -28,8 +31,33 @@ bool CBMkeyboard::heldToggle = false;
 
 int CBMkeyboard::scan_codes[16] = { 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64 };
 
+#ifndef ARDUINO_TEENSY41
+static bool initAUTOBLEHID = false;
+static HIDtoCBMkeyboard hidcbm;
+std::queue<String> scancodeQueue;
+
+void hidReport(size_t len, uint8_t *data, bool isCBM)
+{
+    bool isKeyboard = BLEHID.isKeyboard();
+    if (isCBM) {
+        String s = String(data, len);
+        scancodeQueue.push(s);
+    } else if (isKeyboard) {
+        hidcbm.OnKeyData(len, data);
+        String s = hidcbm.Read();
+        scancodeQueue.push(s);
+    } else {
+        // other HID
+    }
+}
+#endif // !ARDUINO_TEENSY41
+
 void CBMkeyboard::reset(CBMkeyboard::Model model)
 {
+#ifndef ARDUINO_TEENSY41
+  if (!initAUTOBLEHID)
+    AUTOBLEHID.begin(hidReport);
+#endif    
   memset(scan_codes, model == C128 ? 88 : 64, sizeof(scan_codes));
   heldToggle = false;
 }
@@ -137,8 +165,11 @@ loop:
 
     String s = "";
 #ifndef ARDUINO_TEENSY41
-    ble_keyboard->ServiceConnection(restartBLE);
-    s = ble_keyboard->Read();
+    AUTOBLEHID.update();
+    if (!scancodeQueue.empty()) {
+        s = scancodeQueue.front();
+        scancodeQueue.pop();
+    }
     if (s.length() != 0)
         ;
     else

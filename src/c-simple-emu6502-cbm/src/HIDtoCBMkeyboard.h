@@ -1,13 +1,10 @@
-// ble_keyboard.h
+// HIDtoCBMkeyboard.h - HID to Commodore keyboard driver
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
-// c-simple-emu-cbm (C Portable Version)
-// C64/6502 Emulator for M5Stack Cores
-//
 // MIT License
 //
-// Copyright (c) 2023 by David R. Van Wagner
+// Copyright (c) 2026 by David R. Van Wagner
 // davevw.com
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -30,12 +27,11 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-class BLE_Keyboard
+#include <Arduino.h>
+
+class HIDtoCBMkeyboard
 {
 public:
-  BLE_Keyboard();
-  void ServiceConnection(bool restart);
+  void OnKeyData(uint8_t len, uint8_t* data);
   String Read();
 };
-
-extern BLE_Keyboard* ble_keyboard;

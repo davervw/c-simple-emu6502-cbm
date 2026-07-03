@@ -1,3 +1,4 @@
+#ifdef M5TAB5
 #include "tab5keystoc128.h"
 
 namespace
@@ -159,3 +160,4 @@ void tab5_key_matrix_to_c128(const m5::unit::tab5_keyboard::key_status_bits_t &m
     while (count < 8)
         c128_keys[count++] = 88;
 }
+#endif//M5TAB5

@@ -1,3 +1,4 @@
+#ifdef M5TAB5
 #include <M5Unified.h>
 #include <M5UnitUnified.h>
 #include <M5UnitUnifiedKEYBOARD.h>
@@ -81,3 +82,4 @@ bool Tab5KeyMatrix::check_key_change(m5::unit::tab5_keyboard::key_status_bits_t 
     keys = now;
     return true;
 }
+#endif//M5TAB5

@@ -1,3 +1,4 @@
+#ifdef M5TAB5
 #include <M5UnitUnifiedKEYBOARD.h>
 
 class Tab5KeyMatrix {
@@ -9,3 +10,4 @@ private:
     Tab5KeyMatrix();
     ~Tab5KeyMatrix();
 };
+#endif//M5TAB5
