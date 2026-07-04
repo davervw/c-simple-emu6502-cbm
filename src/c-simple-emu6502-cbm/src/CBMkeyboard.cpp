@@ -41,11 +41,13 @@ void hidReport(size_t len, uint8_t *data, bool isCBM)
     bool isKeyboard = BLEHID.isKeyboard();
     if (isCBM) {
         String s = String(data, len);
-        scancodeQueue.push(s);
+        if (s.length() != 0)
+            scancodeQueue.push(s);
     } else if (isKeyboard) {
         hidcbm.OnKeyData(len, data);
         String s = hidcbm.Read();
-        scancodeQueue.push(s);
+        if (s.length() != 0)
+            scancodeQueue.push(s);
     } else {
         // other HID
     }
