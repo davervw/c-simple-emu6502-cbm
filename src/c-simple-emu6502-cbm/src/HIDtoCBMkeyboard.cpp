@@ -1,3 +1,4 @@
+#ifndef M5TAB5
 // HIDtoCBMkeyboard.cpp - HID to Commodore keyboard driver
 //
 ////////////////////////////////////////////////////////////////////////////////
@@ -182,3 +183,4 @@ String HIDtoCBMkeyboard::Read()
   //SerialDef.print(s);
   return s;
 }
+#endif//!M5TAB5

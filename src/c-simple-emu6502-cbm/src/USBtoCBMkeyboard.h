@@ -1,3 +1,4 @@
+#ifdef ARDUINO_TEENSY41
 // USBtoCBMkeyboard.h - keyboard driver for Teensy
 //
 ////////////////////////////////////////////////////////////////////////////////
@@ -39,3 +40,4 @@ public:
   USBtoCBMkeyboard();
   String Read();
 };
+#endif//ARDUINO_TEESNY41

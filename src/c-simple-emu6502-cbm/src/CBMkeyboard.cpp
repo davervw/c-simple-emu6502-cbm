@@ -32,6 +32,7 @@ bool CBMkeyboard::heldToggle = false;
 int CBMkeyboard::scan_codes[16] = { 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64 };
 
 #ifndef ARDUINO_TEENSY41
+#ifndef M5TAB5
 static bool initAUTOBLEHID = false;
 static HIDtoCBMkeyboard hidcbm;
 std::queue<String> scancodeQueue;
@@ -52,13 +53,16 @@ void hidReport(size_t len, uint8_t *data, bool isCBM)
         // other HID
     }
 }
+#endif // !M5TAB5
 #endif // !ARDUINO_TEENSY41
 
 void CBMkeyboard::reset(CBMkeyboard::Model model)
 {
 #ifndef ARDUINO_TEENSY41
+#ifndef M5TAB5
   if (!initAUTOBLEHID)
     AUTOBLEHID.begin(hidReport);
+#endif    
 #endif    
   memset(scan_codes, model == C128 ? 88 : 64, sizeof(scan_codes));
   heldToggle = false;
@@ -167,6 +171,7 @@ loop:
 
     String s = "";
 #ifndef ARDUINO_TEENSY41
+#ifndef M5TAB5
     AUTOBLEHID.update();
     if (!scancodeQueue.empty()) {
         s = scancodeQueue.front();
@@ -175,6 +180,7 @@ loop:
     if (s.length() != 0)
         ;
     else
+#endif    
 #endif
         if (CardKbd)
             s = CardKbdScanRead();

@@ -1,3 +1,4 @@
+#ifndef M5TAB5
 // HIDtoCBMkeyboard.h - HID to Commodore keyboard driver
 //
 ////////////////////////////////////////////////////////////////////////////////
@@ -35,3 +36,4 @@ public:
   void OnKeyData(uint8_t len, uint8_t* data);
   String Read();
 };
+#endif//!M5TAB5

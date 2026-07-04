@@ -1,3 +1,4 @@
+#ifndef M5TAB5
 //////////////////////////////////////////////////////////////////////
 // autoblehid.cpp
 //
@@ -115,3 +116,4 @@ void AutoBleHid::update()
         doConnect();
     }
 }
+#endif//!M5TAB5

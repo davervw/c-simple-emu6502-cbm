@@ -1,3 +1,4 @@
+#ifndef M5TAB5
 //////////////////////////////////////////////////////////////////////
 // autoblehid.h
 //
@@ -43,3 +44,4 @@ public:
 };
 
 extern AutoBleHid AUTOBLEHID;
+#endif//!M5TAB5

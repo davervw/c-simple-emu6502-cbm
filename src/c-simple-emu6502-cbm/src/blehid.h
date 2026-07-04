@@ -1,3 +1,4 @@
+#ifndef M5TAB5
 //////////////////////////////////////////////////////////////////////
 // blehid.h
 //
@@ -52,3 +53,4 @@ class cBLEHID {
 };
 
 extern cBLEHID BLEHID;
+#endif//!M5TAB5
