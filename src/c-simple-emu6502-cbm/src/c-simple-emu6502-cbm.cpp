@@ -47,7 +47,13 @@
 #include "emumin.h"
 #include "emu6502.h"
 
+#ifdef SWI2C
+#include "SoftWire.hpp"
+SoftWire KbdWire;
+#else
 #include <Wire.h>
+TwoWire& KbdWire = Wire;
+#endif
 #include <SPI.h>
 
 #ifdef ARDUINO_LILYGO_T_DISPLAY_S3
@@ -212,13 +218,13 @@ void setup() {
 
   //Serial or I2Ch
 #ifdef ARDUINO_TEENSY41
-  Wire.begin();
+  KbdWire.begin();
 #else
-  Wire.begin(SDA, SCL, 100000UL);
-#endif  
+  KbdWire.begin(SDA, SCL, 100000UL);
+#endif
   for (int i=1; i<=10; ++i)
   {
-    if (Wire.requestFrom(0x5F, 1) == 1)
+    if (KbdWire.requestFrom(0x5F, 1) == 1)
     {
       CardKbd = true;
       break;
@@ -227,7 +233,7 @@ void setup() {
   }
   if (!CardKbd)
   {
-    Wire.end();
+    KbdWire.end();
 #ifndef ARDUINO_SUNTON_8048S070
 #ifndef ARDUINO_TEENSY41
 #ifndef ARDUINO_LILYGO_T_DISPLAY_S3

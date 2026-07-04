@@ -97,7 +97,10 @@ extern TFT_eSPI lcd;
 #ifdef M5TAB5
 #include <M5Unified.h>
 #define M5STACK
-#define RX2 -1
+#define RX2 53
+#define SDA 53
+#define SCL 54
+#define SWI2C
 #define SerialDef Serial
 #define SD SD_MMC
 #endif

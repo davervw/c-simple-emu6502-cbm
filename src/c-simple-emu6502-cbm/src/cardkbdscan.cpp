@@ -30,8 +30,14 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <Wire.h>
 #include "config.h"
+#ifdef SWI2C
+#include <SoftWire.hpp>
+extern SoftWire KbdWire;
+#else
+#include <Wire.h>
+extern Wire& KbdWire;
+#endif
 #include "cardkbdscan.h"
 
 static int xlat[256] = {
@@ -73,10 +79,10 @@ String CardKbdScanRead()
   timer_then = micros();
 
   // put your main code here, to run repeatedly:
-  Wire.requestFrom(0x5F, 1);
+  KbdWire.requestFrom(0x5F, 1);
 
-  while (Wire.available()) {
-    uint8_t data = Wire.read();
+  while (KbdWire.available()) {
+    uint8_t data = KbdWire.read();
     if (data != 0)
     {
       int scan = xlat[data];
