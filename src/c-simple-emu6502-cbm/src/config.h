@@ -57,7 +57,9 @@
 ////////////////////////////
 // In case Sunton board is not defined, use selection of ESP32S3 Dev Module instead
 #ifdef ARDUINO_ESP32S3_DEV
+#ifndef ARDUINO_SUNTON_8048S070
 #define ARDUINO_SUNTON_8048S070
+#endif
 #endif
 #ifdef ARDUINO_SUNTON_8048S070
 #include <Arduino.h>
