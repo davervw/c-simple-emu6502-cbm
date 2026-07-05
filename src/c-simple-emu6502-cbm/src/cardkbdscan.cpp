@@ -36,7 +36,7 @@
 extern SoftWire KbdWire;
 #else
 #include <Wire.h>
-extern Wire& KbdWire;
+extern TwoWire& KbdWire;
 #endif
 #include "cardkbdscan.h"
 
