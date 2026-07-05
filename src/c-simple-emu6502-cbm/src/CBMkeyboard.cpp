@@ -295,7 +295,19 @@ loop:
             s = dnString;
 #endif    
 #ifdef ARDUINO_TEENSY41
-        else
+        else if (Serial1.available() > 0) {
+            static String buffer = "";
+            s = buffer + Serial1.readString();
+            buffer = "";
+            if (s.length() == 0 || s[s.length()-1] == '\n') {
+                buffer = s;
+                s = "";
+            }
+            if (s.length() > 2 && s[2] == ' ') {
+                SerialDef.println(s);
+                s = "";
+            }
+        } else
             s = usbkbd.Read();
 #endif
 #ifdef M5TAB5
@@ -326,7 +338,7 @@ loop:
     if (s.length() == 0)
         return;
 
-    // SerialDef.println(s);
+    //SerialDef.println(s);
 
     caps = false;
     int scan_lshift = (model == VIC20) ? 25 : 15;

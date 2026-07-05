@@ -1,5 +1,7 @@
 #pragma once
 
+#include <Arduino.h>
+
 class CBMkeyboard {
 public:
   typedef enum { C64, C128, VIC20 } Model;  

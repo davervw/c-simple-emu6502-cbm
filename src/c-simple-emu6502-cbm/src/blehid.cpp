@@ -1,4 +1,5 @@
 #ifndef M5TAB5
+#ifndef ARDUINO_TEENSY41
 //////////////////////////////////////////////////////////////////////
 // blehid.cpp
 //
@@ -608,4 +609,5 @@ bool cBLEHID::isConnected() { return _isconnected; }
 bool cBLEHID::isScanning() { return _isscanning; }
 bool cBLEHID::isKeyboard() { return _iskeyboard; }
 bool cBLEHID::isGamePad() { return _isgamepad; }
+#endif//!ARDUINO_TEENSY41
 #endif//!M5TAB5

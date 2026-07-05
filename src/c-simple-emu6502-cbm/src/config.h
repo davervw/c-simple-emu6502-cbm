@@ -73,7 +73,8 @@ extern Arduino_RPi_DPI_RGBPanel *gfx;
 #endif
 ////////////////////////////
 #ifdef ARDUINO_TEENSY41
-#define RX2 -1
+#define RX1 0
+#define TX1 1
 #define SerialDef Serial
 #include <SPI.h>
 #ifdef ILI9341
