@@ -31,11 +31,79 @@ bool CBMkeyboard::heldToggle = false;
 
 int CBMkeyboard::scan_codes[16] = { 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64 };
 
+uint8_t CBMkeyboard::joystick_vic20_1 = 255;
+uint8_t CBMkeyboard::joystick_vic20_2 = 255;
+uint8_t CBMkeyboard::joystick_c64_1 = 255;
+uint8_t CBMkeyboard::joystick_c64_2 = 255;
+
 #ifndef ARDUINO_TEENSY41
 #ifndef M5TAB5
 static bool initAUTOBLEHID = false;
 static HIDtoCBMkeyboard hidcbm;
 std::queue<String> scancodeQueue;
+
+void decodeHatButton(uint8_t hat, uint8_t button)
+{
+    const int c64_up = 1;
+    const int c64_down = 2;
+    const int c64_left = 4;
+    const int c64_right = 8;
+    const int c64_a = 16;
+
+    uint8_t data = 255;
+    switch (hat)
+    {
+        case 1: data -= c64_up; break;
+        case 2: data -= c64_up + c64_right; break;
+        case 3: data -= c64_right; break;
+        case 4: data -= c64_right + c64_down; break;
+        case 5: data -= c64_down; break;
+        case 6: data -= c64_left + c64_down; break;
+        case 7: data -= c64_left; break;
+        case 8: data -= c64_left + c64_up; break;
+    }
+    if ((button & 1) == 1)
+        data -= c64_a;
+
+    static bool last_b = false;
+    static int joystick_i = 2;
+    bool b = ((button & 2) == 2);
+    if (b != last_b && !b) // when b released
+        joystick_i = 3 - joystick_i; // swap joysticks
+    last_b = b;
+
+    switch (joystick_i)
+    {
+        case 1: CBMkeyboard::joystick_c64_1 = data; break;
+        case 2: CBMkeyboard::joystick_c64_2 = data; break;
+    }
+
+    // all over again, but this time for Vic-20
+
+    const int vic20_up = 4;
+    const int vic20_down = 8;
+    const int vic20_left = 16;
+    const int vic20_right = 128;
+    const int vic20_a = 32;
+
+    data = 255;
+    switch (hat)
+    {
+        case 1: data -= vic20_up; break;
+        case 2: data -= vic20_up + vic20_right; break;
+        case 3: data -= vic20_right; break;
+        case 4: data -= vic20_right + vic20_down; break;
+        case 5: data -= vic20_down; break;
+        case 6: data -= vic20_left + vic20_down; break;
+        case 7: data -= vic20_left; break;
+        case 8: data -= vic20_left + vic20_up; break;
+    }
+    if ((button & 1) == 1)
+        data -= vic20_a;
+
+    CBMkeyboard::joystick_vic20_1 = (data & 0x7f) | 0x80;
+    CBMkeyboard::joystick_vic20_2 = 0x7f | (data & 0x80);
+}
 
 void hidReport(size_t len, uint8_t *data, bool isCBM)
 {
@@ -51,6 +119,16 @@ void hidReport(size_t len, uint8_t *data, bool isCBM)
             scancodeQueue.push(s);
     } else {
         // other HID
+        int di = -1;
+        int ai = -1;
+        switch (len)
+        {
+            case 4: di = 3; ai = 0; break; // Kano Pixel Kit BLE
+            case 7: di = 6; ai = 0; break; // MiniJoyC BLE
+            case 16: di = 12; ai = 13; break; // XINPUT (Xbox BLE)
+        }
+        if (di >= 0 && di < len && ai >= 0 && ai < len)
+            decodeHatButton(data[di], data[ai]);
     }
 }
 #endif // !M5TAB5

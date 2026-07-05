@@ -443,6 +443,8 @@ byte EmuC64::C64Memory::read(ushort addr)
             return chargen_rom[addr - io_addr];
         else if (addr >= color_addr && addr < color_addr + color_nybles_size)
             return color_nybles[addr - color_addr] | 0xF0;
+        else if (addr == 0xDC00)
+            return io[addr - io_addr] & CBMkeyboard::joystick_c64_1;
         else if (addr == 0xDC01)
         {
             CBMkeyboard::ReadKeyboard(CBMkeyboard::Model::C64);
@@ -465,7 +467,7 @@ byte EmuC64::C64Memory::read(ushort addr)
                 }
             }
 
-            return ~value;
+            return ~value & CBMkeyboard::joystick_c64_2;
         }
         else if (addr == 0xD011 || addr == 0xD012) // 9-bit raster location
         {

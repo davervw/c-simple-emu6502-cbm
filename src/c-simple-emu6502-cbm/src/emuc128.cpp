@@ -557,11 +557,11 @@ void C128Memory::write(ushort addr, byte value)
 		}
 		else if (addr == 0xDC00) // CIA#1 Data Port Register A
 		{
-			io[addr - io_addr] = (byte)((io[addr - io_addr] & ~io[addr + 2 - io_addr]) | (value & io[addr + 2 - io_addr]));
+			io[addr - io_addr] = (byte)(((io[addr - io_addr] & ~io[addr + 2 - io_addr]) | (value & io[addr + 2 - io_addr])) & CBMkeyboard::joystick_c64_1);
 		}
 		else if (addr == 0xDC01) // CIA#1 Data Port Register B
 		{
-			io[addr - io_addr] = (byte)((io[addr - io_addr] & ~io[addr + 2 - io_addr]) | (value & io[addr + 2 - io_addr]));
+			io[addr - io_addr] = (byte)(((io[addr - io_addr] & ~io[addr + 2 - io_addr]) | (value & io[addr + 2 - io_addr])) & CBMkeyboard::joystick_c64_2);
 		}
 		else if (addr == 0xDC02) // CIA#1 Data Direction Register A
 		{
