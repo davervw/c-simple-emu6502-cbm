@@ -214,6 +214,7 @@ void setup() {
   M5.Lcd.setTextColor(TFT_BLACK);
   M5.Lcd.setTextSize(3);
   M5.Lcd.print("github.com/davervw/c-simple-emu6502-cbm/tree/unified");
+  delay(1000);
 #endif
 
   //Serial or I2Ch
