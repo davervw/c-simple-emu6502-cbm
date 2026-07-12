@@ -16,14 +16,15 @@ extern USBtoCBMkeyboard usbkbd;
 #else // not ARDUINO_TEENSY41
 #include "autoblehid.h"
 #include "blehid.h"
-#include "HIDtoCBMkeyboard.h"
-#include <queue>
 #endif // not ARDUINO_TEENSY41
 #endif // NOT _WINDOWS
 #ifdef M5TAB5
 #include "tab5keymatrix.h"
 #include "tab5keystoc128.h"
-#endif // M5TAB5
+#else //!M5TAB5
+#include <queue>
+#include "HIDtoCBMkeyboard.h"
+#endif //!M5TAB5
 
 bool CBMkeyboard::caps = false;
 
@@ -39,6 +40,10 @@ uint8_t CBMkeyboard::joystick_c64_2 = 255;
 #ifndef ARDUINO_TEENSY41
 #ifndef M5TAB5
 static bool initAUTOBLEHID = false;
+#endif // !M5TAB5
+#endif // !ARDUINO_TEENSY41
+
+#ifndef M5TAB5
 static HIDtoCBMkeyboard hidcbm;
 std::queue<String> scancodeQueue;
 
@@ -107,9 +112,15 @@ void decodeHatButton(uint8_t hat, uint8_t button)
 
 void hidReport(size_t len, uint8_t *data, bool isCBM)
 {
-    bool isKeyboard = BLEHID.isKeyboard();
+    bool isKeyboard = (len == 8); //BLEHID.isKeyboard();
     if (isCBM) {
+#ifdef ARDUINO_TEENSY41
+        String s = "";
+        for (int i=0; i<len; ++i)
+            s += (char)data[i];
+#else        
         String s = String(data, len);
+#endif        
         if (s.length() != 0)
             scancodeQueue.push(s);
     } else if (isKeyboard) {
@@ -131,8 +142,34 @@ void hidReport(size_t len, uint8_t *data, bool isCBM)
             decodeHatButton(data[di], data[ai]);
     }
 }
-#endif // !M5TAB5
-#endif // !ARDUINO_TEENSY41
+
+static bool tryByteRead(String s)
+{
+  uint8_t buffer[8];
+  static char hex[] = "0123456789ABCDEF";
+
+  int i=0;
+  auto len = s.length();
+  while (true)
+  {
+    if (3*i >= s.length() || s[3*i] == '\n')
+     break;
+    auto hi_p = strchr(hex, s[3*i]);
+    auto lo_p = strchr(hex, s[3*i+1]);
+    if (hi_p == nullptr || lo_p == nullptr)
+      return false;
+    if (3*i+2 < s.length() && s[3*i+2] != ' ')
+        return false;
+    auto hi = hi_p - &hex[0];
+    auto lo = lo_p - &hex[0];
+    if (hi < 0 || hi > 15 || lo < 0 || lo > 15)
+      return false;
+    buffer[i++] = (hi << 4) | lo;
+  }
+  hidReport(sizeof(buffer), &buffer[0], false);
+  return true;
+}
+#endif //!M5TAB5
 
 void CBMkeyboard::reset(CBMkeyboard::Model model)
 {
@@ -181,7 +218,9 @@ void CBMkeyboard::ReadKeyboard(CBMkeyboard::Model model)
     return;
 #else // NOT _WINDOWS
 
+#ifndef ARDUINO_TEENSY41
     bool restartBLE = false;
+#endif    
 #ifdef M5STACK
 loop:
     const String upString = "15,7,88";
@@ -296,18 +335,18 @@ loop:
 #endif    
 #ifdef ARDUINO_TEENSY41
         else if (Serial1.available() > 0) {
-            static String buffer = "";
-            s = buffer + Serial1.readString();
-            buffer = "";
-            if (s.length() == 0 || s[s.length()-1] == '\n') {
-                buffer = s;
-                s = "";
+            do {
+                int byte = Serial1.read();
+                if (byte == -1)
+                    continue;
+                s += (char)byte;
+            } while (s[s.length()-1] != '\n');
+            if (s.length() == 49) {
+                tryByteRead(s);
             }
-            if (s.length() > 2 && s[2] == ' ') {
-                SerialDef.println(s);
-                s = "";
-            }
-        } else
+            s = "";      
+        }
+        if (s.length() == 0)
             s = usbkbd.Read();
 #endif
 #ifdef M5TAB5
