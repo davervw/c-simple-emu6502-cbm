@@ -65,6 +65,7 @@ public:
 	static void ClearAll(int color);
 	static void ClearScreenArea(int color);
 	static void DrawBorder(int color);
+	static void ScrollScreen(int color);
 private:
 	// native resolution (e.g. 320x240)
 	static int clientwidth;

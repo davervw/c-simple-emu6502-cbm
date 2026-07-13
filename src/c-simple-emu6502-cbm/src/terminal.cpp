@@ -254,9 +254,13 @@ void Terminal::scrollup()
 	memset(&videoBuffer[(rows - 1) * cols], ' ', cols);
 #ifdef _WINDOWS  
 	redrawRequiredSignal = true;
-#else
+#else//!_WINDOWS
+#if defined(M5STACK) // || defined(OTHER)
+	LCDDraw::ScrollScreen(0x0000);
+#else//!M5STACK
   RedrawScreen();
-#endif  
+#endif//!M5STACK
+#endif//!_WINDOWS
 }
 
 void Terminal::backspace()

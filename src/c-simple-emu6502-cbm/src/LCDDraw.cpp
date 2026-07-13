@@ -326,4 +326,13 @@ void LCDDraw::DrawBorder(int color)
 #endif
 }
 
+void LCDDraw::ScrollScreen(int color)
+{
+#ifdef M5STACK	
+  M5.Display.setBaseColor(color);
+  M5.Display.setScrollRect(borderwidth, borderheight, clientwidth, clientheight);
+  M5.Display.scroll(0, -scaley);
+#endif
+}
+
 #endif // NOT _WINDOWS
