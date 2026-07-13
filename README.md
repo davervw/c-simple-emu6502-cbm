@@ -1,4 +1,8 @@
-# *Unified* - Commodore and minimal 6502 emulator for various targets #
+# *Unified-pio* - Commodore and minimal 6502 emulator for various targets #
+
+## pio is for pioarduino - developing in Visual Studio Code with pioarduino extension that manages the buid environment, libraries, etc. for embedded development. ##
+
+## Currently successfully targeting M5Stack, CYD 7", and Teensy 4.1.  (For LilyGo T-Display-S3, recommend stick with unified branch) ##
 
 ![Unified models](media/models.jpg)
 
