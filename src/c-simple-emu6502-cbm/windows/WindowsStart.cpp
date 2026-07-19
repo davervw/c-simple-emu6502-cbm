@@ -31,12 +31,12 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #ifdef _WINDOWS
-#include "../emutest.h"
-#include "../emu6502.h"
-#include "../emuc64.h"
-#include "../emuvic20.h"
-#include "../emuc128.h"
-#include "../emumin.h"
+#include "emutest.h"
+#include "emu6502.h"
+#include "emuc64.h"
+#include "emuvic20.h"
+#include "emuc128.h"
+#include "emumin.h"
 #include "WindowsStart.h"
 
 int main_go_num = 64;

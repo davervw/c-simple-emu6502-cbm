@@ -170,7 +170,7 @@ static int calculateScanCode()
 
 static bool caps = false;
 
-void pollKeyboard()
+void static pollKeyboard()
 {
   CBMkeyboard::ReadKeyboard(CBMkeyboard::Model::C128);
 }

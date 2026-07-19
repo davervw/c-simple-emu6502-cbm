@@ -32,7 +32,7 @@
 
 #ifdef _WINDOWS
 //#include "../dprintf.h"
-#include "../C128ScanCode.h"
+#include "C128ScanCode.h"
 #include "WindowsKeyboard.h"
 
 static int scan_codes[16] = { 88, 88, 88, 88, 88, 88, 88, 88, 88, 88, 88, 88, 88, 88, 88, 88 };

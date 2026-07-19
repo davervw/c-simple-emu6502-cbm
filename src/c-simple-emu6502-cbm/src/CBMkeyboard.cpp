@@ -39,11 +39,14 @@ uint8_t CBMkeyboard::joystick_c64_2 = 255;
 
 #ifndef ARDUINO_TEENSY41
 #ifndef M5TAB5
+#ifndef _WINDOWS
 static bool initAUTOBLEHID = false;
+#endif // !_WINDOWS
 #endif // !M5TAB5
 #endif // !ARDUINO_TEENSY41
 
 #ifndef M5TAB5
+#ifndef _WINDOWS
 static HIDtoCBMkeyboard hidcbm;
 std::queue<String> scancodeQueue;
 
@@ -169,14 +172,17 @@ static bool tryByteRead(String s)
   hidReport(sizeof(buffer), &buffer[0], false);
   return true;
 }
+#endif //!_WINDOWS
 #endif //!M5TAB5
 
 void CBMkeyboard::reset(CBMkeyboard::Model model)
 {
 #ifndef ARDUINO_TEENSY41
 #ifndef M5TAB5
+#ifndef _WINDOWS
   if (!initAUTOBLEHID)
     AUTOBLEHID.begin(hidReport);
+#endif
 #endif    
 #endif    
   memset(scan_codes, model == C128 ? 88 : 64, sizeof(scan_codes));

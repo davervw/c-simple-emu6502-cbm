@@ -106,7 +106,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>windows</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>Windows;src</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -134,22 +134,26 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="ASCIIKeyboard.cpp" />
-    <ClCompile Include="CBMkeyboard.cpp" />
-    <ClCompile Include="emu6502.cpp" />
-    <ClCompile Include="emuc128.cpp" />
-    <ClCompile Include="emuc64.cpp" />
-    <ClCompile Include="emucbm.cpp" />
-    <ClCompile Include="emud64.cpp" />
-    <ClCompile Include="emumin.cpp" />
-    <ClCompile Include="emutest.cpp" />
-    <ClCompile Include="emuvic20.cpp" />
-    <ClCompile Include="LCDDraw.cpp" />
-    <ClCompile Include="mc6850.cpp" />
-    <ClCompile Include="terminal.cpp" />
-    <ClCompile Include="vdc.cpp" />
-    <ClCompile Include="vic.cpp" />
-    <ClCompile Include="vicii.cpp" />
+    <ClCompile Include="src\ASCIIKeyboard.cpp" />
+    <ClCompile Include="src\CBMkeyboard.cpp" />
+    <ClCompile Include="src\emu6502.cpp" />
+    <ClCompile Include="src\emuc128.cpp" />
+    <ClCompile Include="src\emuc64.cpp" />
+    <ClCompile Include="src\emucbm.cpp" />
+    <ClCompile Include="src\emud64.cpp" />
+    <ClCompile Include="src\emumin.cpp" />
+    <ClCompile Include="src\emutest.cpp" />
+    <ClCompile Include="src\emuvic20.cpp" />
+    <ClCompile Include="src\HIDtoCBMkeyboard.cpp" />
+    <ClCompile Include="src\LCDDraw.cpp" />
+    <ClCompile Include="src\mc6850.cpp" />
+    <ClCompile Include="src\tab5keymatrix.cpp" />
+    <ClCompile Include="src\tab5keystoc128.cpp" />
+    <ClCompile Include="src\terminal.cpp" />
+    <ClCompile Include="src\USBtoCBMkeyboard.cpp" />
+    <ClCompile Include="src\vdc.cpp" />
+    <ClCompile Include="src\vic.cpp" />
+    <ClCompile Include="src\vicii.cpp" />
     <ClCompile Include="windows\WindowsDraw.cpp" />
     <ClCompile Include="windows\WindowsStart.cpp" />
     <ClCompile Include="windows\WindowsFile.cpp" />
@@ -158,6 +162,7 @@
     <ClCompile Include="windows\WindowsTime.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="splash\demugo_splash1152x912.png" />
     <Image Include="windows\c-simple-emu6502-cbm.ico" />
     <Image Include="windows\small.ico" />
   </ItemGroup>

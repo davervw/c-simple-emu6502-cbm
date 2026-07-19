@@ -48,6 +48,7 @@
 #include "WindowsStart.h"
 #include <string.h>
 #include <stdio.h>
+#include <wincodec.h>
 
 const int MAX_LOADSTRING = 100;
 
@@ -66,12 +67,9 @@ ATOM                MyRegisterClass(HINSTANCE hInstance);
 BOOL                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
+INT_PTR CALLBACK SplashDlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 
-int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
-    _In_opt_ HINSTANCE hPrevInstance,
-    _In_ LPWSTR    lpCmdLine,
-    _In_ int       nCmdShow)
-{
+int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nCmdShow) {
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpCmdLine);
 
@@ -80,23 +78,27 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     LoadStringW(hInstance, IDC_CSIMPLEEMU6502CBM, szWindowClass, MAX_LOADSTRING);
     MyRegisterClass(hInstance);
 
-    // Perform application initialization:
+    // 1. Invoke Splash Dialog Screen Modally For 2 Seconds
+    // Note: IDD_SPLASHBOX matches your resource ID mapping definition
+    DialogBox(hInstance, MAKEINTRESOURCE(IDD_SPLASHBOX), nullptr, SplashDlgProc);
+
+    // 2. Resume traditional boot-flow sequence execution pathing
     if (!InitInstance(hInstance, nCmdShow))
         return FALSE;
 
     HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_CSIMPLEEMU6502CBM));
-
     MSG msg;
 
     // Main message loop:
-    while (GetMessage(&msg, nullptr, 0, 0))
-    {
-        if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
-        {
+    while (GetMessage(&msg, nullptr, 0, 0)) {
+        if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg)) {
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }
     }
+
+    // Clean up COM system runtime environments
+    CoUninitialize();
 
     return (int)msg.wParam;
 }
@@ -129,7 +131,7 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 }
 
 
-DWORD WINAPI ThreadProc(LPVOID lpParameter)
+static DWORD WINAPI ThreadProc(LPVOID lpParameter)
 {
     HWND hWnd = (HWND)lpParameter;
     auto result = SendMessage(hWnd, WM_USER, 0, 0); // demo
@@ -292,6 +294,130 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)
         {
             EndDialog(hDlg, LOWORD(wParam));
+            return (INT_PTR)TRUE;
+        }
+        break;
+    }
+    return (INT_PTR)FALSE;
+}
+
+// Explicit Dialog Procedure for Splash Screen
+static INT_PTR CALLBACK SplashDlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    static HBITMAP hSplashBitmap = NULL;
+    const UINT SPLASH_TIMER_ID = 1001;
+
+    switch (message)
+    {
+    case WM_INITDIALOG:
+    {
+        // Initialize COM for WIC (if not already handled)
+        CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
+
+        IWICImagingFactory* pWICFactory = NULL;
+        IWICBitmapDecoder* pDecoder = NULL;
+        IWICBitmapFrameDecode* pFrame = NULL;
+        IWICFormatConverter* pConverter = NULL;
+
+        // Load PNG via Windows Imaging Component
+        if (SUCCEEDED(CoCreateInstance(CLSID_WICImagingFactory, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pWICFactory))))
+        {
+            // Replace L"splash.png" with your physical relative asset filepath
+            if (SUCCEEDED(pWICFactory->CreateDecoderFromFilename(L"roms/splash/demugo_splash1152x912.png", NULL, GENERIC_READ, WICDecodeMetadataCacheOnDemand, &pDecoder)))
+            {
+                if (SUCCEEDED(pDecoder->GetFrame(0, &pFrame)))
+                {
+                    if (SUCCEEDED(pWICFactory->CreateFormatConverter(&pConverter)))
+                    {
+                        if (SUCCEEDED(pConverter->Initialize(pFrame, GUID_WICPixelFormat32bppBGR, WICBitmapDitherTypeNone, NULL, 0.0f, WICBitmapPaletteTypeCustom)))
+                        {
+                            UINT imgWidth = 0, imgHeight = 0;
+                            pConverter->GetSize(&imgWidth, &imgHeight);
+
+                            // Convert converted texture output safely into standard HBITMAP
+                            BITMAPINFO bmi = {};
+                            bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+                            bmi.bmiHeader.biWidth = imgWidth;
+                            bmi.bmiHeader.biHeight = -(int)imgHeight; // Top-down
+                            bmi.bmiHeader.biPlanes = 1;
+                            bmi.bmiHeader.biBitCount = 32;
+                            bmi.bmiHeader.biCompression = BI_RGB;
+
+                            void* pBits = NULL;
+                            HDC hdcScreen = GetDC(NULL);
+                            hSplashBitmap = CreateDIBSection(hdcScreen, &bmi, DIB_RGB_COLORS, &pBits, NULL, 0);
+                            ReleaseDC(NULL, hdcScreen);
+
+                            if (hSplashBitmap && pBits)
+                            {
+                                pConverter->CopyPixels(NULL, imgWidth * 4, imgWidth * imgHeight * 4, (BYTE*)pBits);
+                            }
+
+                            // Resize Modal Dialog Window matching Native Target Resolution Dimensions
+                            RECT rect = { 0, 0, (LONG)imgWidth, (LONG)imgHeight };
+                            AdjustWindowRectEx(&rect, GetWindowLong(hDlg, GWL_STYLE), FALSE, GetWindowLong(hDlg, GWL_EXSTYLE));
+
+                            int scrWidth = GetSystemMetrics(SM_CXSCREEN);
+                            int scrHeight = GetSystemMetrics(SM_CYSCREEN);
+                            int winWidth = rect.right - rect.left;
+                            int winHeight = rect.bottom - rect.top;
+
+                            // Center cleanly on modern monitors
+                            SetWindowPos(hDlg, HWND_TOP, (scrWidth - winWidth) / 2, (scrHeight - winHeight) / 2, winWidth, winHeight, SWP_NOZORDER | SWP_SHOWWINDOW);
+                        }
+                    }
+                    pFrame->Release();
+                }
+                pDecoder->Release();
+            }
+            pWICFactory->Release();
+        }
+
+        // Fallback: If image fails to load entirely, exit modal immediately
+        if (!hSplashBitmap)
+        {
+            EndDialog(hDlg, IDCANCEL);
+            return (INT_PTR)TRUE;
+        }
+
+        // Set precise lifetime window scope execution boundary constraint (2.5 Seconds)
+        SetTimer(hDlg, SPLASH_TIMER_ID, 2500, NULL);
+        return (INT_PTR)TRUE;
+    }
+
+    case WM_PAINT:
+    {
+        PAINTSTRUCT ps;
+        HDC hdc = BeginPaint(hDlg, &ps);
+        if (hSplashBitmap)
+        {
+            HDC hdcMem = CreateCompatibleDC(hdc);
+            HGDIOBJ hOld = SelectObject(hdcMem, hSplashBitmap);
+
+            RECT clientRect;
+            GetClientRect(hDlg, &clientRect);
+            BITMAP bmp;
+            GetObject(hSplashBitmap, sizeof(BITMAP), &bmp);
+
+            BitBlt(hdc, 0, 0, clientRect.right, clientRect.bottom, hdcMem, 0, 0, SRCCOPY);
+
+            SelectObject(hdcMem, hOld);
+            DeleteDC(hdcMem);
+        }
+        EndPaint(hDlg, &ps);
+        return (INT_PTR)TRUE;
+    }
+
+    case WM_TIMER:
+        if (wParam == SPLASH_TIMER_ID)
+        {
+            KillTimer(hDlg, SPLASH_TIMER_ID);
+            if (hSplashBitmap)
+            {
+                DeleteObject(hSplashBitmap);
+                hSplashBitmap = NULL;
+            }
+            EndDialog(hDlg, IDOK);
             return (INT_PTR)TRUE;
         }
         break;

@@ -28,7 +28,13 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifdef _WINDOWS
+#include <string>
+typedef unsigned char uint8_t;
+typedef std::string String;
+#else
 #include <Arduino.h>
+#endif
 #include "HIDtoCBMkeyboard.h"
 #include "C128ScanCode.h"
 
@@ -159,10 +165,14 @@ String HIDtoCBMkeyboard::Read()
     scan_codes[i] &= ~(SCAN_CODE_FLAG_FORCE_SHIFT | SCAN_CODE_FLAG_FORCE_NOSHIFT | SCAN_CODE_FLAG_FORCE_COMMODORE);
     if (scan_codes[i] == 88)
       continue;
-    char buffer[8];
+    char buffer[36];
     if (s.length() > 0)
       s = s + ',';
+#ifdef _WINDOWS
+    _itoa_s(scan_codes[i], buffer, sizeof(buffer), 10);
+#else
     itoa(scan_codes[i], buffer, 10);
+#endif
     s = s + buffer;
   }
   if (s.length() > 0)

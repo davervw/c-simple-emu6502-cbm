@@ -28,7 +28,12 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifdef _WINDOWS
+#include <string>
+typedef std::string String;
+#else
 #include <Arduino.h>
+#endif
 
 class HIDtoCBMkeyboard
 {

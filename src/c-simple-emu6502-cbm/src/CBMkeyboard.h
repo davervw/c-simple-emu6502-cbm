@@ -1,6 +1,10 @@
 #pragma once
 
+#ifdef _WINDOWS
+typedef unsigned char uint8_t;
+#else
 #include <Arduino.h>
+#endif
 
 class CBMkeyboard {
 public:

@@ -12,6 +12,7 @@
 #define IDC_CSIMPLEEMU6502CBM           109
 #define IDR_MAINFRAME                   128
 #define IDC_STATIC                      -1
+#define IDD_SPLASHBOX 201
 
 // Next default values for new objects
 // 

@@ -1,15 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="emu6502.cpp" />
-    <ClCompile Include="emutest.cpp" />
-    <ClCompile Include="emuc64.cpp" />
-    <ClCompile Include="emucbm.cpp" />
-    <ClCompile Include="emud64.cpp" />
-    <ClCompile Include="vicii.cpp" />
-    <ClCompile Include="emuc128.cpp" />
-    <ClCompile Include="vdc.cpp" />
-    <ClCompile Include="vic.cpp" />
     <ClCompile Include="windows\WindowsDraw.cpp">
       <Filter>Windows</Filter>
     </ClCompile>
@@ -28,44 +19,97 @@
     <ClCompile Include="windows\WindowsTime.cpp">
       <Filter>Windows</Filter>
     </ClCompile>
-    <ClCompile Include="emumin.cpp" />
-    <ClCompile Include="mc6850.cpp" />
-    <ClCompile Include="terminal.cpp" />
-    <ClCompile Include="ASCIIKeyboard.cpp" />
-    <ClCompile Include="LCDDraw.cpp" />
-    <ClCompile Include="emuvic20.cpp" />
-    <ClCompile Include="CBMkeyboard.cpp" />
+    <ClCompile Include="src\ASCIIKeyboard.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\emu6502.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\emuc64.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\emuc128.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\emucbm.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\emud64.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\emumin.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\emutest.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\emuvic20.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\HIDtoCBMkeyboard.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\LCDDraw.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mc6850.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\tab5keymatrix.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\tab5keystoc128.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\terminal.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\USBtoCBMkeyboard.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\vdc.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\vic.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\vicii.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\CBMkeyboard.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="windows\framework.h">
-      <Filter>Includes</Filter>
+      <Filter>Include</Filter>
     </ClInclude>
     <ClInclude Include="windows\targetver.h">
-      <Filter>Includes</Filter>
+      <Filter>Include</Filter>
     </ClInclude>
     <ClInclude Include="windows\c-simple-emu6502-cbm.h">
-      <Filter>Includes</Filter>
+      <Filter>Include</Filter>
     </ClInclude>
     <ClInclude Include="windows\Resource.h">
-      <Filter>Includes</Filter>
+      <Filter>Include</Filter>
     </ClInclude>
     <ClInclude Include="emu6502.h">
-      <Filter>Includes</Filter>
+      <Filter>Include</Filter>
     </ClInclude>
     <ClInclude Include="emutest.h">
-      <Filter>Includes</Filter>
+      <Filter>Include</Filter>
     </ClInclude>
     <ClInclude Include="emuc64.h">
-      <Filter>Includes</Filter>
+      <Filter>Include</Filter>
     </ClInclude>
     <ClInclude Include="emucbm.h">
-      <Filter>Includes</Filter>
+      <Filter>Include</Filter>
     </ClInclude>
     <ClInclude Include="emud64.h">
-      <Filter>Includes</Filter>
+      <Filter>Include</Filter>
     </ClInclude>
     <ClInclude Include="vicii.h">
-      <Filter>Includes</Filter>
+      <Filter>Include</Filter>
     </ClInclude>
     <ClInclude Include="windows\WindowsDraw.h">
       <Filter>Windows</Filter>
@@ -83,49 +127,49 @@
       <Filter>Windows</Filter>
     </ClInclude>
     <ClInclude Include="emuc128.h">
-      <Filter>Includes</Filter>
+      <Filter>Include</Filter>
     </ClInclude>
     <ClInclude Include="vdc.h">
-      <Filter>Includes</Filter>
+      <Filter>Include</Filter>
     </ClInclude>
     <ClInclude Include="vic.h">
-      <Filter>Includes</Filter>
+      <Filter>Include</Filter>
     </ClInclude>
     <ClInclude Include="emuvic20.h">
-      <Filter>Includes</Filter>
+      <Filter>Include</Filter>
     </ClInclude>
     <ClInclude Include="emumin.h">
-      <Filter>Includes</Filter>
+      <Filter>Include</Filter>
     </ClInclude>
     <ClInclude Include="mc6850.h">
-      <Filter>Includes</Filter>
+      <Filter>Include</Filter>
     </ClInclude>
     <ClInclude Include="terminal.h">
-      <Filter>Includes</Filter>
+      <Filter>Include</Filter>
     </ClInclude>
     <ClInclude Include="dprintf.h">
-      <Filter>Includes</Filter>
+      <Filter>Include</Filter>
     </ClInclude>
     <ClInclude Include="ASCIIKeyboard.h">
-      <Filter>Includes</Filter>
+      <Filter>Include</Filter>
     </ClInclude>
     <ClInclude Include="ICharInput.h">
-      <Filter>Includes</Filter>
+      <Filter>Include</Filter>
     </ClInclude>
     <ClInclude Include="ICharOutput.h">
-      <Filter>Includes</Filter>
+      <Filter>Include</Filter>
     </ClInclude>
     <ClInclude Include="C128ScanCode.h">
-      <Filter>Includes</Filter>
+      <Filter>Include</Filter>
     </ClInclude>
     <ClInclude Include="LCDDraw.h">
-      <Filter>Includes</Filter>
+      <Filter>Include</Filter>
     </ClInclude>
     <ClInclude Include="config.h">
-      <Filter>Includes</Filter>
+      <Filter>Include</Filter>
     </ClInclude>
     <ClInclude Include="CBMkeyboard.h">
-      <Filter>Includes</Filter>
+      <Filter>Include</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -135,16 +179,25 @@
     <Image Include="windows\small.ico">
       <Filter>Resources</Filter>
     </Image>
+    <Image Include="splash\demugo_splash1152x912.png">
+      <Filter>splash</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Resources">
       <UniqueIdentifier>{fd9d56c5-e8d8-4b97-81d3-d356384d2f86}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Includes">
-      <UniqueIdentifier>{9b5810cc-3830-4fe3-82fd-7e4354eb5829}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Windows">
       <UniqueIdentifier>{ecb9392e-0ac7-4f70-b654-c899400fe8e4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src">
+      <UniqueIdentifier>{76463103-0ee0-44a2-b70c-8af0ceea90a5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Include">
+      <UniqueIdentifier>{9b5810cc-3830-4fe3-82fd-7e4354eb5829}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="splash">
+      <UniqueIdentifier>{57666b49-3809-44de-b71e-dab4a269c161}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
