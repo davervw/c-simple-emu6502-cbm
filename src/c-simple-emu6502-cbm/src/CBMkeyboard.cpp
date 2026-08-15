@@ -242,7 +242,7 @@ loop:
     static bool lastStop = false;
 
     M5.update();
-#ifdef ARDUINO_M5STACK_CORES3
+#if (defined(ARDUINO_M5STACK_CORES3) || defined(M5TAB5))
     static long pressed_time = 0;
     int touchcount = M5.Touch.getCount();
     bool a_pressed = false;
@@ -253,9 +253,18 @@ loop:
     bool c_held = false;
     if (touchcount > 0) {
       auto touchpoint = M5.Touch.getTouchPointRaw();
-      if (touchpoint.y >= 230) {
-        a_pressed = (touchpoint.x < 320 / 3);
-        b_pressed = !a_pressed && (touchpoint.x < 320 * 2 / 3);
+      auto width = M5.Display.width();
+      auto height = M5.Display.height();
+#ifdef M5TAB5
+      auto x = width - touchpoint.y;
+      auto y = touchpoint.x;
+#else
+      auto x = touchpoint.x;
+      auto y = touchpoint.y;
+#endif      
+      if (y >= height * 9 / 10) {
+        a_pressed = (x < width / 3);
+        b_pressed = !a_pressed && (x < width * 2 / 3);
         c_pressed = !a_pressed && !b_pressed;
 
         if (lastCr && b_pressed && (millis() - pressed_time) >= 1000)
