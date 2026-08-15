@@ -214,7 +214,21 @@ void setup() {
   M5.Lcd.setTextColor(TFT_BLACK);
   M5.Lcd.setTextSize(3);
   M5.Lcd.print("github.com/davervw/c-simple-emu6502-cbm/tree/unified");
-  delay(1000);
+  delay(2500);
+#else
+#ifdef M5STACK
+  extern uint8_t splash320_240[28697];
+
+  if (M5.Lcd.drawJpg(splash320_240, sizeof(splash320_240), 0, 0))
+  {
+    M5.Lcd.setTextColor(TFT_BLACK);
+    M5.Lcd.setTextSize(1);
+    M5.Lcd.print("github.com/davervw/c-simple-emu6502-cbm/tree/unified");
+#ifndef ARDUINO_M5STACK_FIRE    
+    delay(2500);
+#endif    
+  }
+#endif
 #endif
 
   //Serial or I2Ch
