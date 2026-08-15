@@ -135,3 +135,9 @@ To achieve the right aspect ratio and to fill the various resolution screens for
 |minimal w/mc6850|x:(1:1), y(1:1)   |x(1:1), y(2:3) |x(1:1), y(4:3)       |x(1:1), y(1:2) |x(3:2), y(3:1)|1:1 (in sw)
 
 ![scaling](media/font_scaling.png)
+
+## M5 Buttons ##
+
+The implementations for the M5Stack 2" displays support physical and virtual (bottom of screen) buttons, including for M5 Fire, Core2, CoreS3.   These buttons help load a default program (e.g. menu), navigate the screen, select/run, break, and switch emulators.
+
+![buttons](media/M5CoreButtons.png)
