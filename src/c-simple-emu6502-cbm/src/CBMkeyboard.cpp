@@ -180,8 +180,10 @@ void CBMkeyboard::reset(CBMkeyboard::Model model)
 #ifndef ARDUINO_TEENSY41
 #ifndef M5TAB5
 #ifndef _WINDOWS
-  if (!initAUTOBLEHID)
+  if (!initAUTOBLEHID) {
     AUTOBLEHID.begin(hidReport);
+    initAUTOBLEHID = true;
+  }
 #endif
 #endif    
 #endif    
