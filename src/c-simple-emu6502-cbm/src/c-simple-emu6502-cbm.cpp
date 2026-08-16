@@ -213,7 +213,7 @@ void setup() {
   M5.Lcd.drawJpgFile("/sdcard/splash1280x720.jpg", 0, 0);
   M5.Lcd.setTextColor(TFT_BLACK);
   M5.Lcd.setTextSize(3);
-  M5.Lcd.print("github.com/davervw/c-simple-emu6502-cbm/tree/unified");
+  M5.Lcd.print("github.com/davervw/c-simple-emu6502-cbm/tree/unified-pio");
   delay(2500);
 #else
 #ifdef M5STACK
@@ -223,7 +223,7 @@ void setup() {
   {
     M5.Lcd.setTextColor(TFT_BLACK);
     M5.Lcd.setTextSize(1);
-    M5.Lcd.print("github.com/davervw/c-simple-emu6502-cbm/tree/unified");
+    M5.Lcd.print("github.com/davervw/c-simple-emu6502-cbm/tree/unified-pio");
 #ifndef ARDUINO_M5STACK_FIRE    
     delay(2500);
 #endif    
