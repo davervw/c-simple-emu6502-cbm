@@ -235,11 +235,21 @@ loop:
     const String runString = "15,63,88";
     const String noString = "88";
     const String stopString = "63,88";
+    const String ltString = "15,2,88";
+    const String rtString = "2,88";
+    const String homeString = "51,88";
+    const String delString = "0,88";
+    const String spaceString = "60,88";
     static bool lastUp = false;
     static bool lastCr = false;
     static bool lastDn = false;
     static bool lastRun = false;
     static bool lastStop = false;
+    static bool lastLt = false;
+    static bool lastRt = false;
+    static bool lastHome = false;
+    static bool lastDel = false;
+    static bool lastSpace = false;
 
     M5.update();
 #if (defined(ARDUINO_M5STACK_CORES3) || defined(M5TAB5))
@@ -248,6 +258,11 @@ loop:
     bool a_pressed = false;
     bool b_pressed = false;
     bool c_pressed = false;
+    bool l_pressed = false;
+    bool r_pressed = false;
+    bool t_pressed = false;
+    bool one_pressed = false;
+    bool two_pressed = false;
     bool a_held = false;
     bool b_held = false;
     bool c_held = false;
@@ -261,24 +276,33 @@ loop:
 #else
       auto x = touchpoint.x;
       auto y = touchpoint.y;
-#endif      
+#endif
       if (y >= height * 9 / 10) {
-        a_pressed = (x < width / 3);
-        b_pressed = !a_pressed && (x < width * 2 / 3);
-        c_pressed = !a_pressed && !b_pressed;
+          a_pressed = (x < width / 3);
+          b_pressed = !a_pressed && (x < width * 2 / 3);
+          c_pressed = !a_pressed && !b_pressed;
 
-        if (lastCr && b_pressed && (millis() - pressed_time) >= 1000)
-          b_held = true;
-        if (!lastCr && b_pressed)
-          pressed_time = millis();
-        if (lastDn && c_pressed && (millis() - pressed_time) >= 1000)
-          c_held = true;
-        if (!lastDn && c_pressed)
-          pressed_time = millis();
-        }
-        if (lastUp && a_pressed && (millis() - pressed_time) >= 1000)
+          if (lastCr && b_pressed && (millis() - pressed_time) >= 1000)
+              b_held = true;
+          if (!lastCr && b_pressed)
+              pressed_time = millis();
+          if (lastDn && c_pressed && (millis() - pressed_time) >= 1000)
+              c_held = true;
+          if (!lastDn && c_pressed)
+              pressed_time = millis();
+      }
+      if (y < height / 10) {
+        one_pressed = (x < width / 3);
+        t_pressed = (x >= width / 3 && x <= width * 2 / 3);
+        two_pressed = (x > width * 2 / 3);
+      }
+      if (y >= height / 3 && y <= height * 2 / 3) {
+        l_pressed = x <= width / 10;
+        r_pressed = x >= width * 9 / 10;
+      }
+      if (lastUp && a_pressed && (millis() - pressed_time) >= 1000)
           a_held = true;
-        if (!lastUp && a_pressed)
+      if (!lastUp && a_pressed)
           pressed_time = millis();
     }
 #else // NOT ARDUINO_M5STACK_CORES3
@@ -347,6 +371,26 @@ loop:
             s = stopString;
         else if ((lastDn = c_pressed && !a_pressed) == true)
             s = dnString;
+        else if (lastLt & (lastLt = l_pressed) == false)
+            s = noString;
+        else if (lastRt & (lastRt = r_pressed) == false)
+            s = noString;
+        else if (lastHome && (lastHome = t_pressed) == false)
+            s = noString;
+        else if (lastDel && (lastDel = one_pressed) == false)
+            s = noString;
+        else if (lastSpace && (lastSpace = two_pressed) == false)
+            s = noString;
+        else if (lastLt = l_pressed)
+            s = ltString;
+        else if (lastRt = r_pressed)
+            s = rtString;
+        else if (lastHome = t_pressed)
+            s = homeString;
+        else if (lastDel = one_pressed)
+            s = delString;
+        else if (lastSpace = two_pressed)
+            s = spaceString;
 #endif    
 #ifdef ARDUINO_TEENSY41
         else if (Serial1.available() > 0) {
