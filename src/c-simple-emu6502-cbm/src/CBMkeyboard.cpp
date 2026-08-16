@@ -228,6 +228,18 @@ void CBMkeyboard::ReadKeyboard(CBMkeyboard::Model model)
     bool restartBLE = false;
 #endif    
 #ifdef M5STACK
+
+// buttons for touch screen including corresponding to physical A, B, C
+// +- 1 ----------T---------- 2 -+
+// |                             |
+// |                             |
+// |                             |
+// L                             R
+// |                             |
+// |                             |
+// |                             |
+// +- A --------- B --------- C -+
+
 loop:
     const String upString = "15,7,88";
     const String dnString = "7,88";
