@@ -141,3 +141,7 @@ To achieve the right aspect ratio and to fill the various resolution screens for
 The implementations for the M5Stack 2" displays support physical and virtual (bottom of screen) buttons, including for M5 Fire, Core2, CoreS3.   These buttons help load a default program (e.g. menu), navigate the screen, select/run, break, and switch emulators.
 
 ![buttons](media/M5CoreButtons.png)
+
+The CoreS3, Tab5, and Sunton 7" have capacitive touch screens, and now have more touch points implemented to allow for more virtual keys.
+
+![buttons](media/CoreS3Buttons.png)
