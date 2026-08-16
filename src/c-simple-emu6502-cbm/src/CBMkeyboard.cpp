@@ -26,6 +26,18 @@ extern USBtoCBMkeyboard usbkbd;
 #include "HIDtoCBMkeyboard.h"
 #endif //!M5TAB5
 
+#ifdef ARDUINO_SUNTON_8048S070
+#include <TAMC_GT911.h>
+#define SCREEN_WIDTH 800
+#define SCREEN_HEIGHT 480
+#define TOUCH_SDA  19
+#define TOUCH_SCL  20
+#define TOUCH_INT  21
+#define TOUCH_RST  38
+static TAMC_GT911 ts = TAMC_GT911(TOUCH_SDA, TOUCH_SCL, TOUCH_INT, TOUCH_RST, SCREEN_WIDTH, SCREEN_HEIGHT);
+static bool init_TAMC_GT911 = false;
+#endif
+
 bool CBMkeyboard::caps = false;
 
 bool CBMkeyboard::heldToggle = false;
@@ -189,6 +201,15 @@ void CBMkeyboard::reset(CBMkeyboard::Model model)
 #endif    
   memset(scan_codes, model == C128 ? 88 : 64, sizeof(scan_codes));
   heldToggle = false;
+#ifdef ARDUINO_SUNTON_8048S070
+  if (!init_TAMC_GT911)
+  {
+    ts.begin();
+    ts.setRotation(ROTATION_INVERTED); // Adjust if your coordinates are inverted
+    init_TAMC_GT911 = true;
+    //SerialDef.println("TAMC_GT911 init");
+  }
+#endif
 }
 
 void CBMkeyboard::ReadKeyboard(CBMkeyboard::Model model)
@@ -226,10 +247,7 @@ void CBMkeyboard::ReadKeyboard(CBMkeyboard::Model model)
     return;
 #else // NOT _WINDOWS
 
-#ifndef ARDUINO_TEENSY41
-    bool restartBLE = false;
-#endif    
-#ifdef M5STACK
+#if (defined(M5STACK) || defined(ARDUINO_SUNTON_8048S070))
 
 // buttons for touch screen including corresponding to physical A, B, C
 // +- 1 ----------T---------- 2 -+
@@ -242,7 +260,7 @@ void CBMkeyboard::ReadKeyboard(CBMkeyboard::Model model)
 // |                             |
 // +- A --------- B --------- C -+
 
-loop:
+//loop:
     const String upString = "15,7,88";
     const String dnString = "7,88";
     const String crString = "1,88";
@@ -265,10 +283,26 @@ loop:
     static bool lastDel = false;
     static bool lastSpace = false;
 
-    M5.update();
-#if (defined(ARDUINO_M5STACK_CORES3) || defined(M5TAB5))
+#if (defined(ARDUINO_M5STACK_CORES3) || defined(M5TAB5) || defined(ARDUINO_SUNTON_8048S070))
     static long pressed_time = 0;
+#ifdef ARDUINO_SUNTON_8048S070
+    static uint32_t last_read = 0;
+    static short touchcount = 0;
+    static short touchX = 0;
+    static short touchY = 0;
+    if (millis() - last_read >= 20) { // rate limiter, otherwise no presses in between, so buffer reads
+        ts.read();
+        last_read = millis();
+        touchcount = (ts.isTouched) ? ts.touches : 0;
+        if (touchcount > 0) {
+            touchX = ts.points[0].x;
+            touchY = ts.points[0].y;
+        }
+    }
+#else
+    M5.update();
     int touchcount = M5.Touch.getCount();
+#endif    
     bool a_pressed = false;
     bool b_pressed = false;
     bool c_pressed = false;
@@ -281,15 +315,24 @@ loop:
     bool b_held = false;
     bool c_held = false;
     if (touchcount > 0) {
+#if (defined(ARDUINO_M5STACK_CORES3) || defined(M5TAB5))
       auto touchpoint = M5.Touch.getTouchPointRaw();
       auto width = M5.Display.width();
       auto height = M5.Display.height();
+#elif (defined(ARDUINO_SUNTON_8048S070))
+      auto width = SCREEN_WIDTH;
+      auto height = SCREEN_HEIGHT;
+#endif
 #ifdef M5TAB5
       auto x = width - touchpoint.y;
       auto y = touchpoint.x;
-#else
+#elif (defined(ARDUINO_M5STACK_CORES3))
       auto x = touchpoint.x;
       auto y = touchpoint.y;
+#elif (defined(ARDUINO_SUNTON_8048S070))
+      auto x = touchX;
+      auto y = touchY;
+      //SerialDef.printf("%d %d\n", x, y);
 #endif
       if (y >= height * 9 / 10) {
           a_pressed = (x < width / 3);
@@ -333,10 +376,10 @@ loop:
       a_pressed = true;
       b_pressed = true;
     }
-    if (a_held && c_held) {
-      restartBLE = true;
-      goto loop; // wait for release
-    }
+    // if (a_held && c_held) {
+    //   restartBLE = true;
+    //   goto loop; // wait for release
+    // }
 #endif // M5STACK
 
     String s = "";
@@ -364,7 +407,7 @@ loop:
 #endif
         if (s.length() == 0 && SerialDef.available())
             s = SerialDef.readString();
-#ifdef M5STACK
+#if (defined(M5STACK) || defined(ARDUINO_SUNTON_8048S070))
         else if (lastRun && (lastRun = (a_pressed && b_pressed)) == false)
             s = noString;
         else if (lastUp && (lastUp = a_pressed && !c_pressed) == false)

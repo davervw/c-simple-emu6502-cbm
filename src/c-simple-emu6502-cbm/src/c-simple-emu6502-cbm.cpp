@@ -50,7 +50,7 @@
 #ifdef SWI2C
 #include "SoftWire.hpp"
 SoftWire KbdWire;
-#else
+#elif (!defined(ARDUINO_SUNTON_8048S070))
 #include <Wire.h>
 TwoWire& KbdWire = Wire;
 #endif
@@ -231,6 +231,9 @@ void setup() {
 #endif
 #endif
 
+#ifdef ARDUINO_SUNTON_8048S070
+  CardKbd = false;
+#else
   //Serial or I2Ch
 #ifdef ARDUINO_TEENSY41
   KbdWire.begin();
@@ -246,10 +249,11 @@ void setup() {
     }
     delay(100);
   }
+#endif
   if (!CardKbd)
   {
-    KbdWire.end();
 #ifndef ARDUINO_SUNTON_8048S070
+    KbdWire.end();
 #ifndef ARDUINO_LILYGO_T_DISPLAY_S3
     //Initialize serial (but don't wait for it to be connected, until there is an exception
 #ifdef ARDUINO_TEENSY41

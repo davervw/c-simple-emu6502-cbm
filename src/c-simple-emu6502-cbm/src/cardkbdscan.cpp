@@ -31,6 +31,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "config.h"
+
+#ifndef ARDUINO_SUNTON_8048S070
+
 #ifdef SWI2C
 #include <SoftWire.hpp>
 extern SoftWire KbdWire;
@@ -61,6 +64,8 @@ static int xlat[256] = {
 
 static char keys[80];
 
+#endif
+
 bool CardKbd = false;
 
 // M5Stack CardKB support
@@ -69,6 +74,9 @@ bool CardKbd = false;
 
 String CardKbdScanRead()
 {
+#ifdef ARDUINO_SUNTON_8048S070
+  String s = "64\n";
+#else
   String s = "";
   static unsigned long timeout = 1000000 / 20; // multiple of 1/60 of second
   static unsigned long timer_then = micros();
@@ -132,5 +140,6 @@ String CardKbdScanRead()
     keys[0] = 0;
   }
 
+#endif
   return s;
 }
