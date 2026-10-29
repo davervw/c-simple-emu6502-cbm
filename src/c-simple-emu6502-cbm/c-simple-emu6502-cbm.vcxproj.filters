@@ -81,36 +81,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="windows\framework.h">
-      <Filter>Include</Filter>
-    </ClInclude>
-    <ClInclude Include="windows\targetver.h">
-      <Filter>Include</Filter>
-    </ClInclude>
-    <ClInclude Include="windows\c-simple-emu6502-cbm.h">
-      <Filter>Include</Filter>
-    </ClInclude>
-    <ClInclude Include="windows\Resource.h">
-      <Filter>Include</Filter>
-    </ClInclude>
-    <ClInclude Include="emu6502.h">
-      <Filter>Include</Filter>
-    </ClInclude>
-    <ClInclude Include="emutest.h">
-      <Filter>Include</Filter>
-    </ClInclude>
-    <ClInclude Include="emuc64.h">
-      <Filter>Include</Filter>
-    </ClInclude>
-    <ClInclude Include="emucbm.h">
-      <Filter>Include</Filter>
-    </ClInclude>
-    <ClInclude Include="emud64.h">
-      <Filter>Include</Filter>
-    </ClInclude>
-    <ClInclude Include="vicii.h">
-      <Filter>Include</Filter>
-    </ClInclude>
     <ClInclude Include="windows\WindowsDraw.h">
       <Filter>Windows</Filter>
     </ClInclude>
@@ -126,50 +96,89 @@
     <ClInclude Include="windows\WindowsTime.h">
       <Filter>Windows</Filter>
     </ClInclude>
-    <ClInclude Include="emuc128.h">
-      <Filter>Include</Filter>
+    <ClInclude Include="src\ASCIIKeyboard.h">
+      <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="vdc.h">
-      <Filter>Include</Filter>
+    <ClInclude Include="src\autoblehid.h">
+      <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="vic.h">
-      <Filter>Include</Filter>
+    <ClInclude Include="src\blehid.h">
+      <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="emuvic20.h">
-      <Filter>Include</Filter>
+    <ClInclude Include="src\C128ScanCode.h">
+      <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="emumin.h">
-      <Filter>Include</Filter>
+    <ClInclude Include="src\cardkbdscan.h">
+      <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="mc6850.h">
-      <Filter>Include</Filter>
+    <ClInclude Include="src\CBMkeyboard.h">
+      <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="terminal.h">
-      <Filter>Include</Filter>
+    <ClInclude Include="src\config.h">
+      <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="dprintf.h">
-      <Filter>Include</Filter>
+    <ClInclude Include="src\dprintf.h">
+      <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="ASCIIKeyboard.h">
-      <Filter>Include</Filter>
+    <ClInclude Include="src\emu6502.h">
+      <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="ICharInput.h">
-      <Filter>Include</Filter>
+    <ClInclude Include="src\emuc64.h">
+      <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="ICharOutput.h">
-      <Filter>Include</Filter>
+    <ClInclude Include="src\emuc128.h">
+      <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="C128ScanCode.h">
-      <Filter>Include</Filter>
+    <ClInclude Include="src\emucbm.h">
+      <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="LCDDraw.h">
-      <Filter>Include</Filter>
+    <ClInclude Include="src\emud64.h">
+      <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="config.h">
-      <Filter>Include</Filter>
+    <ClInclude Include="src\emumin.h">
+      <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="CBMkeyboard.h">
-      <Filter>Include</Filter>
+    <ClInclude Include="src\emutest.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="src\emuvic20.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="src\HIDtoCBMkeyboard.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ICharInput.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ICharOutput.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="src\LCDDraw.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mc6850.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="src\tab5keymatrix.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="src\tab5keystoc128.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="src\terminal.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="src\USBtoCBMkeyboard.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="src\vdc.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="src\vic.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="src\vicii.h">
+      <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -193,11 +202,11 @@
     <Filter Include="src">
       <UniqueIdentifier>{76463103-0ee0-44a2-b70c-8af0ceea90a5}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Include">
-      <UniqueIdentifier>{9b5810cc-3830-4fe3-82fd-7e4354eb5829}</UniqueIdentifier>
-    </Filter>
     <Filter Include="splash">
       <UniqueIdentifier>{57666b49-3809-44de-b71e-dab4a269c161}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include">
+      <UniqueIdentifier>{1d482941-e05a-418b-b121-7d2d7b383b15}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

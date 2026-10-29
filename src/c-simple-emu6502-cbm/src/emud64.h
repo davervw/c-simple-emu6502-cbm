@@ -43,7 +43,7 @@ public:
 
     class DirStruct;
     
-    void InitializeData(unsigned char* disk_name, unsigned char* id); // TODO: TEST
+    void InitializeData(unsigned char* disk_name, unsigned char* id); // tested
     int GetSectorOffset(int track, int sector); // tested
     void WalkDirectory(bool (*dirFn)(EmuD64* d64, DirStruct* dir, int n, bool last, void*& context), void*& context); // tested
     int GetDirectoryCount(); // tested
@@ -56,10 +56,14 @@ public:
     void DiskDosType(char* disk_dos_type, int size); // tested
     int BlocksFree(); // tested
     void ReadFileByIndex(int i, unsigned char* data, int& length); // tested
-    void ReadFileByName(const char* filename, unsigned char* bytes, int &length); // TODO: TEST
-    void StoreFileByName(const char* filename, unsigned char* data, int data_len); // TODO: TEST
+    void ReadFileByName(const char* filename, unsigned char* bytes, int &length); // tested
+    void StoreFileByName(const char* filename, unsigned char* data, int data_len); // need to fix replace existing file (call FreeFileChain)
     const char* GetDirectoryFormatted(); // tested
     bool GetDirectoryProgram(unsigned char* data, int& data_size); // TODO: TEST
+	//bool ValidateDisk(); // TODO: IMPLEMENT
+	//int DeleteFilesByName(const char* filemask); // TODO: IMPLEMENT
+	//void CopyFiles(const char* dest, const char* source);  // TODO: IMPLEMENT, note source can be comma separated list of filenames
+	//void RenameFile(const char* newname, const char* oldname); // TODO: IMPLEMENT
 
 private:
     struct BlockStruct
@@ -70,6 +74,7 @@ private:
 
     void WriteBlock(BlockStruct block, BlockStruct next_block, unsigned char* data, int data_len, int data_offset);
     BlockStruct AllocBlock(bool directory);
+	//void FreeFileChain(BlockStruct block); // TODO: IMPLEMENT, needed by StoreFileByStruct to replace existing file
     void StoreFileByStruct(DirStruct* dir, unsigned char* data, int data_len);
     bool FindOrAllocDirectoryEntry(DirStruct* dir, int& track, int& sector, int& entry);
     void LoadFromFilenameOrCreate();
@@ -99,6 +104,7 @@ public:
     static const int disk_id_size = 2;
     static const int disk_dos_type_offset = 0xA5;
     static const int disk_dos_type_size = 2;
+	static const bool allow_overwrite = true; // TODO: allow runtime configuration, behavior is currently to overwrite --  doesn't use this variable
 
     class DirStruct
     {
