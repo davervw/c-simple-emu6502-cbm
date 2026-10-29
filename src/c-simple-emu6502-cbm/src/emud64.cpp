@@ -91,6 +91,7 @@ EmuD64::EmuD64(const char* filename_d64)
     strcpy_s(this->filename_d64, len, filename_d64);
     track_dirty = new bool[n_tracks + 1]; // +1 because this index is one based
     LoadFromFilenameOrCreate();
+    ValidateDisk(); // validate on startup to fix/workaround past sins
 }
 
 EmuD64::~EmuD64()
