@@ -60,7 +60,7 @@ public:
     void StoreFileByName(const char* filename, unsigned char* data, int data_len); // need to fix replace existing file (call FreeFileChain)
     const char* GetDirectoryFormatted(); // tested
     bool GetDirectoryProgram(unsigned char* data, int& data_size); // TODO: TEST
-	//bool ValidateDisk(); // TODO: IMPLEMENT
+	void ValidateDisk(); // TODO: IMPLEMENT
 	//int DeleteFilesByName(const char* filemask); // TODO: IMPLEMENT
 	//void CopyFiles(const char* dest, const char* source);  // TODO: IMPLEMENT, note source can be comma separated list of filenames
 	//void RenameFile(const char* newname, const char* oldname); // TODO: IMPLEMENT

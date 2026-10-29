@@ -58,6 +58,8 @@
 #include "emud64.h"
 #include "config.h"
 
+#include "dprintf.h"
+
 #ifndef _WINDOWS
 static void strcpy_s(char* dest, size_t size, const char* src)
 {
@@ -797,7 +799,7 @@ EmuD64::BlockStruct EmuD64::AllocBlock(bool directory)
     return block;
 }
 
-void EmuD64::StoreFileByStruct(DirStruct* dir, unsigned char* data, int data_len)
+void EmuD64::StoreFileByStruct(DirStruct* dir, unsigned char* data, int data_len) // TODO: test/fix saving zero byte file -- shouldn't allocate a block, but should still create a directory entry with 0 sectors
 {
     int n_sectors = (data_len + bytes_per_sector - 2 - 1) / (bytes_per_sector - 2);
     int free = BlocksFree();
@@ -1214,3 +1216,243 @@ void EmuD64::FlushDisk()
     }
 }
 
+static int CountBits(int value)
+{
+    int count = 0;
+    while (value > 0)
+    {
+        if (value & 1)
+            ++count;
+        value >>= 1;
+    }
+    return count;
+}
+
+class WalkContext
+{
+public:
+    unsigned char* bytes; // raw D64
+    int sectors_used;
+    unsigned new_bam[EmuD64::n_tracks+1]; // need 24-bits minimum for 1541/D64
+    bool circular_reference;
+    bool out_of_range;
+    bool rel_found;
+};
+
+static void WalkDirectoryChainAddtoBAM(EmuD64* d64, WalkContext*& context)
+{
+	auto track = d64->dir_track;
+	auto sector = d64->dir_sector;
+    unsigned coverage_bitmap[EmuD64::n_tracks + 1]{};
+    //dprintf("DIRECTORY: (%d,%d)", track, sector);
+    int sectors = 0;
+    while (track != 0)
+    {
+        if (track >= 1 && track <= EmuD64::n_tracks)
+        {
+            if (sector >= 0 && sector < sectors_per_track[track])
+            {
+                auto free = (context->new_bam[track] >> sector) & 1u;
+                if (free)
+                    context->new_bam[track] &= ~(1u << sector);
+                else
+                {
+                    //dprintf("**cross allocated track %d sector %d**", track, sector);
+                }
+            }
+            else
+            {
+                //dprintf("**sector %d out of range**", sector);
+                context->out_of_range = true;
+                break;
+            }
+        }
+        else {
+            //dprintf("**track %d out of range**", track);
+            context->out_of_range = true;
+            break;
+        }
+        auto i = d64->GetSectorOffset(track, sector);
+        track = context->bytes[i++];
+        sector = context->bytes[i++];
+        //dprintf(",(%d,%d)", track, sector);
+        auto traveled = (coverage_bitmap[track] >> sector) & 1u;
+        if (traveled)
+        {
+            context->circular_reference = true;
+            //dprintf("**CIRCULAR REFERENCE**");
+            break;
+        }
+        coverage_bitmap[track] |= (1u << sector);
+        ++sectors;
+	}
+    //dprintf(" sectors=%d\n",sectors);
+    context->sectors_used += sectors;
+}
+
+static bool WalkFileChainAddtoBAM(EmuD64* d64, EmuD64::DirStruct* dir, int n, bool last, void*& context)
+{
+    unsigned char filename[dir->dir_name_size + 1];
+    dir->getName(filename, sizeof(filename));
+    char splatChar = ((dir->file_type & 0x80) == 0) ? '*' : ' ';
+    char lockedChar = ((dir->file_type & 0x40) != 0) ? '<' : ' ';
+    //dprintf("\"%-16s\" %c%s%c (%d,%d)", filename, splatChar, dir->FileTypeString(), lockedChar, dir->file_track, dir->file_sector);
+    if (splatChar == '*')
+    {
+        //dprintf("SKIPPING PROCESSING UNCLOSED FILE\n");
+        return true;
+    }
+    auto track = dir->file_track;
+    auto sector = dir->file_sector;
+    WalkContext* walk_context = (WalkContext*)context;
+    if ((dir->file_type & 7) == dir->FileType::REL)
+        walk_context->rel_found = true;
+    unsigned char* bytes = walk_context->bytes;
+    int file_size = 0;
+    int sectors = (track > 0) ? 1 : 0;
+    unsigned coverage_bitmap[EmuD64::n_tracks + 1]{};
+    while (track != 0)
+    {
+        if (track >= 1 && track <= EmuD64::n_tracks)
+        {
+            if (sector >= 0 && sector < sectors_per_track[track])
+            {
+                auto free = (walk_context->new_bam[track] >> sector) & 1u;
+                if (free)
+                {
+                    ++walk_context->sectors_used;
+                    walk_context->new_bam[track] &= ~(1u << sector);
+                }
+                else
+                {
+                    //dprintf("**cross allocated track %d sector %d**", track, sector);
+                }
+            }
+            else
+            {
+                //dprintf("**sector %d out of range**", sector);
+                walk_context->out_of_range = true;
+                break;
+            }
+        }
+        else {
+            //dprintf("**track %d out of range**", track);
+            walk_context->out_of_range = true;
+            break;
+        }
+
+        auto i = d64->GetSectorOffset(track, sector);
+        track = bytes[i++];
+        sector = bytes[i++];
+        //dprintf(",(%d,%d)", track, sector);
+        file_size += (track > 0) ? 254 : sector;
+
+        auto traveled = (coverage_bitmap[track] >> sector) & 1u;
+        if (traveled)
+        {
+            walk_context->circular_reference = true;
+            //dprintf("**CIRCULAR REFERENCE**");
+            break;
+        }
+        coverage_bitmap[track] |= (1u << sector);
+
+        if (track > 0)
+            ++sectors;
+    }
+    //dprintf(" file_size=%d sectors=%d\n", file_size, sectors);
+    return true;
+}
+
+void EmuD64::ValidateDisk()
+{
+    if (bytes == 0)
+        show_exception("Invalid operation, disk not in memory");
+
+    // check BAM
+    auto i = GetSectorOffset(bam_track, bam_sector);
+    auto dir_track = bytes[i++];
+    auto dir_sector = bytes[i++];
+    auto dos_version = bytes[i++];
+    auto unused = bytes[i++];
+    int total_free = 0;
+    int dir_free = 0;
+
+    //dprintf("BAM: track=%d sector=%d dos_version=%d unused=%d\n", dir_track, dir_sector, dos_version, unused);
+
+    WalkContext* context = new WalkContext;
+    context->bytes = bytes;
+    context->sectors_used = 1; // BAM
+    context->circular_reference = false;
+    context->out_of_range = false;
+	context->rel_found = false;
+    for (int track = 1; track <= n_tracks; ++track)
+        context->new_bam[track] = (1 << (sectors_per_track[track])) - 1;
+
+    context->new_bam[dir_track] &= ~1u; // mark BAM used
+    WalkDirectoryChainAddtoBAM(this, context);
+    WalkDirectory(WalkFileChainAddtoBAM, (void*&)context);
+
+    bool differences_found = false;
+    // iterate through tracks of BAM
+    for (int track = 1; track <= n_tracks; ++track)
+    {
+        auto free_count = bytes[i++]; // sectors_per_track[track];
+        auto bitmap1 = bytes[i++]; // blank is 0xFF;
+        auto bitmap2 = bytes[i++]; // blank is 0xFF;
+        auto bitmap3 = bytes[i++]; // blank is (1 << (sectors_per_track[track] - 16)) - 1;
+        auto bitmap_count = CountBits(bitmap1) + CountBits(bitmap2) + CountBits(bitmap3);
+
+        unsigned char new_bitmap1 = context->new_bam[track] & 0xFF;
+        unsigned char new_bitmap2 = (context->new_bam[track] >> 8) & 0xFF;
+        unsigned char new_bitmap3 = (context->new_bam[track] >> 16) & 0xFF;
+        auto new_free_count = CountBits(new_bitmap1) + CountBits(new_bitmap2) + CountBits(new_bitmap3);
+        bool bam_matches_for_this_track = (free_count == bitmap_count && free_count == new_free_count && bitmap1 == new_bitmap1 && bitmap2 == new_bitmap2 && bitmap3 == new_bitmap3);
+        auto state = (bam_matches_for_this_track) ? "OK" : "MISMATCH";
+        if (!bam_matches_for_this_track)
+            differences_found = true;
+
+        //dprintf("BAM track %d: free_count=%d %02X%02X%02X bitmap_count=%d %02X%02X%02X new_free_count=%d %s\n", track, free_count, bitmap1, bitmap2, bitmap3, bitmap_count, new_bitmap1, new_bitmap2, new_bitmap3, new_free_count, state);
+
+        if (track == dir_track)
+            dir_free += new_free_count;
+        else
+            total_free += new_free_count;
+    }
+
+    auto grand_total = total_free + dir_free + context->sectors_used;
+    //dprintf("TOTAL FREE = %d, DIR FREE = %d, SECTORS USED = %d, GRAND_TOTAL = %d\n", total_free, dir_free, context->sectors_used, grand_total);
+    if (grand_total == sectors_per_disk)
+    {
+        //dprintf("SIZES ADD UP\n"); // so rewrite BAM
+        if (differences_found)
+        {
+            //dprintf("DIFFERENCES FOUND ");
+            if (context->rel_found)
+            {
+                //dprintf("VALIDATE WITH REL FILES NOT SUPPORTED\n");
+                return;
+            }
+            if (context->circular_reference)
+            {
+                //dprintf("VALIDATE WITH CIRCULAR REFERENCE NOT SUPPORTED -- NOT RECOMMENDED\n");
+                return;
+            }
+            //dprintf("REWRITING BAM\n");
+            i = GetSectorOffset(bam_track, bam_sector);
+			i += 4; // skip over dir_track, dir_sector, dos_version, unused
+            for (int track = 1; track <= n_tracks; ++track)
+            {
+                unsigned char new_bitmap1 = context->new_bam[track] & 0xFF;
+                unsigned char new_bitmap2 = (context->new_bam[track] >> 8) & 0xFF;
+                unsigned char new_bitmap3 = (context->new_bam[track] >> 16) & 0xFF;
+                auto new_free_count = CountBits(new_bitmap1) + CountBits(new_bitmap2) + CountBits(new_bitmap3);
+                bytes[i++] = new_free_count;
+                bytes[i++] = new_bitmap1;
+                bytes[i++] = new_bitmap2;
+                bytes[i++] = new_bitmap3;
+            }
+            track_dirty[bam_track] = true;
+            FlushDisk();
+        }
+    }
+}
