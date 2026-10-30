@@ -57,8 +57,7 @@
 #endif // NOT _WINDOWS
 #include "emud64.h"
 #include "config.h"
-
-#include "dprintf.h"
+//#include "dprintf.h"
 
 #ifndef _WINDOWS
 static void strcpy_s(char* dest, size_t size, const char* src)
@@ -270,6 +269,9 @@ static struct DirEntryLocation {
     int empty_entry;
     int empty_next_track;
     int empty_next_sector;
+
+    int file_track;
+    int file_sector;
 } dir_entry_location;
 
 // gather various track/sector/entry location to help us store a new directory entry, or overwrite an existing directory entry
@@ -291,6 +293,8 @@ static bool DirectoryEntryLocator(EmuD64* d64, EmuD64::DirStruct* dir, int n, bo
             dir_entry_location.empty_entry = 0;
             dir_entry_location.empty_next_track = 0;
             dir_entry_location.empty_next_sector = 0;
+            dir_entry_location.file_track = 0;
+			dir_entry_location.file_sector = 0;
         }
         else
         {
@@ -316,6 +320,8 @@ static bool DirectoryEntryLocator(EmuD64* d64, EmuD64::DirStruct* dir, int n, bo
         && memcmp(dir->filename, dir_entry_location.filename, EmuD64::DirStruct::dir_name_size) == 0)
     {
         dir_entry_location.found_name = true;
+		dir_entry_location.file_track = dir->file_track;
+		dir_entry_location.file_sector = dir->file_sector;
     }
     else
         dir_entry_location.found_name = false;
@@ -332,13 +338,18 @@ static bool FindDirectoryEntry(EmuD64* d64, EmuD64::DirStruct* dir)
     return dir_entry_location.found_name;
 }
 
-bool EmuD64::FindOrAllocDirectoryEntry(EmuD64::DirStruct* dir, int& track, int& sector, int& entry)
+bool EmuD64::FindOrAllocDirectoryEntry(EmuD64::DirStruct* dir, int& track, int& sector, int& entry, int& old_file_track, int& old_file_sector)
 {
+    old_file_track = 0;
+	old_file_sector = 0;
+
     if (FindDirectoryEntry(this, dir))
     {
         track = dir_entry_location.track;
         sector = dir_entry_location.sector;
         entry = dir_entry_location.entry;
+        old_file_track = dir_entry_location.file_track;
+        old_file_sector = dir_entry_location.file_sector;
         if (entry == 0)
         {
             dir->next_track = dir_entry_location.next_track;
@@ -800,6 +811,37 @@ EmuD64::BlockStruct EmuD64::AllocBlock(bool directory)
     return block;
 }
 
+void EmuD64::FreeBlock(BlockStruct block)
+{
+    if (block.track < 1 || block.track > n_tracks || block.sector < 0 || block.sector >= sectors_per_track[block.track])
+    {
+        char exception[80];
+        snprintf(exception, sizeof(exception), "cannot free block track %d sector %d, out of range", block.track, block.sector);
+        show_exception(exception);
+	}
+    int offset = GetSectorOffset(bam_track, bam_sector);
+	int track_bam_offset = offset + block.track * 4; // track is one based, so this is correct to skip over the first 4 bytes of BAM (which are dir track, dir sector, DOS version, and unused)
+    int track_free = bytes[track_bam_offset];
+	auto bitmap1 = bytes[track_bam_offset + 1];
+	auto bitmap2 = bytes[track_bam_offset + 2];
+	auto bitmap3 = bytes[track_bam_offset + 3];
+	auto bitmap = bitmap1 | ((unsigned long)bitmap2 << 8) | ((unsigned long)bitmap3 << 16);
+	auto sector_allocated = (bitmap & (1u << block.sector)) == 0;
+    if (sector_allocated)
+    {
+        // mark sector free
+        if (block.sector < 8)
+            bytes[track_bam_offset + 1] |= (1 << block.sector);
+        else if (block.sector < 16)
+            bytes[track_bam_offset + 2] |= (1 << (block.sector - 8));
+        else
+            bytes[track_bam_offset + 3] |= (1 << (block.sector - 16));
+        ++track_free;
+        bytes[track_bam_offset] = track_free;
+		track_dirty[bam_track] = true;
+    }
+}
+
 void EmuD64::StoreFileByStruct(DirStruct* dir, unsigned char* data, int data_len) // TODO: test/fix saving zero byte file -- shouldn't allocate a block, but should still create a directory entry with 0 sectors
 {
     int n_sectors = (data_len + bytes_per_sector - 2 - 1) / (bytes_per_sector - 2);
@@ -820,7 +862,8 @@ void EmuD64::StoreFileByStruct(DirStruct* dir, unsigned char* data, int data_len
         dir->file_track = block.track;
         dir->file_sector = block.sector;
         int dir_track, dir_sector, dir_entry;
-        if (FindOrAllocDirectoryEntry(dir, dir_track, dir_sector, dir_entry)
+        int old_file_track, old_file_sector;
+        if (FindOrAllocDirectoryEntry(dir, dir_track, dir_sector, dir_entry, old_file_track, old_file_sector)
             && dir->Store(this, dir_track, dir_sector, dir_entry))
         {
             while (n_sectors > 0)
@@ -841,6 +884,27 @@ void EmuD64::StoreFileByStruct(DirStruct* dir, unsigned char* data, int data_len
                 block = next_block;
                 offset += (bytes_per_sector - 2);
             }
+
+            if (old_file_track >= 1 && old_file_track <= n_tracks && old_file_sector >= 0 && old_file_sector < sectors_per_track[old_file_track])
+            {
+                // free old file blocks
+                BlockStruct block{};
+                block.track = old_file_track;
+                block.sector = old_file_sector;
+                while (true)
+                {
+                    int offset = GetSectorOffset(block.track, block.sector);
+                    BlockStruct next_block{};
+                    next_block.track = bytes[offset];
+                    next_block.sector = bytes[offset + 1];
+                    FreeBlock(block);
+                    if (next_block.track == 0)
+                        break;
+                    block = next_block;
+                }
+			}
+            block.track = old_file_track;
+			block.sector = old_file_sector;
         }
         // else TODO: report soft error
         FlushDisk();

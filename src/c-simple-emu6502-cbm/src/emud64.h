@@ -74,9 +74,9 @@ private:
 
     void WriteBlock(BlockStruct block, BlockStruct next_block, unsigned char* data, int data_len, int data_offset);
     BlockStruct AllocBlock(bool directory);
-	//void FreeFileChain(BlockStruct block); // TODO: IMPLEMENT, needed by StoreFileByStruct to replace existing file
+    void FreeBlock(BlockStruct block);
     void StoreFileByStruct(DirStruct* dir, unsigned char* data, int data_len);
-    bool FindOrAllocDirectoryEntry(DirStruct* dir, int& track, int& sector, int& entry);
+    bool FindOrAllocDirectoryEntry(DirStruct* dir, int& track, int& sector, int& entry, int& old_file_track, int& old_file_sector);
     void LoadFromFilenameOrCreate();
     void FlushDisk();
 
