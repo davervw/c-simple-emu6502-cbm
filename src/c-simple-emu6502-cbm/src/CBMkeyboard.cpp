@@ -428,6 +428,7 @@ void CBMkeyboard::ReadKeyboard(CBMkeyboard::Model model)
             s = stopString;
         else if ((lastDn = c_pressed && !a_pressed) == true)
             s = dnString;
+#if (defined(ARDUINO_M5STACK_CORES3) || defined(M5TAB5) || defined(ARDUINO_SUNTON_8048S070))
         else if (lastLt & (lastLt = l_pressed) == false)
             s = noString;
         else if (lastRt & (lastRt = r_pressed) == false)
@@ -448,6 +449,7 @@ void CBMkeyboard::ReadKeyboard(CBMkeyboard::Model model)
             s = delString;
         else if (lastSpace = two_pressed)
             s = spaceString;
+#endif
 #endif    
 #ifdef ARDUINO_TEENSY41
         else if (Serial1.available() > 0) {
