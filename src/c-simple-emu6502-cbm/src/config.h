@@ -20,13 +20,13 @@
 #endif
 #endif
 #ifdef ARDUINO_M5STACK_Core2
-#include <M5Core2.h> // library version 0.1.9
+#include <M5Unified.h> // library version 0.1.14
 #define SerialDef Serial
 #undef RX2
 #define RX2 G32
 #define SDA G32
 #define SCL G33
-#define SD_CS_OVERRIDE
+#define SD_CS_OVERRIDE GPIO_NUM_4
 #define M5STACK
 #endif
 ////////////////////////////
